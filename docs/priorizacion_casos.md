@@ -192,17 +192,3 @@ Comparar 3 propuestas innovadoras de machine learning para emergencias sanitaria
 | Risk regulatorio | Moderado | **Bajo** | Alto |
 
 ---
-
-## Próximos pasos si se elige B
-
-1. **Semana 1-2:** Contactar UNICEF Bolivia, Save the Children (acceso a fotos anonimizadas)
-2. **Semana 3-4:** Recolectar dataset (300-500 fotos etiquetadas)
-3. **Semana 5-10:** Entrenar modelo (ResNet-50 fine-tuning)
-4. **Semana 11-14:** Validación clínica + integración SMS/WhatsApp
-5. **Semana 15-18:** MVP en piloto con 2-3 ONGs
-
----
-
-**Redactado por:** Equipo TSI  
-**Fecha:** [fecha actual]  
-**Vigencia:** Sujeto a validación de acceso a datos en semana 2
