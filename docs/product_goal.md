@@ -1,7 +1,5 @@
 # Product Goal: Soluciones de IA para Salud y Ayuda Social
 
-Elige el enunciado que corresponda al caso seleccionado.
-
 ---
 
 ## **OPCIÓN A: Triaje Inteligente para Emergencias Saturadas**
