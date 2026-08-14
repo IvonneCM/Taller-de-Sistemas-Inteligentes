@@ -116,4 +116,4 @@ Si se completa B y queda tiempo → hacer C en semestre 2.
 ---
 
 **Redactado por:** Equipo TSI  
-**Fecha:** [fecha actual]
+**Fecha:** 13 de agosto del 2026
