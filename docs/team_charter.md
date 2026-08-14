@@ -6,20 +6,20 @@ Todos los integrantes cursan pasantías en **GATOBYTE** en horario laboral, por 
 
 | Integrante | Responsabilidad | Disponibilidad | Restricción |
 |---|---|---|---|
-| Colque Murillo Ivonne Micaela | Valor / producto | Lun-Vie 20:00, Sáb 10:00 | pasantía en GATOBYTE hasta 19:00 |
-| Rocha Vedia Adriana Nathalie | Proceso / bloqueos | Lun-Vie 20:30, Dom 15:00 | pasantía en GATOBYTE hasta 19:00 |
-| Pérez Dick Tania Morelia | Datos | Mar-Jue 20:00, Sáb 14:00 | pasantía en GATOBYTE hasta 19:00 |
-| Retamozo Torrez Ignacio | Modelo / IA | Lun-Vie 21:00, Dom 16:00 | pasantía en GATOBYTE hasta 19:00 |
-| Mamani Pamuri Dilan Obed | Ingeniería | Mié-Vie 20:00, Sáb 11:00 | pasantía en GATOBYTE hasta 19:00 |
+| Rocha Vedia Adriana Nathalie | Valor / producto | Vie 20:30, Dom 15:00 | pasantía hasta 19:00 |
+| Colque Murillo Ivonne Micaela | Proceso / bloqueos | Vie 20:00, Sáb 10:00 | pasantía hasta 19:00 |
+| Pérez Dick Tania Morelia | Datos | Vie 20:00, Sáb 14:00 | pasantía hasta 19:00 |
+| Retamozo Torrez Ignacio | Modelo / IA | Vie 20:00, Dom 16:00 | pasantía hasta 19:00 |
+| Mamani Pamuri Dilan Obed | Ingeniería | Vie 20:00, Sáb 11:00 | pasantía hasta 19:00 |
 
 No se agendan reuniones ni revisiones antes de las 19:30 en días de semana, dado que todos los integrantes están ocupados en GATOBYTE durante el día.
 
 ## Canales y tiempos de respuesta
 
-- ClickUp: tareas, responsables y evidencia.
+- ClickUp: tareas, responsabilidades y evidencia.
 - WhatsApp: coordinación rápida, no decisiones finales.
 - GitHub Issues: defectos técnicos y bloqueos reproducibles.
-- Tiempo de respuesta normal: 24 horas (considerando que el equipo trabaja fuera de su horario de pasantía).
+- Tiempo de respuesta normal: 6 horas (considerando que el equipo trabaja fuera de su horario de pasantía).
 - Bloqueo crítico: se etiqueta en ClickUp y se notifica al canal del equipo en WhatsApp.
 
 ## Revisión de PR
