@@ -1,4 +1,4 @@
-# Product Goal: Predicción de Brotes de Dengue/Malaria (Time Series + Geospatial)**
+# Product Goal: Predicción de Brotes de Dengue/Malaria (Time Series + Geospatial)
 
 ### Enunciado
 
