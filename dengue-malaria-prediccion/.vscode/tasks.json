@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Instalar dependencias",
+      "type": "shell",
+      "command": "pip install -r requirements.txt",
+      "problemMatcher": []
+    },
+    {
+      "label": "Levantar servidor de desarrollo",
+      "type": "shell",
+      "command": "uvicorn app.main:app --reload --port 8000",
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Ejecutar migraciones (alembic upgrade head)",
+      "type": "shell",
+      "command": "alembic upgrade head",
+      "problemMatcher": []
+    },
+    {
+      "label": "Crear nueva migración",
+      "type": "shell",
+      "command": "alembic revision --autogenerate -m \"${input:mensajeMigracion}\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "Ejecutar tests con cobertura",
+      "type": "shell",
+      "command": "pytest --cov=app tests/",
+      "problemMatcher": []
+    },
+    {
+      "label": "Formatear código (black)",
+      "type": "shell",
+      "command": "black app tests",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "mensajeMigracion",
+      "type": "promptString",
+      "description": "Mensaje descriptivo para la migración de Alembic"
+    }
+  ]
+}
