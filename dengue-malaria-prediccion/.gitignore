@@ -1,0 +1,35 @@
+# Entornos y dependencias
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Variables de entorno y secretos
+.env
+*.pem
+*.key
+
+# Bases de datos locales
+*.sqlite3
+*.db
+
+# Modelos entrenados (pueden pesar mucho; versionar aparte si se requiere)
+*.pkl
+*.joblib
+models_artifacts/
+
+# Datos crudos (no versionar datasets grandes o sensibles)
+data/raw/
+data/*.csv
+
+# Sistema operativo / editor
+.DS_Store
+.vscode/*.log
+*.log
+
+# Cobertura de tests
+.coverage
+htmlcov/
