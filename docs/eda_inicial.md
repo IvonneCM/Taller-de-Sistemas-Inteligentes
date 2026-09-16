@@ -30,12 +30,15 @@ reemplaza la función de carga por el conector real de `app/etl/conectores/`.
 
 El dataset sintético no busca simular casos reales; busca **estresar el
 pipeline de perfilado** contra los riesgos de datos ya identificados por el
-equipo en `requirements.md` §5 y `priorizacion_casos.md`:
+equipo en `requirements.md` §5 y `priorizacion_casos.md`, además de inyectar
+una señal causal controlada (clima con rezago → casos) para poder demostrar
+el análisis de relación entre variables que pide esta entrega:
 
 | Característica real documentada | Cómo se refleja en el dataset sintético |
 |---|---|
 | Cobertura irregular de estaciones SENAMHI en zonas rurales | Municipios rurales (Apolo, Ixiamas, Guanay, San Buenaventura) reciben una probabilidad de día-sin-registro de 25%, vs. 3% en zonas urbanas |
 | Sesgo de vigilancia (zonas con mejor infraestructura reportan más) | Los municipios rurales generan casos epidemiológicos con un factor de reporte de 0.4x respecto al mismo nivel real de incidencia |
+| Hipótesis del proyecto: el clima anticipa brotes | Los casos de una semana se generan a partir de la temperatura y precipitación de **3 semanas antes** (lag), más ruido de Poisson — para poder validar que el pipeline de EDA detecta esta relación |
 | Retraso de reporte epidemiológico | Datos agregados semanalmente en vez de diariamente, como espera el SEDES |
 | Formato semi-estructurado de SEDES (PDFs → Excel) | Se documenta como riesgo de calidad de datos, no se simula el parseo (fuera del alcance del EDA) |
 | Errores de sensor / outliers climáticos | 0.5% de registros de temperatura con desviaciones de ±15-20°C respecto a la media |
@@ -44,7 +47,7 @@ equipo en `requirements.md` §5 y `priorizacion_casos.md`:
 
 Ejecutando `eda_inicial.py`:
 
-- **8,593 registros climáticos** y **1,390 registros epidemiológicos**
+- **8,593 registros climáticos** y **1,368 registros epidemiológicos**
   generados sobre el rango 2024-01-01 a 2026-08-31 y 10 municipios de
   ejemplo (zona piloto tentativa: La Paz — pendiente confirmación oficial,
   ver `design.md` §10).
@@ -56,8 +59,25 @@ Ejecutando `eda_inicial.py`:
   §5, paso 2).
 - **Outliers de temperatura**: 94 registros detectados por método IQR,
   candidatos a revisión antes de imputación (ver `outliers_climaticos.csv`).
-- Distribuciones de temperatura, precipitación y casos confirmados
-  disponibles en `distribucion_variables.png`.
+- **Distribuciones**: temperatura y humedad aproximadamente normales;
+  precipitación con cola larga (muchos días sin lluvia, típico de datos
+  pluviométricos); casos confirmados con forma tipo Poisson.
+- **Matriz de correlación** (clima con 3 semanas de rezago vs. casos):
+  la temperatura rezagada muestra la correlación más fuerte con los casos
+  confirmados (**r = 0.29**); humedad y precipitación muestran correlación
+  débil en este dataset sintético (ver `matriz_correlacion.csv` y
+  `matriz_correlacion.png`).
+- **Dispersión clima vs. casos**: el gráfico de regresión confirma
+  visualmente la tendencia positiva entre temperatura rezagada y casos
+  (`dispersion_clima_vs_casos.png`) — este es el tipo de relación que el
+  motor de predicción (design.md §5) debe capturar vía feature engineering
+  con variables rezagadas.
+- **Boxplots por municipio**: además de exponer outliers, evidencian
+  visualmente el **sesgo de vigilancia** — los municipios rurales muestran
+  cajas de casos confirmados sistemáticamente más bajas que las urbanas,
+  pese a compartir un rango climático similar (`boxplots_por_municipio.png`).
+- **Serie temporal**: los casos totales muestran estacionalidad visible a
+  lo largo del periodo simulado (`serie_temporal_casos.png`).
 
 ## 4. Qué cambia cuando lleguen los datos reales
 
@@ -67,9 +87,12 @@ Ejecutando `eda_inicial.py`:
    real de SEDES, incluyendo el paso de parseo PDF → estructurado que no
    está cubierto en esta versión sintética.
 3. Re-ejecutar el mismo pipeline de perfilado (faltantes, outliers,
-   distribuciones) sin cambios de código.
+   distribuciones, correlación, dispersión) sin cambios de código.
 4. Confirmar si el umbral de 20% de faltantes rurales (NFR-007) se sostiene
-   con datos reales o si SENAMHI tiene mejor cobertura de la asumida aquí.
+   con datos reales, y si la correlación clima-casos observada aquí (nivel
+   de referencia: r≈0.29 con lag de 3 semanas) se mantiene, sube o baja con
+   datos reales — esto informará directamente qué variables priorizar en
+   `app/ml/features.py`.
 
 ## 5. Archivos de evidencia
 
@@ -77,5 +100,10 @@ Ejecutando `eda_inicial.py`:
 - `docs_eda_output/resumen_climatico.csv`
 - `docs_eda_output/resumen_epidemiologico.csv`
 - `docs_eda_output/outliers_climaticos.csv`
+- `docs_eda_output/matriz_correlacion.csv`
 - `docs_eda_output/faltantes_por_municipio.png`
 - `docs_eda_output/distribucion_variables.png`
+- `docs_eda_output/boxplots_por_municipio.png`
+- `docs_eda_output/matriz_correlacion.png`
+- `docs_eda_output/dispersion_clima_vs_casos.png`
+- `docs_eda_output/serie_temporal_casos.png`

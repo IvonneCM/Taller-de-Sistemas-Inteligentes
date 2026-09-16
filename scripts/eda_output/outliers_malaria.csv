@@ -1,0 +1,5 @@
+sedes_segun_tabla,municipio,anio,periodo,p_vivax,p_falciparum,mixta,total_malaria,fuente,pagina_fuente,nota
+BENI,RIBERALTA,2026,SE 1-13,597,58,27,682,"Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N°13, 2026",12,Acumulado municipal SE 1-13; se preserva la agrupación SEDES tal como aparece en la tabla oficial.
+BENI,GUAYARAMERIN,2026,SE 1-13,199,87,7,293,"Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N°13, 2026",12,Acumulado municipal SE 1-13; se preserva la agrupación SEDES tal como aparece en la tabla oficial.
+PANDO,IXIAMAS,2026,SE 1-13,100,52,4,156,"Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N°13, 2026",12,"Acumulado municipal SE 1-13; se preserva la agrupación SEDES tal como aparece en la tabla oficial. El texto narrativo del boletín atribuye Ixiamas a La Paz; la tabla lo muestra bajo Pando, por lo que se conserva la tabla y se documenta la inconsistencia."
+PANDO,SENA,2026,SE 1-13,92,34,0,126,"Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N°13, 2026",12,Acumulado municipal SE 1-13; se preserva la agrupación SEDES tal como aparece en la tabla oficial.

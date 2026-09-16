@@ -1,171 +1,532 @@
 """
-EDA inicial — Sistema de Predicción Temprana de Brotes de Dengue/Malaria
-Tarea: Adriana Rocha — Análisis exploratorio de datos (EDA) inicial
+EDA epidemiológico inicial
+Sistema de Predicción Temprana de Brotes de Dengue y Malaria
 
-IMPORTANTE: no se cuenta todavía con acceso confirmado a los datos reales de
-SENAMHI ni de SEDES (ver docs/priorizacion_casos.md). Este script genera un
-dataset SINTÉTICO que replica las características documentadas de ambas
-fuentes (volumen, formato, gaps geográficos, sesgo de vigilancia) para dejar
-el pipeline de perfilado listo y reproducible. Al llegar los datos reales,
-basta con reemplazar las funciones `generar_datos_climaticos_sinteticos()` y
-`generar_datos_epidemiologicos_sinteticos()` por los conectores de ingesta
-reales (ver design.md, app/etl/conectores/).
+Responsable: Adriana Rocha
 
-Uso:
-    python eda_inicial.py
+Fuente:
+Ministerio de Salud y Deportes de Bolivia
+Boletín Epidemiológico N° 13 - 2026
 
-Salida:
-    - docs/eda_output/resumen_climatico.csv
-    - docs/eda_output/resumen_epidemiologico.csv
-    - docs/eda_output/outliers_climaticos.csv
-    - docs/eda_output/faltantes_por_municipio.png
-    - docs/eda_output/distribucion_variables.png
+IMPORTANTE:
+Este análisis utiliza únicamente datos epidemiológicos reales.
+No se generan datos sintéticos.
+
+El análisis climático con SENAMHI se realizará posteriormente.
 """
 
 import os
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-np.random.seed(42)
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "docs_eda_output")
+# ============================================================
+# RUTAS
+# ============================================================
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+DATA_DIR = os.path.join(
+    BASE_DIR,
+    "data",
+    "raw",
+    "epidemiologia"
+)
+
+OUTPUT_DIR = os.path.join(
+    os.path.dirname(__file__),
+    "eda_output"
+)
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Municipios de ejemplo (La Paz — zona piloto sugerida, pendiente confirmación oficial)
-MUNICIPIOS = [
-    "La Paz", "El Alto", "Coroico", "Caranavi", "Rurrenabaque",
-    "Palos Blancos", "Guanay", "Apolo", "Ixiamas", "San Buenaventura",
-]
 
-# Municipios rurales con menor densidad de estaciones (ver design.md — cobertura
-# irregular) y menor reporte epidemiológico (sesgo de vigilancia)
-MUNICIPIOS_RURALES = ["Apolo", "Ixiamas", "Guanay", "San Buenaventura"]
+DENGUE_SEMANAL = os.path.join(
+    DATA_DIR,
+    "dengue_bolivia_semanal_SE01_13_2026.csv"
+)
 
-FECHA_INICIO = "2024-01-01"
-FECHA_FIN = "2026-08-31"
+DENGUE_MUNICIPAL = os.path.join(
+    DATA_DIR,
+    "dengue_bolivia_municipal_SE01_13_2026.csv"
+)
 
-
-def generar_datos_climaticos_sinteticos() -> pd.DataFrame:
-    """Simula datos_climaticos con la estructura de design.md §3, imitando
-    la cobertura irregular de estaciones SENAMHI en zonas rurales."""
-    fechas = pd.date_range(FECHA_INICIO, FECHA_FIN, freq="D")
-    filas = []
-    for municipio in MUNICIPIOS:
-        es_rural = municipio in MUNICIPIOS_RURALES
-        # Zonas rurales: menor densidad de estaciones -> más huecos de reporte
-        prob_faltante = 0.25 if es_rural else 0.03
-        for fecha in fechas:
-            if np.random.random() < prob_faltante:
-                continue  # día sin registro (estación no reportó)
-            temp = np.random.normal(24, 3)
-            humedad = np.clip(np.random.normal(70, 12), 0, 100)
-            precip = max(0, np.random.exponential(4))
-            # outliers ocasionales (posibles errores de sensor)
-            if np.random.random() < 0.005:
-                temp += np.random.choice([-15, 20])
-            filas.append({
-                "municipio": municipio,
-                "fecha": fecha,
-                "temperatura_media_c": round(temp, 1),
-                "humedad_relativa_pct": round(humedad, 1),
-                "precipitacion_mm": round(precip, 1),
-                "fuente": "SENAMHI",
-            })
-    return pd.DataFrame(filas)
+MALARIA_MUNICIPAL = os.path.join(
+    DATA_DIR,
+    "malaria_bolivia_municipal_SE01_13_2026.csv"
+)
 
 
-def generar_datos_epidemiologicos_sinteticos() -> pd.DataFrame:
-    """Simula casos_epidemiologicos con la estructura de design.md §3,
-    imitando el retraso de reporte y sesgo de vigilancia de SEDES."""
-    fechas = pd.date_range(FECHA_INICIO, FECHA_FIN, freq="W")
-    filas = []
-    for municipio in MUNICIPIOS:
-        es_rural = municipio in MUNICIPIOS_RURALES
-        # Sesgo de vigilancia: zonas rurales reportan menos, no porque haya
-        # menos casos reales, sino por menor infraestructura de salud
-        factor_reporte = 0.4 if es_rural else 1.0
-        base_casos = np.random.uniform(2, 15)
-        for fecha in fechas:
-            estacionalidad = 1 + 0.6 * np.sin(2 * np.pi * fecha.dayofyear / 365)
-            casos = max(0, np.random.poisson(base_casos * estacionalidad * factor_reporte))
-            filas.append({
-                "municipio": municipio,
-                "enfermedad": np.random.choice(["dengue", "malaria"], p=[0.75, 0.25]),
-                "fecha_reporte": fecha,
-                "casos_confirmados": casos,
-                "fuente": "SEDES La Paz",
-            })
-    return pd.DataFrame(filas)
+# ============================================================
+# CARGA
+# ============================================================
+
+def cargar_datos():
+
+    dengue_semanal = pd.read_csv(DENGUE_SEMANAL)
+    dengue_municipal = pd.read_csv(DENGUE_MUNICIPAL)
+    malaria = pd.read_csv(MALARIA_MUNICIPAL)
+
+    return dengue_semanal, dengue_municipal, malaria
 
 
-def perfilar_faltantes(df_clima: pd.DataFrame) -> pd.DataFrame:
-    """Calcula, por municipio, el % de días sin registro climático dentro
-    de la ventana total — soporta NFR-007 (tolerancia a datos incompletos)."""
-    dias_totales = (pd.Timestamp(FECHA_FIN) - pd.Timestamp(FECHA_INICIO)).days + 1
-    conteo = df_clima.groupby("municipio").size()
-    faltantes_pct = (1 - conteo / dias_totales) * 100
-    resumen = faltantes_pct.reset_index()
-    resumen.columns = ["municipio", "pct_dias_faltantes"]
-    return resumen.sort_values("pct_dias_faltantes", ascending=False)
+# ============================================================
+# VALIDACIÓN
+# ============================================================
+
+def validar_datos(dengue_semanal, dengue_municipal, malaria):
+
+    print("\n========== VALIDACIÓN ==========")
+
+    total_dengue = dengue_semanal["casos_dengue"].sum()
+
+    total_dengue_municipal = (
+        dengue_municipal[
+            "casos_dengue_acumulados_se1_13"
+        ].sum()
+    )
+
+    total_malaria = malaria["total_malaria"].sum()
+
+    print("Dengue semanal:", total_dengue)
+    print("Dengue municipal:", total_dengue_municipal)
+    print("Malaria:", total_malaria)
+
+    # Totales reportados por el boletín
+    assert total_dengue == 341, \
+        "ERROR: dengue semanal no suma 341"
+
+    assert total_dengue_municipal == 341, \
+        "ERROR: dengue municipal no suma 341"
+
+    assert total_malaria == 1615, \
+        "ERROR: malaria no suma 1615"
+
+    print("\n✓ Los totales coinciden con el boletín oficial.")
 
 
-def detectar_outliers_iqr(df_clima: pd.DataFrame, columna: str) -> pd.DataFrame:
-    """Detección de outliers por rango intercuartílico (IQR), por variable."""
-    q1, q3 = df_clima[columna].quantile([0.25, 0.75])
+# ============================================================
+# CALIDAD DE DATOS
+# ============================================================
+
+def analizar_calidad(dengue_semanal, dengue_municipal, malaria):
+
+    resultados = []
+
+    datasets = {
+        "Dengue semanal": dengue_semanal,
+        "Dengue municipal": dengue_municipal,
+        "Malaria municipal": malaria
+    }
+
+    for nombre, df in datasets.items():
+
+        resultados.append({
+            "dataset": nombre,
+            "filas": len(df),
+            "columnas": len(df.columns),
+            "valores_faltantes": int(df.isnull().sum().sum()),
+            "duplicados": int(df.duplicated().sum())
+        })
+
+    calidad = pd.DataFrame(resultados)
+
+    calidad.to_csv(
+        os.path.join(OUTPUT_DIR, "calidad_datos.csv"),
+        index=False
+    )
+
+    print("\n========== CALIDAD DE DATOS ==========")
+    print(calidad.to_string(index=False))
+
+
+# ============================================================
+# ESTADÍSTICAS DESCRIPTIVAS
+# ============================================================
+
+def generar_resumenes(
+    dengue_semanal,
+    dengue_municipal,
+    malaria
+):
+
+    dengue_semanal.describe().to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "resumen_dengue_semanal.csv"
+        )
+    )
+
+    dengue_municipal.describe().to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "resumen_dengue_municipal.csv"
+        )
+    )
+
+    malaria.describe().to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "resumen_malaria.csv"
+        )
+    )
+
+
+# ============================================================
+# OUTLIERS CON IQR
+# ============================================================
+
+def detectar_outliers(df, columna):
+
+    q1 = df[columna].quantile(0.25)
+    q3 = df[columna].quantile(0.75)
+
     iqr = q3 - q1
-    lim_inf, lim_sup = q1 - 1.5 * iqr, q3 + 1.5 * iqr
-    return df_clima[(df_clima[columna] < lim_inf) | (df_clima[columna] > lim_sup)]
+
+    limite_inferior = q1 - 1.5 * iqr
+    limite_superior = q3 + 1.5 * iqr
+
+    return df[
+        (df[columna] < limite_inferior) |
+        (df[columna] > limite_superior)
+    ]
 
 
-def graficar_faltantes(resumen_faltantes: pd.DataFrame):
+def analizar_outliers(dengue_municipal, malaria):
+
+    outliers_dengue = detectar_outliers(
+        dengue_municipal,
+        "casos_dengue_acumulados_se1_13"
+    )
+
+    outliers_malaria = detectar_outliers(
+        malaria,
+        "total_malaria"
+    )
+
+    outliers_dengue.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "outliers_dengue.csv"
+        ),
+        index=False
+    )
+
+    outliers_malaria.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "outliers_malaria.csv"
+        ),
+        index=False
+    )
+
+    print("\n========== OUTLIERS ==========")
+
+    print(
+        "Municipios atípicos dengue:",
+        len(outliers_dengue)
+    )
+
+    print(
+        "Municipios atípicos malaria:",
+        len(outliers_malaria)
+    )
+
+
+# ============================================================
+# SERIE TEMPORAL DENGUE
+# ============================================================
+
+def grafico_dengue_semanal(df):
+
+    plt.figure(figsize=(10, 5))
+
+    plt.plot(
+        df["semana_epidemiologica"],
+        df["casos_dengue"],
+        marker="o"
+    )
+
+    plt.title(
+        "Casos de dengue por semana epidemiológica\n"
+        "Bolivia - SE 1 a SE 13, 2026"
+    )
+
+    plt.xlabel("Semana epidemiológica")
+    plt.ylabel("Casos reportados")
+
+    plt.xticks(
+        df["semana_epidemiologica"]
+    )
+
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "dengue_serie_temporal.png"
+        ),
+        dpi=300
+    )
+
+    plt.close()
+
+
+# ============================================================
+# DENGUE POR MUNICIPIO
+# ============================================================
+
+def grafico_dengue_municipio(df):
+
+    datos = df.sort_values(
+        "casos_dengue_acumulados_se1_13",
+        ascending=True
+    )
+
+    plt.figure(figsize=(10, 9))
+
+    plt.barh(
+        datos["municipio"],
+        datos["casos_dengue_acumulados_se1_13"]
+    )
+
+    plt.title(
+        "Casos acumulados de dengue por municipio\n"
+        "SE 1-13, Bolivia 2026"
+    )
+
+    plt.xlabel("Casos acumulados")
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "dengue_por_municipio.png"
+        ),
+        dpi=300
+    )
+
+    plt.close()
+
+
+# ============================================================
+# MALARIA POR MUNICIPIO
+# ============================================================
+
+def grafico_malaria_municipio(df):
+
+    datos = df.sort_values(
+        "total_malaria",
+        ascending=True
+    )
+
+    plt.figure(figsize=(10, 8))
+
+    plt.barh(
+        datos["municipio"],
+        datos["total_malaria"]
+    )
+
+    plt.title(
+        "Casos acumulados de malaria por municipio\n"
+        "SE 1-13, Bolivia 2026"
+    )
+
+    plt.xlabel("Casos acumulados")
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "malaria_por_municipio.png"
+        ),
+        dpi=300
+    )
+
+    plt.close()
+
+
+# ============================================================
+# MALARIA POR ESPECIE
+# ============================================================
+
+def grafico_malaria_especie(df):
+
+    especies = {
+        "P. vivax": df["p_vivax"].sum(),
+        "P. falciparum": df["p_falciparum"].sum(),
+        "Mixta": df["mixta"].sum()
+    }
+
     plt.figure(figsize=(8, 5))
-    plt.barh(resumen_faltantes["municipio"], resumen_faltantes["pct_dias_faltantes"])
-    plt.xlabel("% de días sin registro climático")
-    plt.title("Cobertura de datos climáticos por municipio (SENAMHI, sintético)")
+
+    plt.bar(
+        especies.keys(),
+        especies.values()
+    )
+
+    plt.title(
+        "Casos de malaria según especie\n"
+        "Bolivia - SE 1-13, 2026"
+    )
+
+    plt.ylabel("Número de casos")
+
     plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "faltantes_por_municipio.png"))
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "malaria_por_especie.png"
+        ),
+        dpi=300
+    )
+
     plt.close()
 
 
-def graficar_distribuciones(df_clima: pd.DataFrame, df_epi: pd.DataFrame):
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
-    axes[0].hist(df_clima["temperatura_media_c"], bins=30)
-    axes[0].set_title("Temperatura media (°C)")
-    axes[1].hist(df_clima["precipitacion_mm"], bins=30)
-    axes[1].set_title("Precipitación (mm)")
-    axes[2].hist(df_epi["casos_confirmados"], bins=30)
-    axes[2].set_title("Casos confirmados por semana")
+# ============================================================
+# DISTRIBUCIONES
+# ============================================================
+
+def grafico_distribuciones(
+    dengue_municipal,
+    malaria
+):
+
+    plt.figure(figsize=(8, 5))
+
+    plt.hist(
+        dengue_municipal[
+            "casos_dengue_acumulados_se1_13"
+        ],
+        bins=10,
+        edgecolor="black"
+    )
+
+    plt.title(
+        "Distribución de casos de dengue por municipio"
+    )
+
+    plt.xlabel("Casos acumulados")
+    plt.ylabel("Número de municipios")
+
     plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "distribucion_variables.png"))
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "distribucion_dengue.png"
+        ),
+        dpi=300
+    )
+
     plt.close()
 
+
+    plt.figure(figsize=(8, 5))
+
+    plt.hist(
+        malaria["total_malaria"],
+        bins=10,
+        edgecolor="black"
+    )
+
+    plt.title(
+        "Distribución de casos de malaria por municipio"
+    )
+
+    plt.xlabel("Casos acumulados")
+    plt.ylabel("Número de municipios")
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "distribucion_malaria.png"
+        ),
+        dpi=300
+    )
+
+    plt.close()
+
+
+# ============================================================
+# MAIN
+# ============================================================
 
 def main():
-    df_clima = generar_datos_climaticos_sinteticos()
-    df_epi = generar_datos_epidemiologicos_sinteticos()
 
-    print(f"Registros climáticos generados: {len(df_clima)}")
-    print(f"Registros epidemiológicos generados: {len(df_epi)}")
-    print(f"Rango de fechas: {FECHA_INICIO} a {FECHA_FIN}")
+    print(
+        "\nEDA EPIDEMIOLÓGICO - DENGUE Y MALARIA"
+    )
 
-    resumen_clima = df_clima.describe(include="all")
-    resumen_epi = df_epi.describe(include="all")
-    resumen_clima.to_csv(os.path.join(OUTPUT_DIR, "resumen_climatico.csv"))
-    resumen_epi.to_csv(os.path.join(OUTPUT_DIR, "resumen_epidemiologico.csv"))
+    print(
+        "Fuente: Ministerio de Salud y Deportes "
+        "de Bolivia - Boletín N°13, 2026"
+    )
 
-    faltantes = perfilar_faltantes(df_clima)
-    print("\nCobertura de datos climáticos por municipio (top faltantes):")
-    print(faltantes.head())
+    dengue_semanal, dengue_municipal, malaria = (
+        cargar_datos()
+    )
 
-    outliers_temp = detectar_outliers_iqr(df_clima, "temperatura_media_c")
-    outliers_temp.to_csv(os.path.join(OUTPUT_DIR, "outliers_climaticos.csv"), index=False)
-    print(f"\nOutliers de temperatura detectados (IQR): {len(outliers_temp)}")
+    validar_datos(
+        dengue_semanal,
+        dengue_municipal,
+        malaria
+    )
 
-    graficar_faltantes(faltantes)
-    graficar_distribuciones(df_clima, df_epi)
+    analizar_calidad(
+        dengue_semanal,
+        dengue_municipal,
+        malaria
+    )
 
-    print(f"\nArchivos de salida guardados en: {OUTPUT_DIR}")
+    generar_resumenes(
+        dengue_semanal,
+        dengue_municipal,
+        malaria
+    )
+
+    analizar_outliers(
+        dengue_municipal,
+        malaria
+    )
+
+    grafico_dengue_semanal(
+        dengue_semanal
+    )
+
+    grafico_dengue_municipio(
+        dengue_municipal
+    )
+
+    grafico_malaria_municipio(
+        malaria
+    )
+
+    grafico_malaria_especie(
+        malaria
+    )
+
+    grafico_distribuciones(
+        dengue_municipal,
+        malaria
+    )
+
+    print(
+        "\n✓ EDA completado."
+    )
+
+    print(
+        "Resultados guardados en:",
+        OUTPUT_DIR
+    )
 
 
 if __name__ == "__main__":
