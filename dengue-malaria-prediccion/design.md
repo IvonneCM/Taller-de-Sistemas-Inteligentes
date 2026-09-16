@@ -200,10 +200,14 @@ REQ-007, REQ-019 y REQ-020.
 
 1. **Extracción**: lectura de `casos_epidemiologicos` y `datos_climaticos`
    por municipio, ventana móvil de N semanas.
-2. **Limpieza/imputación** (REQ-013): valores faltantes climáticos se
-   imputan por interpolación temporal o promedio histórico del municipio;
-   se marca `es_dato_imputado = true`. Municipios con más del umbral definido
-   en NFR-007 de datos faltantes generan predicciones con `nivel_confianza = bajo`.
+2. **Limpieza/imputación** (REQ-013): los valores faltantes climáticos se
+   tratan mediante una jerarquía reproducible y se marca
+   `es_dato_imputado = true`. Con más de 5% y hasta 20% de faltantes la
+   predicción continúa con confianza baja; por encima de 20% no se publica
+   una predicción operativa. Los reportes epidemiológicos ausentes no se
+   convierten en cero ni se imputan silenciosamente. Las reglas completas,
+   incluidos retrasos de reporte y criterios de prueba, están en
+   [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md).
 3. **Feature engineering**: variables rezagadas (lag) de temperatura,
    humedad y precipitación (2-4 semanas atrás), promedio móvil de casos,
    estacionalidad.

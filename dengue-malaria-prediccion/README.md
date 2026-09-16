@@ -33,6 +33,7 @@ Lectura recomendada:
 5. [`CONTEXT.md`](./CONTEXT.md): estado de trabajo y decisiones pendientes.
 6. [`../docs/priorizacion_casos.md`](../docs/priorizacion_casos.md): priorización del caso de uso.
 7. [`../docs/team_charter.md`](../docs/team_charter.md): integrantes y acuerdos del equipo.
+8. [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md): validación, limpieza e imputación.
 
 ## Tecnología propuesta
 
