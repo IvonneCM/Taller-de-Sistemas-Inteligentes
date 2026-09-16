@@ -1,110 +1,147 @@
-# Sistema de Predicción Temprana de Brotes de Dengue/Malaria (Bolivia)
+# Sistema de Predicción Temprana de Brotes de Dengue/Malaria
 
-Proyecto universitario: predicción de zonas con riesgo de brote de dengue o
-malaria con 3-4 semanas de anticipación, usando datos epidemiológicos,
-climáticos y geoespaciales, para apoyar a SEDES, autoridades de salud y
-coordinadores municipales.
+Proyecto universitario orientado a apoyar a SEDES, autoridades de salud y
+coordinadores municipales en la identificación de zonas con riesgo de brotes
+de dengue o malaria con 3-4 semanas de anticipación. La propuesta combina
+datos epidemiológicos, climáticos y geoespaciales para priorizar acciones
+preventivas.
 
-## Documentación (leer en este orden)
+## Estado actual
 
-1. [`requirements.md`](./requirements.md) — qué debe hacer el sistema
-2. [`design.md`](./design.md) — cómo está construido (arquitectura, modelo de datos, API)
-3. [`tasks.md`](./tasks.md) — plan de implementación paso a paso
-4. [`CONTEXT.md`](./CONTEXT.md) — en qué tarea vamos ahora mismo
-5. [`CLAUDE.md`](./CLAUDE.md) — reglas para agentes de IA que trabajen en este repo
+El proyecto se encuentra en la **Fase 1: infraestructura base**. Actualmente
+incluye:
 
-## Stack
+- especificación funcional y no funcional;
+- diseño de arquitectura, modelo de datos y API propuesta;
+- backlog técnico dividido por fases;
+- estructura inicial del backend con FastAPI;
+- endpoint local `GET /health`.
 
-- **Backend:** Python 3.12 + FastAPI
-- **Base de datos:** PostgreSQL 16 + PostGIS
-- **ML:** scikit-learn / XGBoost + SHAP (explicabilidad)
-- **Frontend:** React + Leaflet/Mapbox (no incluido en este paquete inicial)
-- **Despliegue:** Railway
+Todavía no están implementados la conexión a PostgreSQL/PostGIS, las
+migraciones Alembic, los conectores ETL, el pipeline de predicción, la
+autenticación, el dashboard ni el despliegue. Las métricas de precisión y
+anticipación son objetivos de diseño y no resultados validados.
 
-## Requisitos previos
+## Documentación
 
-- Python 3.12+
-- PostgreSQL 16+ con extensión PostGIS disponible
-- VS Code con las extensiones recomendadas (se sugieren automáticamente al
-  abrir la carpeta — ver `.vscode/extensions.json`)
+Lectura recomendada:
 
-## Puesta en marcha local
+1. [`../docs/product_goal.md`](../docs/product_goal.md): objetivo del producto y valor esperado.
+2. [`requirements.md`](./requirements.md): requisitos funcionales y no funcionales.
+3. [`design.md`](./design.md): arquitectura, modelo de datos y decisiones de diseño.
+4. [`tasks.md`](./tasks.md): plan de implementación y criterios de verificación.
+5. [`CONTEXT.md`](./CONTEXT.md): estado de trabajo y decisiones pendientes.
+6. [`../docs/priorizacion_casos.md`](../docs/priorizacion_casos.md): priorización del caso de uso.
+7. [`../docs/team_charter.md`](../docs/team_charter.md): integrantes y acuerdos del equipo.
+
+## Tecnología propuesta
+
+- **Backend:** Python 3.12 y FastAPI.
+- **Base de datos:** PostgreSQL 16 con PostGIS.
+- **ML:** scikit-learn, XGBoost y SHAP.
+- **Frontend:** React con Leaflet o Mapbox; aún no incluido.
+- **Despliegue:** Railway; aún no configurado.
+
+## Reproducir el avance actual
+
+### Requisitos
+
+- Git.
+- Python 3.12 o una versión compatible con las dependencias fijadas en
+  `requirements.txt`.
+
+PostgreSQL/PostGIS no es necesario para ejecutar el endpoint disponible en
+esta etapa.
+
+### Instalación
+
+Desde la raíz del repositorio:
 
 ```bash
-# 1. Crear y activar entorno virtual
-python3 -m venv .venv
-source .venv/bin/activate        # En Windows: .venv\Scripts\activate
+cd dengue-malaria-prediccion
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-# 2. Instalar dependencias
-pip install -r requirements.txt
+En Windows, la activación del entorno es:
 
-# 3. Configurar variables de entorno
-cp .env.example .env
-# Editar .env con los valores reales (DATABASE_URL, SECRET_KEY, etc.)
+```powershell
+.venv\Scripts\Activate.ps1
+```
 
-# 4. Crear la base de datos y habilitar PostGIS
-createdb dengue_malaria
-psql -d dengue_malaria -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+El archivo `.env.example` documenta las variables previstas para las fases
+posteriores. El endpoint actual no necesita una base de datos ni secretos.
 
-# 5. Ejecutar migraciones (una vez que existan, ver TASK-005 en tasks.md)
-alembic upgrade head
+### Ejecución
 
-# 6. Levantar el servidor de desarrollo
+```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-Verificar que todo funciona:
+En otra terminal:
 
 ```bash
-curl http://localhost:8000/health
-# {"status": "ok"}
+curl http://127.0.0.1:8000/health
 ```
 
-## Uso desde VS Code
+Respuesta esperada:
 
-Este repositorio incluye configuración lista para VS Code:
-
-- **`.vscode/settings.json`** — intérprete de Python, formateo automático, conexión sugerida a PostgreSQL vía SQLTools.
-- **`.vscode/launch.json`** — configuraciones de depuración para `uvicorn` y `pytest`.
-- **`.vscode/tasks.json`** — tareas rápidas (Ctrl+Shift+P → "Tasks: Run Task"): instalar dependencias, levantar servidor, correr migraciones, ejecutar tests con cobertura.
-- **`.vscode/extensions.json`** — extensiones recomendadas, incluyendo **Claude Code** y **GitHub Copilot**.
-
-## Trabajar con Claude Code
-
-1. Abrir esta carpeta en VS Code (o la terminal, si usas Claude Code en modo CLI).
-2. Iniciar Claude Code (extensión o `claude` en terminal).
-3. Usar el prompt inicial de [`FIRST_PROMPT.md`](./FIRST_PROMPT.md) para arrancar la Fase 1 según `tasks.md`.
-4. Claude Code debe leer `CONTEXT.md` al inicio de cada sesión y actualizarlo al final (ver `CLAUDE.md`).
-
-## Estructura del proyecto
-
+```json
+{"status":"ok"}
 ```
+
+La documentación interactiva generada por FastAPI queda disponible en
+`http://127.0.0.1:8000/docs`.
+
+### Verificaciones disponibles
+
+```bash
+python -m compileall -q app tests
+pytest
+```
+
+En el estado actual, `pytest` no contiene casos de prueba y puede informar
+que no se recolectaron pruebas. Los comandos de base de datos y migraciones
+serán reproducibles después de completar TASK-002 y TASK-005.
+
+## Estructura actual
+
+```text
 dengue-malaria-prediccion/
 ├── app/
-│   ├── main.py
-│   ├── core/            # configuración, seguridad
-│   ├── models/          # modelos ORM (SQLAlchemy + PostGIS)
-│   ├── schemas/         # esquemas Pydantic
-│   ├── api/routes/      # endpoints REST
-│   ├── etl/conectores/  # ingesta de datos por fuente
-│   └── ml/              # features, entrenamiento, predicción, explicabilidad
-├── tests/
-├── alembic/              # migraciones (se inicializa en TASK-001/005)
+│   ├── main.py             # aplicación FastAPI y endpoint /health
+│   ├── api/routes/         # reservado para rutas REST
+│   ├── core/               # reservado para configuración y seguridad
+│   ├── etl/conectores/     # reservado para ingesta y limpieza
+│   ├── ml/                 # reservado para predicción y explicabilidad
+│   ├── models/             # reservado para modelos ORM
+│   └── schemas/            # reservado para esquemas Pydantic
+├── tests/                  # estructura inicial, todavía sin casos
+├── requirements.txt
 ├── requirements.md
 ├── design.md
 ├── tasks.md
-├── CONTEXT.md
-├── CLAUDE.md
-├── .github/copilot-instructions.md
-└── FIRST_PROMPT.md
+└── CONTEXT.md
 ```
 
-## Notas importantes
+La estructura objetivo completa, incluidos los archivos todavía pendientes,
+se encuentra en [`design.md` §9](./design.md#9-estructura-de-archivos-backend).
 
-- No se manejan datos personales de pacientes (ver REQ-020) — todo dato
-  epidemiológico se trabaja agregado por municipio y fecha.
-- Cualquier cifra de precisión o desempeño mostrada en código o
-  documentación debe marcarse como "estimada/referencial" hasta ser validada
-  con datos reales del piloto.
-- Ver preguntas abiertas en `design.md` §10 antes de implementar los
-  conectores de ingesta (TASK-008, TASK-009).
+## Decisiones y límites
+
+- No se almacenarán datos personales de pacientes: la información
+  epidemiológica se trabajará agregada por municipio y fecha (REQ-020).
+- El sistema será una herramienta de apoyo; no reemplazará el criterio
+  clínico ni epidemiológico.
+- Toda cifra de desempeño debe identificarse como objetivo o estimación hasta
+  validarse con datos reales de la zona piloto.
+- Las fuentes climática y epidemiológica y la zona piloto exacta continúan
+  pendientes de confirmación antes de implementar TASK-008 y TASK-009.
+
+## Flujo de trabajo
+
+Cada integrante trabaja en su propia rama. Antes de integrar cambios se debe
+comprobar que la documentación sea consistente, que el backend compile y que
+las verificaciones disponibles finalicen sin errores atribuibles al cambio.
