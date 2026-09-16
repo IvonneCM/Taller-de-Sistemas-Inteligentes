@@ -226,6 +226,12 @@ complejidad de infraestructura para un proyecto universitario.
 
 ## 6. Seguridad
 
+La matriz completa, el estado de implementación y los criterios de evidencia
+se documentan en
+[`../docs/controles_seguridad.md`](../docs/controles_seguridad.md). En la fase
+actual, JWT, RBAC, hashing y HTTPS son controles diseñados pero todavía no
+implementados ni verificados en un despliegue.
+
 - Autenticación JWT (OAuth2 password flow), expiración corta de access token
   + refresh token.
 - RBAC aplicado en la capa de servicio de FastAPI (dependencias de rol).

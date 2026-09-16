@@ -34,6 +34,7 @@ Lectura recomendada:
 6. [`../docs/priorizacion_casos.md`](../docs/priorizacion_casos.md): priorización del caso de uso.
 7. [`../docs/team_charter.md`](../docs/team_charter.md): integrantes y acuerdos del equipo.
 8. [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md): validación, limpieza e imputación.
+9. [`../docs/controles_seguridad.md`](../docs/controles_seguridad.md): controles, estado y evidencia de seguridad.
 
 ## Tecnología propuesta
 
