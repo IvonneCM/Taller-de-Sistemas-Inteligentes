@@ -1,8 +1,6 @@
 # Inventario de fuentes de datos — Predicción de brotes de dengue/malaria (Bolivia)
 
 **Sección del backlog:** Data
-**Estado:** borrador en progreso — pendiente completar información de SENAMHI e INE
-**Última actualización:** 2026-09-16
 **Documentos relacionados:** `priorizacion_casos.md`, `product_goal.md`, `design.md` §10, `requirements.md` (REQ-013, REQ-014, REQ-015)
 
 ---
@@ -62,8 +60,6 @@ verificados).
 | Campo | Detalle |
 |---|---|
 | **Estado** | **Pregunta abierta** (`design.md` §10) |
-| **Forma de acceso** | Por definir |
-| **Notas** | Mencionada como posible fuente de datos históricos para el piloto. Sin confirmar disponibilidad ni formato. |
 
 ---
 
@@ -74,43 +70,19 @@ verificados).
 | Campo | Detalle |
 |---|---|
 | **Estado** | **Pendiente de completar** (requiere validación del equipo) |
-| **Forma de acceso** | Descarga web directa (~30 min) en `https://www.senamhi.gob.bo/sisop/` **o** solicitud por correo (3-5 días hábiles) |
-| **Contenido** | Temperatura, precipitación, humedad |
-| **Volumen estimado (referencial)** | 29k+ registros |
-| **Formato** | Limpio, validado |
-| **Requisitos** | REQ-013, REQ-014 |
-| **Notas** | Fuente referencial tomada de `priorizacion_casos.md:75`. Datos aún **no descargados**. Pendiente confirmar estación/serie exacta y cobertura por municipio (la cobertura rural es irregular, ver NFR-007). |
 
 ### 3.2 NASA POWER (alternativa climática)
 
 | Campo | Detalle |
 |---|---|
 | **Estado** | **Pregunta abierta** (`design.md` §10) |
-| **Forma de acceso** | API pública de NASA POWER (por definir parámetros y resolución) |
-| **Notas** | Candidata mencionada como alternativa/suplemento a SENAMHI. No evaluada todavía. |
-
 ### 3.3 OPS/PAHO — validación regional
 
 | Campo | Detalle |
 |---|---|
 | **Estado** | **Acordada (pública)** |
-| **Forma de acceso** | CSV descargable en `https://www.paho.org/` |
-| **Uso previsto** | Validación regional de cifras (no fuente primaria del piloto) |
-| **Requisitos** | REQ-015 (procedencia) |
-| **Notas** | Fuente referencial tomada de `priorizacion_casos.md:87`. |
 
 ---
-
-## 4. Fuentes poblacionales / geográficas
-
-### 4.1 INE (Instituto Nacional de Estadística de Bolivia)
-
-| Campo | Detalle |
-|---|---|
-| **Estado** | **Pendiente de completar** — por definir si se incluye |
-| **Forma de acceso** | Por definir |
-| **Uso previsto (tentativo)** | Denominadores poblacionales para incidencia por 10,000 hab.; geometrías/zonificación municipio-departamento |
-| **Notas** | Aún no decidido si forma parte del inventario. El campo `incidencia_por_10000_hab` del dengue municipal (§2.1) ya viene calculado desde el boletín, por lo que INE sería para validación/recalculo propio. |
 
 ---
 
