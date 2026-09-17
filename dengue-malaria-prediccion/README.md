@@ -8,19 +8,29 @@ preventivas.
 
 ## Estado actual
 
-El proyecto se encuentra en la **Fase 1: infraestructura base**. Actualmente
-incluye:
+Este proyecto tiene dos frentes de trabajo con avance distinto, que conviene
+no confundir:
 
-- especificación funcional y no funcional;
-- diseño de arquitectura, modelo de datos y API propuesta;
-- backlog técnico dividido por fases;
-- estructura inicial del backend con FastAPI;
-- endpoint local `GET /health`.
+**Backend (este directorio):** en **Fase 1 — infraestructura base**.
+Incluye especificación funcional y no funcional, diseño de arquitectura,
+modelo de datos y API propuesta, backlog técnico dividido por fases,
+estructura inicial del backend con FastAPI y el endpoint local `GET
+/health`. Todavía no están implementados la conexión a PostgreSQL/PostGIS,
+las migraciones Alembic, los conectores ETL formales (`app/etl/`), el
+motor de predicción, la autenticación ni el dashboard.
 
-Todavía no están implementados la conexión a PostgreSQL/PostGIS, las
-migraciones Alembic, los conectores ETL, el pipeline de predicción, la
-autenticación, el dashboard ni el despliegue. Las métricas de precisión y
-anticipación son objetivos de diseño y no resultados validados.
+**Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
+backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
+de Salud y Deportes de Bolivia, un EDA completo sobre esos datos, reglas de
+calidad/imputación documentadas, y un prototipo de pipeline de limpieza que
+las implementa (ver `../docs/eda_inicial.md` y `../docs/cierre_sprint1.md`).
+Este trabajo todavía no está integrado al backend — los conectores de
+`app/etl/` (TASK-008/009/010 en `tasks.md`) deben reutilizar esa lógica en
+vez de rediseñarla desde cero.
+
+Las métricas de precisión y anticipación del modelo (NFR-001, NFR-002)
+siguen siendo objetivos de diseño, no resultados validados: no existe
+todavía un motor de predicción entrenado (ver `../docs/metricas_valor.md`).
 
 ## Documentación
 
@@ -35,6 +45,11 @@ Lectura recomendada:
 7. [`../docs/team_charter.md`](../docs/team_charter.md): integrantes y acuerdos del equipo.
 8. [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md): validación, limpieza e imputación.
 9. [`../docs/controles_seguridad.md`](../docs/controles_seguridad.md): controles, estado y evidencia de seguridad.
+10. [`../docs/eda_inicial.md`](../docs/eda_inicial.md): análisis exploratorio sobre datos reales de SENAMHI y del Ministerio de Salud.
+11. [`../docs/c4/`](../docs/c4/): diagramas C4 de Contexto y Contenedores.
+12. [`../docs/metricas_valor.md`](../docs/metricas_valor.md): métricas de valor y criterios de éxito.
+13. [`../docs/cierre_sprint1.md`](../docs/cierre_sprint1.md): backlog pendiente, bloqueos y próximos pasos.
+14. [`../docs/pipeline_datos.md`](../docs/pipeline_datos.md): pipeline reproducible de limpieza e imputación (Línea Base — Paso 2).
 
 ## Tecnología propuesta
 
@@ -110,6 +125,8 @@ serán reproducibles después de completar TASK-002 y TASK-005.
 
 ## Estructura actual
 
+Estructura de `dengue-malaria-prediccion/` (el backend):
+
 ```text
 dengue-malaria-prediccion/
 ├── app/
@@ -131,6 +148,21 @@ dengue-malaria-prediccion/
 La estructura objetivo completa, incluidos los archivos todavía pendientes,
 se encuentra en [`design.md` §9](./design.md#9-estructura-de-archivos-backend).
 
+Estructura del repositorio completo (raíz), donde vive el trabajo de datos:
+
+```text
+Taller-de-Sistemas-Inteligentes/
+├── dengue-malaria-prediccion/   # backend FastAPI (este directorio)
+├── docs/                        # documentación del equipo (product_goal,
+│                                 # EDA, reglas de calidad, C4, métricas...)
+├── scripts/                     # ingesta y EDA reales: descargar_senamhi.py,
+│                                 # procesar_clima.py, eda_*.py, integrar_datos.py
+├── data/
+│   ├── raw/                     # datos crudos (parte versionada con DVC)
+│   └── processed/                # datos ya limpios/agregados
+└── requirements.txt              # dependencias del código de datos/EDA
+```
+
 ## Decisiones y límites
 
 - No se almacenarán datos personales de pacientes: la información
@@ -139,8 +171,12 @@ se encuentra en [`design.md` §9](./design.md#9-estructura-de-archivos-backend).
   clínico ni epidemiológico.
 - Toda cifra de desempeño debe identificarse como objetivo o estimación hasta
   validarse con datos reales de la zona piloto.
-- Las fuentes climática y epidemiológica y la zona piloto exacta continúan
-  pendientes de confirmación antes de implementar TASK-008 y TASK-009.
+- Las fuentes climática (SENAMHI) y epidemiológica (Ministerio de Salud y
+  Deportes, Boletín Epidemiológico N.º 13) ya están confirmadas y en uso
+  para el EDA (ver `../docs/eda_inicial.md`). La zona piloto definitiva para
+  validar NFR-001/NFR-002 aún no está confirmada oficialmente; los cuatro
+  municipios con cruce de datos real (Guayaramerín, Ixiamas, Palos Blancos,
+  San Buenaventura) son la referencia usada hasta ahora (ver `design.md` §10).
 
 ## Flujo de trabajo
 
