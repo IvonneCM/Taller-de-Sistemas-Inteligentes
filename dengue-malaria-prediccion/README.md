@@ -52,6 +52,7 @@ Lectura recomendada:
 14. [`../docs/pipeline_datos.md`](../docs/pipeline_datos.md): pipeline reproducible de limpieza e imputación (Línea Base — Paso 2).
 15. [`../docs/privacidad_datos.md`](../docs/privacidad_datos.md): restricciones de privacidad y licencias de datos.
 16. [`../docs/entorno_datos_iniciales.md`](../docs/entorno_datos_iniciales.md): entorno reproducible y estado inicial de los datos (Línea Base — Paso 1).
+15. [`../docs/linea_base.md`](../docs/linea_base.md): línea base y registro de experimentos (Línea Base — Paso 3).
 
 ## Tecnología propuesta
 
