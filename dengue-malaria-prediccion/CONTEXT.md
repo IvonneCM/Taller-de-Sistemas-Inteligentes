@@ -1,5 +1,10 @@
 # CONTEXT.md — Bitácora de sesión del proyecto
 
+> ⏸️ **Desarrollo del backend en pausa.** Esta bitácora es de la carpeta
+> `dengue-malaria-prediccion/` (especificación y esqueleto del backend). El
+> trabajo activo de esta evaluación está en `../docs/`, `../scripts/` y
+> `../data/`, documentado en `../docs/cierre_sprint1.md`, no aquí.
+
 ## Bloque de reanudación
 
 - **Tarea activa:** ninguna tarea de `tasks.md` (Fase 1 en adelante) ha
