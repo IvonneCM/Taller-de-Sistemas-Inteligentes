@@ -148,33 +148,8 @@ Definido en `protocolo_baseline.json` para cuando existan los datos:
 
 ---
 
-## 7. "El alcance dice que hacemos predicciones, ¿cómo?"
 
-Hay dos tiempos en `alcance_exclusiones.md`:
-
-- **SÍ incluye (objetivo del MVP):** predice riesgo de brote por municipio con
-  3-4 semanas de anticipación. Ese es el diseño (`design.md` §5, Fase 3 de
-  `tasks.md`).
-- **NO incluye (estado hoy):** el **modelo municipal operativo** todavía no
-  existe; hoy la única referencia numérica es la línea base nacional
-  provisional de este documento.
-
-**Cómo se harán las predicciones cuando existan los datos** (batch semanal,
-no tiempo real):
-1. Leer `casos_epidemiologicos` y `datos_climaticos` por municipio, ventana móvil.
-2. Limpieza/imputación; con >20% de faltantes **no se publica** predicción.
-3. Feature engineering: lags de clima (2-4 sem.), promedio móvil de casos.
-4. Modelo ML (XGBoost/scikit-learn) clasifica riesgo y calcula probabilidad.
-5. Explicabilidad con SHAP (qué variable influyó, REQ-004).
-6. INSERT inmutable en `predicciones` (nunca UPDATE, NFR-009).
-7. Si la probabilidad supera el umbral → se crea una alerta con justificación.
-
-**Qué falta para ejecutarlo:** la serie municipio-semana de casos (hoy solo
-acumulados SE1-13), que es exactamente el primer ítem de "NO incluye".
-
----
-
-## 8. Archivos generados
+## 7. Archivos generados
 
 En `scripts/linea_base_output/`:
 
