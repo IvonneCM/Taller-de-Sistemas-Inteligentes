@@ -1,0 +1,53 @@
+EDA INTEGRADO - CLIMA + DENGUE + MALARIA
+========================================
+
+FUENTES
+-------
+SENAMHI Bolivia - WIS 2.0
+Ministerio de Salud y Deportes de Bolivia
+
+COBERTURA
+---------
+Municipios integrados: 4
+Municipios con dengue disponible: 4
+Municipios con malaria disponible: 3
+Municipios con cobertura climática alta: 2
+
+PERÍODOS
+--------
+Clima disponible: SE3-SE13 de 2026
+Epidemiología: SE1-SE13 de 2026
+
+LIMITACIONES
+------------
+1. La cobertura temporal de las fuentes no coincide completamente.
+
+2. Los datos epidemiológicos municipales corresponden a
+   acumulados SE1-SE13 y no a observaciones semanales.
+
+3. Los datos climáticos utilizados corresponden a SE3-SE13.
+
+4. Palos Blancos no tiene registro de malaria en el dataset
+   utilizado. La ausencia se conserva como dato faltante y
+   no se interpreta como cero casos.
+
+5. Palos Blancos y San Buenaventura presentan menor cobertura
+   de observaciones climáticas.
+
+6. El dataset integrado contiene únicamente cuatro municipios.
+
+7. Por el tamaño de la muestra no se realizan inferencias
+   estadísticas fuertes ni se interpretan asociaciones
+   exploratorias como relaciones causales.
+
+8. Este dataset se utiliza para EDA e integración de fuentes.
+   No constituye por sí solo un dataset suficiente para
+   entrenar un modelo predictivo de brotes.
+
+CONCLUSIÓN METODOLÓGICA
+-----------------------
+La integración permite comparar descriptivamente variables
+climáticas y epidemiológicas en los municipios con información
+coincidente. Sin embargo, será necesario ampliar la cobertura
+temporal y epidemiológica para construir posteriormente un
+modelo de predicción temprana de brotes.

@@ -1,0 +1,5 @@
+﻿municipio,temperatura_media_periodo,humedad_media_periodo,precipitacion_media_dia_observado,casos_dengue_acumulados_se1_13,incidencia_por_10000_hab,total_malaria,porcentaje_dias_precipitacion,cobertura_climatica_alta
+GUAYARAMERIN,26.61326005570878,91.6954532941014,7.03,9,2.2,293.0,96.1,True
+IXIAMAS,24.903175887521027,89.3251296509215,11.81,15,12.0,156.0,96.1,True
+PALOS BLANCOS,25.83111787816349,92.3704560857918,6.16,5,1.9,,71.43,False
+SAN BUENAVENTURA,26.599469056704336,91.42622953621628,0.18,22,21.7,1.0,62.34,False
