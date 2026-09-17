@@ -22,12 +22,15 @@ Entradas:
 
 Salidas (scripts/linea_base_output/):
   expA_persistencia_nacional.csv
+  expA_persistencia_nacional.png        grafico real vs persistencia
   expB_modelos_nacional.csv
   expB_resumen_modelos.csv
+  expB_comparacion_modelos.png          barras MAE/RMSE/MAPE por modelo
   expC_cross_sectional.csv
+  expC_inviabilidad_municipal.png       R2 / grados de libertad / LOOCV por modelo
   protocolo_baseline.json
   resumen_baseline.json
-  linea_base_nacional.png
+  linea_base_nacional.png               serie nacional con predicciones
 
 Transparencia de IA: borrador generado con asistencia de IA (opencode/Claude)
 y revisado por Ivonne Colque  antes de su publicacion.
@@ -468,6 +471,139 @@ def grafico_nacional(df, detalle_b):
 
 
 # ============================================================
+# GRAFICOS ADICIONALES DE LECTURA
+# ============================================================
+
+def grafico_persistencia(df):
+    """
+    Experimento A: serie real vs prediccion de persistencia (repite la
+    semana anterior). Permite ver el rezago de una semana y los saltos.
+    """
+
+    semanas = df["semana_epidemiologica"].to_numpy()
+    casos = df["casos_dengue"].to_numpy(dtype=float)
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(semanas, casos, marker="o", label="Casos reales")
+    plt.plot(
+        semanas[1:], casos[:-1],
+        marker="s", linestyle="--", color="tab:orange",
+        label="Persistencia (y(t-1))",
+    )
+    plt.title(
+        "Experimento A - Persistencia: la prediccion repite la semana anterior\n"
+        "Dengue Bolivia SE1-SE13, 2026 (12 transiciones)"
+    )
+    plt.xlabel("Semana epidemiologica")
+    plt.ylabel("Casos nacionales")
+    plt.xticks(semanas)
+    plt.grid(alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(
+        os.path.join(OUTPUT_DIR, "expA_persistencia_nacional.png"),
+        dpi=300
+    )
+    plt.close()
+
+
+def grafico_comparacion_modelos(resumen_b):
+    """
+    Experimento B: barras de MAE, RMSE y MAPE para los 4 modelos
+    walk-forward, resaltando el mejor por MAE.
+    """
+
+    filas = resumen_b["resultados"]
+    nombres = [f["modelo"] for f in filas]
+    metricas = {
+        "MAE": [f["mae"] for f in filas],
+        "RMSE": [f["rmse"] for f in filas],
+        "MAPE (%)": [f["mape"] for f in filas],
+    }
+    mejor = resumen_b["mejor_modelo_por_mae"]
+
+    fig, ejes = plt.subplots(1, 3, figsize=(13, 4.2), sharex=True)
+    for eje, (nombre, valores) in zip(ejes, metricas.items()):
+        colores = [
+            "#d62728" if (nombre == "MAE" and n == mejor) else "#4682B4"
+            for n in nombres
+        ]
+        eje.bar(nombres, valores, color=colores)
+        eje.set_title(nombre)
+        eje.tick_params(axis="x", rotation=15)
+        eje.grid(axis="y", alpha=0.3)
+        for i, v in enumerate(valores):
+            eje.text(i, v, f"{v:.1f}", ha="center", va="bottom", fontsize=9)
+    fig.suptitle(
+        "Experimento B - Modelos nacionales walk-forward (8 objetivos)\n"
+        "Rojo en MAE = mejor modelo. Todos superan 80% de MAPE: sin senal explotable"
+    )
+    fig.tight_layout()
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "expB_comparacion_modelos.png"),
+        dpi=300
+    )
+    plt.close(fig)
+
+
+def grafico_inviabilidad_cross_sectional(filas):
+    """
+    Experimento C: R2 y R2 ajustado por modelo, con grados de libertad y
+    validez de LOOCV, para evidenciar por que el modelo municipal no es
+    defendible con n=4 y n=3.
+    """
+
+    etiquetas = {
+        "media": "Media",
+        "temperatura": "Solo temperatura",
+        "completo_temp_hum_precip": "Temp+Humed+Precip",
+    }
+    orden = list(etiquetas.keys())
+
+    fig, ejes = plt.subplots(1, 2, figsize=(12, 4.8))
+    for ax, enf in zip(ejes, ["dengue", "malaria"]):
+        sub = [f for f in filas if f["enfermedad"] == enf]
+        sub = sorted(sub, key=lambda f: orden.index(f["modelo"]))
+        nombres = [etiquetas[f["modelo"]] for f in sub]
+        x = np.arange(len(nombres))
+        r2 = [f["r2"] for f in sub]
+        r2aj = [f.get("r2_ajustado") for f in sub]
+        r2aj = [v if v == v else float("nan") for v in r2aj]
+
+        ax.bar(x - 0.18, r2, 0.36, label="R2", color="#4682B4")
+        ax.bar(x + 0.18, r2aj, 0.36, label="R2 ajustado", color="#2ca02c")
+        ax.set_xticks(x)
+        ax.set_xticklabels(nombres, rotation=15)
+        ax.axhline(0, color="black", lw=0.8)
+        ax.set_ylim(-1.3, 1.2)
+        ax.set_title("{0} (n={1})".format(enf.upper(), sub[0]["n"]))
+        ax.grid(axis="y", alpha=0.3)
+        for i, f in enumerate(sub):
+            loocv = "LOOCV valido" if f["loocv_valido"] else "LOOCV invalido"
+            ax.annotate(
+                "gl = {0:+.0f}\n{1}".format(
+                    f["grados_libertad_residual"], loocv
+                ),
+                xy=(i, -1.15),
+                ha="center",
+                va="top",
+                fontsize=7,
+                color="#333",
+            )
+    fig.suptitle(
+        "Experimento C - Regresion cross-sectional: clima del periodo -> casos acumulados\n"
+        "R2 = 1.0 con 0/-1 grados de libertad es sobreajuste sin capacidad de generalizar"
+    )
+    fig.legend(loc="lower center", ncol=2, frameon=False)
+    fig.tight_layout(rect=[0, 0.06, 1, 1])
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "expC_inviabilidad_municipal.png"),
+        dpi=300
+    )
+    plt.close(fig)
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -485,6 +621,9 @@ def main():
     protocolo_d = experimento_d()
 
     grafico_nacional(dengue, detalle_b)
+    grafico_persistencia(dengue)
+    grafico_comparacion_modelos(resumen_b)
+    grafico_inviabilidad_cross_sectional(resumen_c["filas"])
 
     resumen = {
         "experimento_a": resumen_a,
@@ -495,6 +634,18 @@ def main():
             "dengue_semanal": "data/processed/dengue_semanal_validado.csv",
             "dataset_integrado": "data/processed/dataset_integrado_municipal.csv",
         },
+        "salidas": [
+            "expA_persistencia_nacional.csv",
+            "expA_persistencia_nacional.png",
+            "expB_modelos_nacional.csv",
+            "expB_resumen_modelos.csv",
+            "expB_comparacion_modelos.png",
+            "expC_cross_sectional.csv",
+            "expC_inviabilidad_municipal.png",
+            "protocolo_baseline.json",
+            "resumen_baseline.json",
+            "linea_base_nacional.png",
+        ],
     }
 
     with open(
