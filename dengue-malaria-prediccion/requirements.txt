@@ -7,7 +7,7 @@ pydantic-settings==2.5.2
 # --- Base de datos ---
 sqlalchemy==2.0.35
 alembic==1.13.3
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.13
 geoalchemy2==0.15.2
 
 # --- Autenticación / Seguridad ---
@@ -18,9 +18,9 @@ python-multipart==0.0.9
 # --- Machine Learning / Explicabilidad ---
 scikit-learn==1.5.2
 xgboost==2.1.1
-shap==0.46.0
+shap==0.52.0
 pandas==2.2.3
-numpy==1.26.4
+numpy==2.5.3
 
 # --- Tareas programadas ---
 apscheduler==3.10.4
