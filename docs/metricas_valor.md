@@ -29,15 +29,14 @@ Este documento separa explícitamente:
 | **NFR-002 — Anticipación mínima** | El sistema deberá anticipar brotes al menos **2 semanas** antes de su confirmación clínica. | Medir la diferencia, en semanas epidemiológicas, entre la fecha en que el modelo emite una alerta y la fecha en que el reporte oficial confirma el aumento de casos en esa zona. | Igual que NFR-001: requiere la serie semanal municipal que hoy no existe (ver limitación en `docs/eda_inicial.md` §16). |
 | **NFR-007 — Tolerancia a datos incompletos** | El pipeline debe seguir operando (con confianza reducida) con hasta 20% de registros climáticos ausentes en una ventana. | % de municipio-semana que caen en cada nivel de confianza (`confianza_normal` ≤5% faltante, `confianza_baja` 5-20%, `datos_insuficientes` >20%). | Datos climáticos procesados (`data/processed/clima_semanal.csv` y su continuación con imputación, ver nota en §5). |
 
-### Inconsistencia detectada (no resuelta en este documento)
+### Inconsistencia detectada y corregida
 
-`docs/product_goal.md` §"Verificación de calidad" dice *"Predice brote 2-4
-semanas antes con **≥80%** precisión"*, mientras que `requirements.md`
-NFR-001 fija **75%**. Son números distintos para lo que parece ser la misma
-métrica. No se corrige aquí unilateralmente porque `product_goal.md` es
-propiedad de la definición de producto, no de este documento — queda
-señalado para que el equipo lo reconcilie antes de citar cualquiera de las
-dos cifras en la defensa.
+`docs/product_goal.md` decía *"≥80% precisión"* y *"lead time 3-4 semanas
+mínimo"*, mientras que `requirements.md` fija NFR-001 en **75%** y NFR-002
+en **al menos 2 semanas** (con 3-4 semanas como objetivo de diseño, no como
+mínimo). Ambas cifras ya se corrigieron en `product_goal.md` para citar
+directamente NFR-001/NFR-002 en vez de repetir números sueltos — así solo
+hay una fuente de verdad (`requirements.md`) para estas dos métricas.
 
 ## 3. Métricas de esta entrega (evidencia real, ya medida)
 

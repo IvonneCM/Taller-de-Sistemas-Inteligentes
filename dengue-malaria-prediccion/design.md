@@ -311,12 +311,23 @@ dengue-malaria-prediccion/
 
 ## 10. Preguntas abiertas
 
-- ¿Qué fuente exacta de datos climáticos públicos se usará (ej. SENAMHI,
-  NASA POWER, otra)? Esto define el conector de ingesta prioritario.
-- ¿Qué fuente de datos epidemiológicos históricos está disponible para el
-  piloto (SNIS, datos abiertos de SEDES, datos sintéticos para la demo)?
+- ~~¿Qué fuente exacta de datos climáticos públicos se usará?~~ **Resuelto:**
+  SENAMHI Bolivia (WIS 2.0), vía `scripts/descargar_senamhi.py`. Ver
+  `docs/eda_inicial.md` §2.2.
+- ~~¿Qué fuente de datos epidemiológicos históricos está disponible?~~
+  **Resuelto:** Ministerio de Salud y Deportes de Bolivia, Boletín
+  Epidemiológico N.º 13 (2026), acumulados municipales SE1-13 de dengue y
+  malaria. Ver `docs/eda_inicial.md` §2.1. **Pendiente:** esta fuente entrega
+  acumulados, no series semana-a-semana por municipio; esa granularidad
+  sigue sin confirmarse (ver limitación en `docs/eda_inicial.md` §16).
 - ¿Cuál será la zona piloto específica (departamento/municipio) para validar
-  la precisión espacial del 75% y la anticipación de 2 semanas?
+  la precisión espacial del 75% y la anticipación de 2 semanas? **Estado de
+  facto, no confirmado oficialmente:** el EDA real solo tiene cruce de
+  clima + epidemiología en 4 municipios — Guayaramerín (Beni), Ixiamas, Palos
+  Blancos y San Buenaventura (La Paz) — por ser los únicos con estación
+  SENAMHI activa en el periodo descargado. El equipo aún no decidió
+  formalmente si estos 4 son la zona piloto del proyecto o si se ampliará la
+  descarga a otros municipios (ver `docs/cierre_sprint1.md` §3.2).
 - ¿Se requiere notificación por correo electrónico para las alertas en esta
   primera versión, o basta con la vista en el dashboard?
 - ¿El modelo se re-entrenará periódicamente (ej. mensual) o solo una vez

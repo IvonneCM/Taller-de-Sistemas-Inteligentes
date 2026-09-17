@@ -27,8 +27,8 @@ ya decidida en [`../../dengue-malaria-prediccion/design.md`](../../dengue-malari
 ## Decisiones que quedan explícitas en el propio diagrama
 
 - El Módulo ETL es el único punto que escribe "datos limpios" a la base —
-  refleja que la limpieza/imputación (`docs/reglas_calidad_datos.md`,
-  `docs/pipeline_datos.md`) ocurre antes de persistir, no dentro de la API.
+  refleja que la limpieza/imputación (`docs/reglas_calidad_datos.md`)
+  ocurre antes de persistir, no dentro de la API.
 - El Motor de Predicción se marca explícitamente como **batch semanal**, no
   tiempo real, consistente con la decisión de diseño registrada en
   `design.md` y con el horizonte de predicción de 3-4 semanas del proyecto.

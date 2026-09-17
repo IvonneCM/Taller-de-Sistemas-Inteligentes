@@ -54,9 +54,10 @@ archivos no existen en ninguna rama al momento de este cierre:
    credenciales y commit.
 2. Completar las 9 tareas listadas como "pendientes" arriba (Ivonne,
    Adriana, Ignacio) — ninguna tiene contenido en el repo todavía.
-3. Reconciliar la cifra de precisión del modelo entre `product_goal.md`
-   (≥80%) y `requirements.md` NFR-001 (75%) — detectado al escribir
-   `docs/metricas_valor.md`.
+3. ~~Reconciliar la cifra de precisión del modelo entre `product_goal.md`
+   y `requirements.md` NFR-001~~ — **Resuelto:** `product_goal.md` ahora cita
+   directamente NFR-001 (75%) y NFR-002 (mínimo 2 semanas, objetivo 3-4)
+   en vez de repetir números sueltos.
 4. Decidir formalmente si los 4 municipios con datos reales cruzados
    (Guayaramerín, Ixiamas, Palos Blancos, San Buenaventura) son la zona
    piloto oficial, o si se sigue buscando otra — `design.md` §10 sigue
