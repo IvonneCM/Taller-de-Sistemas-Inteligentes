@@ -1,0 +1,120 @@
+EDA INTEGRADO - CLIMA + DENGUE + MALARIA
+=========================================
+
+FUENTES
+-------
+Clima:
+SENAMHI Bolivia - WIS 2.0
+
+Epidemiología:
+Ministerio de Salud y Deportes de Bolivia
+Boletín Epidemiológico N°13, 2026.
+
+UNIDAD DE ANÁLISIS
+------------------
+Municipio.
+
+Municipios integrados:
+4
+
+Municipios con información de dengue:
+4
+
+Municipios con información de malaria:
+3
+
+Municipios con cobertura climática alta:
+2
+
+PERÍODOS
+--------
+Datos climáticos:
+SE3-SE13 2026 aproximadamente.
+
+Datos epidemiológicos:
+SE1-SE13 2026 acumulados.
+
+La alineación temporal no es completa.
+
+ANÁLISIS REALIZADOS
+-------------------
+1. Calidad y valores faltantes.
+2. Cobertura climática.
+3. Resumen epidemiológico.
+4. Resumen climático.
+5. Correlaciones de Pearson.
+6. Correlaciones de Spearman.
+7. Relaciones clima-dengue.
+8. Relaciones clima-incidencia de dengue.
+9. Relaciones clima-malaria.
+10. Perfil climático-epidemiológico por municipio.
+11. Comparación normalizada entre municipios.
+12. Composición de malaria.
+13. Análisis de cobertura de las observaciones.
+
+INTERPRETACIÓN
+--------------
+Los coeficientes de correlación se utilizan únicamente
+como herramientas exploratorias para identificar posibles
+patrones entre las variables climáticas y epidemiológicas.
+
+Una correlación positiva indica que ambas variables tienden
+a variar en la misma dirección.
+
+Una correlación negativa indica que tienden a variar en
+direcciones opuestas.
+
+Una correlación cercana a cero indica ausencia de una
+relación monotónica o lineal clara dentro de los datos
+observados.
+
+IMPORTANTE:
+Correlación no implica causalidad.
+
+LIMITACIONES
+------------
+1. Actualmente solo existen 4 municipios integrados.
+
+2. Para malaria existen únicamente 3 municipios
+   con información coincidente.
+
+3. Una correlación calculada con n=3 o n=4 es extremadamente
+   sensible a cada observación individual.
+
+4. Por esta razón, incluso coeficientes cercanos a 1 o -1
+   no constituyen evidencia estadística suficiente.
+
+5. La cobertura climática no es homogénea entre municipios.
+
+6. Guayaramerín e Ixiamas presentan mejor cobertura
+   climática que Palos Blancos y San Buenaventura.
+
+7. El período climático no coincide completamente con el
+   período epidemiológico.
+
+8. Los casos epidemiológicos municipales disponibles son
+   acumulados para SE1-SE13, mientras que las variables
+   climáticas resumen principalmente SE3-SE13.
+
+9. No es posible establecer relaciones temporales de
+   retraso entre clima y enfermedad con el dataset
+   municipal acumulado actual.
+
+CONCLUSIÓN METODOLÓGICA
+-----------------------
+Este EDA permite caracterizar los datos reales disponibles
+y explorar posibles asociaciones entre clima, dengue y
+malaria.
+
+Los resultados son útiles para formular hipótesis y
+determinar qué variables podrían resultar relevantes en
+etapas posteriores.
+
+Sin embargo, para construir un modelo de predicción
+temprana de 3 a 4 semanas será necesario contar con una
+serie epidemiológica temporal más granular, idealmente
+municipio-semana, y ampliar la cobertura histórica.
+
+Por tanto, las correlaciones actuales deben considerarse
+descriptivas y exploratorias, no como evidencia causal ni
+como validación de un modelo predictivo.

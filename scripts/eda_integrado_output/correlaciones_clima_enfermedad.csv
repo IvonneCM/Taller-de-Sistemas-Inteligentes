@@ -1,0 +1,10 @@
+﻿variable_climatica,variable_epidemiologica,n,pearson,spearman
+Temperatura,Dengue,4,0.11591759890211946,0.0
+Temperatura,Incidencia dengue,4,0.06013059556602352,0.0
+Temperatura,Malaria,3,-0.028558950805790063,0.5
+Humedad,Dengue,4,-0.44680974663632106,-0.7999999999999999
+Humedad,Incidencia dengue,4,-0.38881433143210775,-0.7999999999999999
+Humedad,Malaria,3,0.06828266904928659,0.5
+Precipitación,Dengue,4,-0.4321611696518279,-0.19999999999999998
+Precipitación,Incidencia dengue,4,-0.4830342080630978,-0.19999999999999998
+Precipitación,Malaria,3,0.6143609607743358,0.5

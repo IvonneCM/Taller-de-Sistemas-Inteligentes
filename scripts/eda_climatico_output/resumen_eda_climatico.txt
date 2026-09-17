@@ -1,0 +1,82 @@
+EDA CLIMÁTICO AVANZADO
+======================
+
+FUENTE
+------
+SENAMHI Bolivia - WIS 2.0
+
+UNIDAD PRINCIPAL DE ANÁLISIS
+----------------------------
+Municipio - semana epidemiológica
+
+Observaciones analizadas:
+44
+
+Municipios:
+4
+
+Semanas epidemiológicas:
+11
+
+CORRELACIONES DE SPEARMAN
+-------------------------
+Temperatura - Humedad:
+-0.464
+
+Temperatura - Precipitación:
+-0.411
+
+Humedad - Precipitación:
+0.059
+
+INTERPRETACIÓN
+--------------
+Las correlaciones representan asociaciones exploratorias
+entre las variables climáticas observadas.
+
+Un coeficiente positivo indica que ambas variables tienden
+a aumentar conjuntamente, mientras que un coeficiente
+negativo indica que una tiende a disminuir cuando la otra
+aumenta.
+
+Estas asociaciones no deben interpretarse como relaciones
+causales.
+
+Los análisis por municipio permiten comprobar si las
+relaciones generales se mantienen o cambian entre zonas.
+
+Los heatmaps temporales permiten identificar semanas con
+condiciones climáticas particularmente diferentes.
+
+El perfil normalizado permite comparar municipios aunque
+temperatura, humedad y precipitación utilicen escalas
+distintas.
+
+LIMITACIONES
+------------
+1. La cobertura climática no es igual para todos los
+   municipios.
+
+2. Algunas semanas tienen menos días observados.
+
+3. Palos Blancos y San Buenaventura presentan menor
+   cobertura que Guayaramerín e Ixiamas.
+
+4. Los resultados corresponden al período disponible
+   durante 2026.
+
+5. Correlación no implica causalidad.
+
+6. Las relaciones climáticas observadas no implican por
+   sí mismas una relación con dengue o malaria. Esa parte
+   corresponde al EDA integrado.
+
+CONCLUSIÓN METODOLÓGICA
+-----------------------
+El EDA climático permite estudiar no solamente los niveles
+promedio de temperatura, humedad y precipitación, sino
+también su evolución temporal, variabilidad, relaciones y
+diferencias entre municipios.
+
+Estos resultados sirven como base para la posterior
+integración con información epidemiológica.
