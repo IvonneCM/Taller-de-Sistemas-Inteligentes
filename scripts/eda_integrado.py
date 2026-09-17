@@ -13,10 +13,6 @@ Fuentes:
 Unidad de análisis actual:
 Municipio.
 
-IMPORTANTE:
-Las asociaciones encontradas son exploratorias.
-El número de municipios integrados es pequeño y la
-alineación temporal entre clima y epidemiología no es completa.
 """
 
 import os

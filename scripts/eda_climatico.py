@@ -21,9 +21,6 @@ Objetivos:
 - Detectar semanas climáticamente extremas.
 - Generar visualizaciones interpretativas.
 
-IMPORTANTE:
-Las correlaciones son asociaciones exploratorias.
-No implican causalidad.
 """
 
 import os
