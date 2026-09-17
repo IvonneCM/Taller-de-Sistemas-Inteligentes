@@ -35,6 +35,8 @@ Lectura recomendada:
 7. [`../docs/team_charter.md`](../docs/team_charter.md): integrantes y acuerdos del equipo.
 8. [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md): validación, limpieza e imputación.
 9. [`../docs/controles_seguridad.md`](../docs/controles_seguridad.md): controles, estado y evidencia de seguridad.
+10. [`../docs/eda_inicial.md`](../docs/eda_inicial.md): análisis exploratorio sobre datos reales de SENAMHI y del Ministerio de Salud.
+11. [`../docs/c4/`](../docs/c4/): diagramas C4 de Contexto y Contenedores.
 
 ## Tecnología propuesta
 
@@ -139,8 +141,13 @@ se encuentra en [`design.md` §9](./design.md#9-estructura-de-archivos-backend).
   clínico ni epidemiológico.
 - Toda cifra de desempeño debe identificarse como objetivo o estimación hasta
   validarse con datos reales de la zona piloto.
-- Las fuentes climática y epidemiológica y la zona piloto exacta continúan
-  pendientes de confirmación antes de implementar TASK-008 y TASK-009.
+- Las fuentes climática (SENAMHI) y epidemiológica (Ministerio de Salud y
+  Deportes, Boletín Epidemiológico N.º 13) ya están confirmadas y en uso
+  para el EDA y el pipeline de datos (ver `../docs/eda_inicial.md` y
+  `../docs/pipeline_datos.md`). La zona piloto definitiva para validar
+  NFR-001/NFR-002 aún no está confirmada oficialmente; los cuatro
+  municipios con cruce de datos real (Guayaramerín, Ixiamas, Palos Blancos,
+  San Buenaventura) son la referencia usada hasta ahora.
 
 ## Flujo de trabajo
 
