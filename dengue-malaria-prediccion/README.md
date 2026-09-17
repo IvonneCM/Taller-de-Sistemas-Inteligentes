@@ -52,7 +52,11 @@ Lectura recomendada:
 14. [`../docs/pipeline_datos.md`](../docs/pipeline_datos.md): pipeline reproducible de limpieza e imputación (Línea Base — Paso 2).
 15. [`../docs/privacidad_datos.md`](../docs/privacidad_datos.md): restricciones de privacidad y licencias de datos.
 16. [`../docs/entorno_datos_iniciales.md`](../docs/entorno_datos_iniciales.md): entorno reproducible y estado inicial de los datos (Línea Base — Paso 1).
-15. [`../docs/linea_base.md`](../docs/linea_base.md): línea base y registro de experimentos (Línea Base — Paso 3).
+17. [`../docs/linea_base.md`](../docs/linea_base.md): línea base y registro de experimentos (Línea Base — Paso 3).
+18. [`../docs/inventario_datos.md`](../docs/inventario_datos.md): inventario de fuentes de datos epidemiológicos y climáticos.
+19. [`../docs/adr/`](../docs/adr/): registro de decisiones de arquitectura (ADR).
+20. [`../docs/risk_register.md`](../docs/risk_register.md): Risk Register inicial.
+21. [`../docs/declaracion_uso_ia.md`](../docs/declaracion_uso_ia.md): declaración de uso de IA y revisión humana.
 
 ## Tecnología propuesta
 
