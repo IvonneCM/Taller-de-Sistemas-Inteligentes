@@ -3,6 +3,13 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
+> ⏸️ **Estado:** ninguna tarea de este plan ha comenzado. Es el plan de
+> desarrollo del backend, **posterior** a esta primera evaluación — no
+> retomar antes de cerrarla (ver `README.md` → "Cuándo se retoma"). Cuando
+> se retome, empezar por TASK-001 con `FIRST_PROMPT.md`. TASK-008, TASK-009
+> y TASK-010 ya tienen notas agregadas sobre trabajo previo reutilizable en
+> `../scripts/` y `../docs/`.
+
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
 
