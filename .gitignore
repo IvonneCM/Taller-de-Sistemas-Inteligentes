@@ -21,3 +21,6 @@ __pycache__/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Descargas temporales
+data/raw/clima/senamhi/senamhi_descarga_parcial.csv

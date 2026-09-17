@@ -2,8 +2,6 @@
 EDA epidemiológico inicial
 Sistema de Predicción Temprana de Brotes de Dengue y Malaria
 
-Responsable: Adriana Rocha
-
 Fuente:
 Ministerio de Salud y Deportes de Bolivia
 Boletín Epidemiológico N° 13 - 2026
