@@ -1,3 +1,6 @@
+[core]
+    remote = origin-s3
 ['remote "origin-s3"']
     url = s3://dvc
     endpointurl = https://dagshub.com/AdrianaRochaVedia/Proyecto-Taller-de-Sistemas-Inteligentes.s3
+    

@@ -1,0 +1,51 @@
+stages:
+  procesar_clima:
+    cmd: python scripts/procesar_clima.py
+    deps:
+      - scripts/procesar_clima.py
+      - data/raw/clima/senamhi/senamhi_raw_SE01_13_2026.csv
+    outs:
+      - data/processed/control_calidad_clima.csv:
+          cache: false
+      - data/processed/clima_diario.csv:
+          cache: false
+      - data/processed/clima_semanal.csv:
+          cache: false
+
+  limpieza_datos:
+    cmd: python scripts/limpieza_datos.py
+    deps:
+      - scripts/limpieza_datos.py
+      - data/processed/clima_diario.csv
+      - data/raw/epidemiologia
+    outs:
+      - data/processed/clima_diario_imputado.csv:
+          cache: false
+      - data/processed/clima_semanal_calidad.csv:
+          cache: false
+      - data/processed/dengue_municipal_validado.csv:
+          cache: false
+      - data/processed/malaria_municipal_validado.csv:
+          cache: false
+      - data/processed/dengue_semanal_validado.csv:
+          cache: false
+      - data/processed/resumen_calidad_pipeline.md:
+          cache: false
+      - data/processed/resumen_calidad_pipeline.json:
+          cache: false
+
+  integrar_datos:
+    cmd: python scripts/integrar_datos.py
+    deps:
+      - scripts/integrar_datos.py
+      - data/processed/clima_semanal.csv
+      - data/raw/epidemiologia
+    outs:
+      - data/processed/dataset_integrado_municipal.csv:
+          cache: false
+
+  eda_integrado:
+    cmd: python scripts/eda_integrado.py
+    deps:
+      - scripts/eda_integrado.py
+      - data/processed/dataset_integrado_municipal.csv

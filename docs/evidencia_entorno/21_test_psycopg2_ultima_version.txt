@@ -1,0 +1,4 @@
+Collecting psycopg2-binary
+  Downloading psycopg2_binary-2.9.13-cp313-cp313-win_amd64.whl.metadata (5.1 kB)
+Would install psycopg2-binary-2.9.13
+EXIT=0

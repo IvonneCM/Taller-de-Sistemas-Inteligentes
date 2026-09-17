@@ -234,3 +234,31 @@ propagación de un brote, en lugar de reaccionar cuando ya es tarde.
   operativa completa.
 - Certificación oficial ante el Ministerio de Salud; este es un proyecto
   universitario/piloto, no un sistema de producción certificado.
+
+## 6.1 Exclusiones adicionales confirmadas por el estado real de datos (2026-09-17)
+
+Complemento de la sección 6 aprobado para la presentación (ver
+`docs/alcance_exclusiones.md`). Marca explícitamente lo que esta evaluación
+**no** entrega, para evitar asumir un alcance que los datos reales no sostienen:
+
+- **Modelo predictivo municipio-semana operativo.** Fuera del alcance de esta
+  evaluación: no existe serie temporal semanal de casos por municipio (solo
+  acumulados SE1-13). La entrega es una línea base nacional provisional como
+  referencia inicial (ver ADR-004). REQ-001/REQ-002 y NFR-001/NFR-002 siguen
+  como objetivos de diseño, no medibles todavía.
+- **Predicción nacional como entregable operativo.** La serie nacional
+  (SE1-13) es provisional (la propia fuente declara el dato "sujeto a
+  actualización") y solo sirve como referencia numérica de baselines, no como
+  sistema de predicción.
+- **Datos históricos mayores a un año.** Solo se dispone de semanas SE1-13 de
+  2026 (clima desde SE3). No se puede aplicar estacionalidad ni la regla de
+  mediana histórica de calidad del pipeline.
+- **Cobertura geográfica más allá de la zona con datos reales.** El análisis
+  real opera con 4 municipios (Guayaramerín, Ixiamas, Palos Blancos, San
+  Buenaventura). El resto de Bolivia (REQ-017) queda en diseño, no
+  implementado.
+- **Fuentes de datos aún no confirmadas.** SEDES, SNIS, NASA POWER e INE no
+  están incorporadas a esta evaluación; solo están identificadas como
+  pendientes (ver `docs/inventario_datos.md`).
+- **Datos en streaming / tiempo real.** Todo el flujo opera en modo batch
+  por semana epidemiológica; no hay ingesta en tiempo real.
