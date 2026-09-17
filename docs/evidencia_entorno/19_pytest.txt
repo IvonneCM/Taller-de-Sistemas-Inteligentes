@@ -1,0 +1,8 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-8.3.3, pluggy-1.6.0
+rootdir: E:\SEMESTRE-II-2026\TALLERDESIS\Taller-de-Sistemas-Inteligentes\dengue-malaria-prediccion
+plugins: anyio-4.15.1, cov-5.0.0
+collected 0 items
+
+============================ no tests ran in 0.04s ============================
+EXIT=5
