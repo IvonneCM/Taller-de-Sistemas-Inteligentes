@@ -195,13 +195,19 @@ credenciales. Salidas en `scripts/linea_base_output/`:
 
 ```text
 expA_persistencia_nacional.csv
+expA_persistencia_nacional.png
 expB_modelos_nacional.csv
 expB_resumen_modelos.csv
+expB_comparacion_modelos.png
 expC_cross_sectional.csv
+expC_inviabilidad_municipal.png
 protocolo_baseline.json
 resumen_baseline.json
 linea_base_nacional.png
 ```
+
+Para una lectura ordenada de estos resultados (tablas, gráficos y explicación
+de walk-forward, modelos y LOOCV), ver [`resultados_linea_base.md`](./resultados_linea_base.md).
 
 ---
 

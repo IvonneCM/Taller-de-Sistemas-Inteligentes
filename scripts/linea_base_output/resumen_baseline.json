@@ -157,5 +157,17 @@
   "entradas": {
     "dengue_semanal": "data/processed/dengue_semanal_validado.csv",
     "dataset_integrado": "data/processed/dataset_integrado_municipal.csv"
-  }
+  },
+  "salidas": [
+    "expA_persistencia_nacional.csv",
+    "expA_persistencia_nacional.png",
+    "expB_modelos_nacional.csv",
+    "expB_resumen_modelos.csv",
+    "expB_comparacion_modelos.png",
+    "expC_cross_sectional.csv",
+    "expC_inviabilidad_municipal.png",
+    "protocolo_baseline.json",
+    "resumen_baseline.json",
+    "linea_base_nacional.png"
+  ]
 }
