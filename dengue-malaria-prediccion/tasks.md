@@ -59,22 +59,32 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       plano falla la revisión de código / test unitario de hashing.
 
 - [ ] **TASK-008** [REQ-014] Implementar conector de ingesta para datos
-      climáticos públicos (fuente a definir según pregunta abierta en
-      `design.md` §10; usar datos de ejemplo/sintéticos si no hay acceso
-      confirmado aún).
+      climáticos públicos. **Fuente ya confirmada:** SENAMHI Bolivia (WIS
+      2.0) — ver `docs/eda_inicial.md` §2.2. Existe ya una descarga
+      funcional fuera de `app/etl/conectores/` (`scripts/descargar_senamhi.py`);
+      esta tarea es adaptar esa lógica al conector formal del backend, no
+      reemplazarla ni volver a diseñarla.
       *Verificación:* test que ingiere un CSV/JSON de muestra y valida que
       los registros aparecen en `datos_climaticos` con `fuente` poblada.
 
 - [ ] **TASK-009** [REQ-014] Implementar conector de ingesta para datos
-      epidemiológicos históricos (fuente a definir; usar datos
-      sintéticos/anonimizados de ejemplo si no hay dataset real disponible
-      para el proyecto universitario).
+      epidemiológicos históricos. **Fuente ya confirmada:** Ministerio de
+      Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13 — ver
+      `docs/eda_inicial.md` §2.1. **Limitación conocida:** la fuente entrega
+      acumulados municipales SE1-13, no series semana-a-semana; confirmar si
+      esa granularidad mejora antes de dar por cerrada esta tarea (ver
+      `docs/cierre_sprint1.md` §3.2).
       *Verificación:* test análogo a TASK-008 para `casos_epidemiologicos`.
 
 - [ ] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
-      imputación (`app/etl/limpieza.py`): interpolación temporal para
-      climáticos faltantes, marcado de `es_dato_imputado`, y cálculo del
-      porcentaje de datos faltantes por municipio/ventana.
+      imputación (`app/etl/limpieza.py`) siguiendo `docs/reglas_calidad_datos.md`:
+      interpolación temporal para climáticos faltantes, marcado de
+      `es_dato_imputado`, y cálculo del porcentaje de datos faltantes por
+      municipio/ventana. **Nota de Línea Base:** ya existe un prototipo de
+      este pipeline probado sobre datos reales (Sprint 1, Línea Base — Paso
+      2); antes de empezar esta tarea, confirmar con Tania si ese prototipo
+      ya está subido al repositorio para reutilizar su lógica en vez de
+      rediseñarla desde cero.
       *Verificación:* test unitario con dataset que tiene 20% de valores
       faltantes; el resultado no contiene NaN y se marca el flag de
       confianza baja cuando corresponde (ver TASK-014).

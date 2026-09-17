@@ -1,2 +1,9 @@
 pandas
+numpy
 matplotlib
+requests
+seaborn
+squarify
+scipy
+dvc
+dvc-s3

@@ -200,10 +200,14 @@ REQ-007, REQ-019 y REQ-020.
 
 1. **Extracción**: lectura de `casos_epidemiologicos` y `datos_climaticos`
    por municipio, ventana móvil de N semanas.
-2. **Limpieza/imputación** (REQ-013): valores faltantes climáticos se
-   imputan por interpolación temporal o promedio histórico del municipio;
-   se marca `es_dato_imputado = true`. Municipios con más del umbral definido
-   en NFR-007 de datos faltantes generan predicciones con `nivel_confianza = bajo`.
+2. **Limpieza/imputación** (REQ-013): los valores faltantes climáticos se
+   tratan mediante una jerarquía reproducible y se marca
+   `es_dato_imputado = true`. Con más de 5% y hasta 20% de faltantes la
+   predicción continúa con confianza baja; por encima de 20% no se publica
+   una predicción operativa. Los reportes epidemiológicos ausentes no se
+   convierten en cero ni se imputan silenciosamente. Las reglas completas,
+   incluidos retrasos de reporte y criterios de prueba, están en
+   [`../docs/reglas_calidad_datos.md`](../docs/reglas_calidad_datos.md).
 3. **Feature engineering**: variables rezagadas (lag) de temperatura,
    humedad y precipitación (2-4 semanas atrás), promedio móvil de casos,
    estacionalidad.
@@ -221,6 +225,12 @@ cual es coherente con el horizonte de predicción de 3-4 semanas y reduce la
 complejidad de infraestructura para un proyecto universitario.
 
 ## 6. Seguridad
+
+La matriz completa, el estado de implementación y los criterios de evidencia
+se documentan en
+[`../docs/controles_seguridad.md`](../docs/controles_seguridad.md). En la fase
+actual, JWT, RBAC, hashing y HTTPS son controles diseñados pero todavía no
+implementados ni verificados en un despliegue.
 
 - Autenticación JWT (OAuth2 password flow), expiración corta de access token
   + refresh token.
@@ -301,12 +311,23 @@ dengue-malaria-prediccion/
 
 ## 10. Preguntas abiertas
 
-- ¿Qué fuente exacta de datos climáticos públicos se usará (ej. SENAMHI,
-  NASA POWER, otra)? Esto define el conector de ingesta prioritario.
-- ¿Qué fuente de datos epidemiológicos históricos está disponible para el
-  piloto (SNIS, datos abiertos de SEDES, datos sintéticos para la demo)?
+- ~~¿Qué fuente exacta de datos climáticos públicos se usará?~~ **Resuelto:**
+  SENAMHI Bolivia (WIS 2.0), vía `scripts/descargar_senamhi.py`. Ver
+  `docs/eda_inicial.md` §2.2.
+- ~~¿Qué fuente de datos epidemiológicos históricos está disponible?~~
+  **Resuelto:** Ministerio de Salud y Deportes de Bolivia, Boletín
+  Epidemiológico N.º 13 (2026), acumulados municipales SE1-13 de dengue y
+  malaria. Ver `docs/eda_inicial.md` §2.1. **Pendiente:** esta fuente entrega
+  acumulados, no series semana-a-semana por municipio; esa granularidad
+  sigue sin confirmarse (ver limitación en `docs/eda_inicial.md` §16).
 - ¿Cuál será la zona piloto específica (departamento/municipio) para validar
-  la precisión espacial del 75% y la anticipación de 2 semanas?
+  la precisión espacial del 75% y la anticipación de 2 semanas? **Estado de
+  facto, no confirmado oficialmente:** el EDA real solo tiene cruce de
+  clima + epidemiología en 4 municipios — Guayaramerín (Beni), Ixiamas, Palos
+  Blancos y San Buenaventura (La Paz) — por ser los únicos con estación
+  SENAMHI activa en el periodo descargado. El equipo aún no decidió
+  formalmente si estos 4 son la zona piloto del proyecto o si se ampliará la
+  descarga a otros municipios (ver `docs/cierre_sprint1.md` §3.2).
 - ¿Se requiere notificación por correo electrónico para las alertas en esta
   primera versión, o basta con la vista en el dashboard?
 - ¿El modelo se re-entrenará periódicamente (ej. mensual) o solo una vez

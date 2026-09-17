@@ -2,6 +2,7 @@
 
 Ver requirements.md y design.md antes de agregar endpoints.
 """
+
 from fastapi import FastAPI
 
 app = FastAPI(
