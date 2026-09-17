@@ -37,6 +37,8 @@ Lectura recomendada:
 9. [`../docs/controles_seguridad.md`](../docs/controles_seguridad.md): controles, estado y evidencia de seguridad.
 10. [`../docs/eda_inicial.md`](../docs/eda_inicial.md): análisis exploratorio sobre datos reales de SENAMHI y del Ministerio de Salud.
 11. [`../docs/c4/`](../docs/c4/): diagramas C4 de Contexto y Contenedores.
+12. [`../docs/metricas_valor.md`](../docs/metricas_valor.md): métricas de valor y criterios de éxito.
+13. [`../docs/cierre_sprint1.md`](../docs/cierre_sprint1.md): backlog pendiente, bloqueos y próximos pasos.
 
 ## Tecnología propuesta
 
