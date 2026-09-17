@@ -1,19 +1,33 @@
 """
-EDA climático inicial
-Sistema de Predicción Temprana de Brotes de Dengue y Malaria
+EDA CLIMÁTICO AVANZADO - SENAMHI BOLIVIA
+=========================================
+
+Variables:
+- Temperatura
+- Humedad relativa
+- Precipitación
+
+Nivel principal de análisis:
+Municipio - Semana epidemiológica
 
 Fuente:
 SENAMHI Bolivia - WIS 2.0
 
-Este script analiza únicamente observaciones climáticas reales:
-- Temperatura del aire
-- Humedad relativa
-- Precipitación acumulada en 24 horas
+Objetivos:
+- Analizar calidad y cobertura.
+- Estudiar evolución temporal.
+- Analizar relaciones entre variables climáticas.
+- Detectar patrones municipales.
+- Detectar semanas climáticamente extremas.
+- Generar visualizaciones interpretativas.
 
-No se generan ni imputan datos sintéticos.
+IMPORTANTE:
+Las correlaciones son asociaciones exploratorias.
+No implican causalidad.
 """
 
 import os
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -26,17 +40,23 @@ BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
 
-DATA_FILE = os.path.join(
+SEMANAL_FILE = os.path.join(
     BASE_DIR,
     "data",
-    "raw",
-    "clima",
-    "senamhi",
-    "senamhi_raw_SE01_13_2026.csv"
+    "processed",
+    "clima_semanal.csv"
+)
+
+DIARIO_FILE = os.path.join(
+    BASE_DIR,
+    "data",
+    "processed",
+    "clima_diario.csv"
 )
 
 OUTPUT_DIR = os.path.join(
-    os.path.dirname(__file__),
+    BASE_DIR,
+    "scripts",
     "eda_climatico_output"
 )
 
@@ -44,37 +64,211 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 # ============================================================
-# NOMBRES DE VARIABLES
+# UTILIDADES
 # ============================================================
 
-TEMP = "air_temperature"
-HUMEDAD = "relative_humidity"
-PRECIP = "total_precipitation_or_total_water_equivalent"
+def guardar_figura(nombre):
+
+    ruta = os.path.join(
+        OUTPUT_DIR,
+        nombre
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        ruta,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+
+def heatmap(
+    matriz,
+    titulo,
+    xlabel,
+    ylabel,
+    nombre_archivo,
+    formato=".2f"
+):
+
+    fig, ax = plt.subplots(
+        figsize=(10, 7)
+    )
+
+    imagen = ax.imshow(
+        matriz.values,
+        aspect="auto"
+    )
+
+    ax.set_xticks(
+        range(len(matriz.columns))
+    )
+
+    ax.set_xticklabels(
+        matriz.columns,
+        rotation=45,
+        ha="right"
+    )
+
+    ax.set_yticks(
+        range(len(matriz.index))
+    )
+
+    ax.set_yticklabels(
+        matriz.index
+    )
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    ax.set_title(titulo)
+
+    plt.colorbar(
+        imagen,
+        ax=ax
+    )
+
+    # Valores dentro de las celdas
+    for i in range(len(matriz.index)):
+
+        for j in range(len(matriz.columns)):
+
+            valor = matriz.iloc[i, j]
+
+            if pd.notna(valor):
+
+                ax.text(
+                    j,
+                    i,
+                    format(valor, formato),
+                    ha="center",
+                    va="center",
+                    fontsize=8
+                )
+
+    guardar_figura(
+        nombre_archivo
+    )
 
 
 # ============================================================
-# CARGA
+# CARGAR DATOS
 # ============================================================
 
 def cargar_datos():
 
-    print("\nCargando datos SENAMHI...")
+    print("\nCargando datasets climáticos...")
 
-    df = pd.read_csv(DATA_FILE)
-
-    df["fecha_hora"] = pd.to_datetime(
-        df["fecha_hora"],
-        utc=True
+    semanal = pd.read_csv(
+        SEMANAL_FILE
     )
 
-    df["valor"] = pd.to_numeric(
-        df["valor"],
-        errors="coerce"
+    diario = pd.read_csv(
+        DIARIO_FILE
     )
 
-    print("✓ Datos cargados:", len(df))
+    print(
+        "✓ Semanal:",
+        len(semanal),
+        "registros"
+    )
 
-    return df
+    print(
+        "✓ Diario:",
+        len(diario),
+        "registros"
+    )
+
+    print(
+        "\nColumnas dataset semanal:"
+    )
+
+    print(
+        semanal.columns.tolist()
+    )
+
+    return semanal, diario
+
+
+# ============================================================
+# DETECTAR COLUMNAS
+# ============================================================
+
+def detectar_columnas(df):
+
+    columnas = df.columns.tolist()
+
+    def buscar(palabras):
+
+        for columna in columnas:
+
+            nombre = columna.lower()
+
+            if all(
+                palabra in nombre
+                for palabra in palabras
+            ):
+
+                return columna
+
+        return None
+
+    temperatura = buscar(
+        ["temperatura", "media"]
+    )
+
+    humedad = buscar(
+        ["humedad", "media"]
+    )
+
+    precipitacion = buscar(
+        ["precipitacion", "total"]
+    )
+
+    if precipitacion is None:
+
+        precipitacion = buscar(
+            ["precipitacion"]
+        )
+
+    print(
+        "\nVariables detectadas:"
+    )
+
+    print(
+        "Temperatura:",
+        temperatura
+    )
+
+    print(
+        "Humedad:",
+        humedad
+    )
+
+    print(
+        "Precipitación:",
+        precipitacion
+    )
+
+    if (
+        temperatura is None
+        or humedad is None
+        or precipitacion is None
+    ):
+
+        raise ValueError(
+            "No se pudieron detectar las variables "
+            "climáticas principales."
+        )
+
+    return (
+        temperatura,
+        humedad,
+        precipitacion
+    )
 
 
 # ============================================================
@@ -83,236 +277,827 @@ def cargar_datos():
 
 def informacion_general(df):
 
-    print("\n========== INFORMACIÓN GENERAL ==========")
-
-    print("Filas:", len(df))
-    print("Columnas:", len(df.columns))
-
     print(
-        "Desde:",
-        df["fecha_hora"].min()
+        "\n========== INFORMACIÓN GENERAL =========="
     )
 
     print(
-        "Hasta:",
-        df["fecha_hora"].max()
+        "Registros:",
+        len(df)
     )
 
-    print("\nRegistros por municipio:")
-    print(df["municipio"].value_counts())
+    print(
+        "Municipios:",
+        df["municipio"].nunique()
+    )
 
-    print("\nRegistros por variable:")
-    print(df["variable"].value_counts())
+    print(
+        "Semanas:",
+        df[
+            "semana_epidemiologica"
+        ].nunique()
+    )
+
+    print(
+        "\nMunicipios:"
+    )
+
+    for municipio in sorted(
+        df["municipio"].unique()
+    ):
+
+        print(
+            "-",
+            municipio
+        )
 
 
 # ============================================================
-# CALIDAD DE DATOS
+# CALIDAD Y COBERTURA
 # ============================================================
 
-def analizar_calidad(df):
+def calidad_datos(df):
 
-    print("\n========== CALIDAD DE DATOS ==========")
+    print(
+        "\n========== CALIDAD =========="
+    )
 
-    faltantes = int(
+    print(
+        "Valores faltantes:",
         df.isnull().sum().sum()
     )
 
-    duplicados = int(
+    print(
+        "Duplicados:",
         df.duplicated().sum()
     )
 
-    print("Valores faltantes:", faltantes)
-    print("Duplicados exactos:", duplicados)
-
-    resumen = []
-
-    for municipio in sorted(
-        df["municipio"].dropna().unique()
-    ):
-
-        datos = df[
-            df["municipio"] == municipio
+    columnas_cobertura = [
+        columna
+        for columna in [
+            "municipio",
+            "semana_epidemiologica",
+            "dias_con_temperatura",
+            "dias_con_humedad",
+            "dias_con_precipitacion",
+            "cobertura_suficiente"
         ]
+        if columna in df.columns
+    ]
 
-        resumen.append({
-            "municipio": municipio,
-            "registros": len(datos),
-            "fecha_inicio": datos["fecha_hora"].min(),
-            "fecha_fin": datos["fecha_hora"].max(),
-            "faltantes": int(
-                datos.isnull().sum().sum()
-            ),
-            "duplicados": int(
-                datos.duplicated().sum()
-            )
-        })
+    cobertura = df[
+        columnas_cobertura
+    ].copy()
 
-    calidad = pd.DataFrame(resumen)
-
-    calidad.to_csv(
+    cobertura.to_csv(
         os.path.join(
             OUTPUT_DIR,
-            "calidad_climatica.csv"
+            "cobertura_semanal.csv"
         ),
-        index=False
+        index=False,
+        encoding="utf-8-sig"
     )
 
-    print("\nCobertura por municipio:")
-    print(calidad.to_string(index=False))
-
 
 # ============================================================
-# RESUMEN ESTADÍSTICO
+# ESTADÍSTICAS DESCRIPTIVAS
 # ============================================================
 
-def generar_resumen(df):
+def estadisticas_descriptivas(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    print(
+        "\n========== ESTADÍSTICAS DESCRIPTIVAS =========="
+    )
+
+    variables = [
+        temperatura,
+        humedad,
+        precipitacion
+    ]
 
     resumen = (
-        df.groupby(
-            ["municipio", "variable"]
-        )["valor"]
-        .agg([
-            "count",
-            "mean",
-            "median",
-            "std",
-            "min",
-            "max"
-        ])
-        .reset_index()
+        df[
+            variables
+        ]
+        .describe()
+        .T
+    )
+
+    print(
+        resumen.to_string()
     )
 
     resumen.to_csv(
         os.path.join(
             OUTPUT_DIR,
-            "resumen_climatico.csv"
+            "estadisticas_climaticas.csv"
         ),
-        index=False
+        encoding="utf-8-sig"
     )
 
-    print("\n========== RESUMEN CLIMÁTICO ==========")
-    print(resumen.to_string(index=False))
-
 
 # ============================================================
-# OUTLIERS IQR
+# CORRELACIONES GENERALES
 # ============================================================
 
-def detectar_outliers_grupo(datos):
+def correlaciones(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
 
-    if len(datos) < 4:
-        return datos.iloc[0:0]
+    print(
+        "\n========== CORRELACIONES =========="
+    )
 
-    q1 = datos["valor"].quantile(0.25)
-    q3 = datos["valor"].quantile(0.75)
-
-    iqr = q3 - q1
-
-    limite_inferior = q1 - 1.5 * iqr
-    limite_superior = q3 + 1.5 * iqr
-
-    return datos[
-        (datos["valor"] < limite_inferior) |
-        (datos["valor"] > limite_superior)
+    variables = [
+        temperatura,
+        humedad,
+        precipitacion
     ]
 
+    datos = df[
+        variables
+    ].copy()
 
-def analizar_outliers(df):
+    pearson = datos.corr(
+        method="pearson"
+    )
+
+    spearman = datos.corr(
+        method="spearman"
+    )
+
+    print(
+        "\nPearson:"
+    )
+
+    print(
+        pearson.round(3)
+    )
+
+    print(
+        "\nSpearman:"
+    )
+
+    print(
+        spearman.round(3)
+    )
+
+    pearson.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "correlacion_pearson.csv"
+        ),
+        encoding="utf-8-sig"
+    )
+
+    spearman.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "correlacion_spearman.csv"
+        ),
+        encoding="utf-8-sig"
+    )
+
+    nombres = {
+        temperatura: "Temperatura",
+        humedad: "Humedad",
+        precipitacion: "Precipitación"
+    }
+
+    pearson_visual = pearson.rename(
+        index=nombres,
+        columns=nombres
+    )
+
+    spearman_visual = spearman.rename(
+        index=nombres,
+        columns=nombres
+    )
+
+    heatmap(
+        pearson_visual,
+        "Correlación climática de Pearson\nMunicipio-semana",
+        "Variable",
+        "Variable",
+        "heatmap_correlacion_pearson.png"
+    )
+
+    heatmap(
+        spearman_visual,
+        "Correlación climática de Spearman\nMunicipio-semana",
+        "Variable",
+        "Variable",
+        "heatmap_correlacion_spearman.png"
+    )
+
+
+# ============================================================
+# CORRELACIONES POR MUNICIPIO
+# ============================================================
+
+def correlaciones_por_municipio(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
 
     resultados = []
 
-    for municipio in df["municipio"].unique():
+    for municipio, grupo in df.groupby(
+        "municipio"
+    ):
 
-        for variable in df["variable"].unique():
+        variables = grupo[
+            [
+                temperatura,
+                humedad,
+                precipitacion
+            ]
+        ]
 
-            datos = df[
-                (df["municipio"] == municipio) &
-                (df["variable"] == variable)
-            ].copy()
+        correlacion = variables.corr(
+            method="spearman"
+        )
 
-            if datos.empty:
-                continue
+        resultados.append({
+            "municipio": municipio,
 
-            outliers = detectar_outliers_grupo(
-                datos
-            )
+            "temp_humedad":
+                correlacion.loc[
+                    temperatura,
+                    humedad
+                ],
 
-            resultados.append({
-                "municipio": municipio,
-                "variable": variable,
-                "registros": len(datos),
-                "outliers": len(outliers),
-                "porcentaje_outliers": round(
-                    len(outliers) /
-                    len(datos) * 100,
-                    2
-                )
-            })
+            "temp_precipitacion":
+                correlacion.loc[
+                    temperatura,
+                    precipitacion
+                ],
 
-    resumen = pd.DataFrame(resultados)
+            "humedad_precipitacion":
+                correlacion.loc[
+                    humedad,
+                    precipitacion
+                ]
+        })
 
-    resumen.to_csv(
-        os.path.join(
-            OUTPUT_DIR,
-            "outliers_climaticos.csv"
-        ),
-        index=False
+    resultado = pd.DataFrame(
+        resultados
     )
 
-    print("\n========== OUTLIERS ==========")
-    print(resumen.to_string(index=False))
+    print(
+        "\n========== CORRELACIONES POR MUNICIPIO =========="
+    )
+
+    print(
+        resultado.round(3).to_string(
+            index=False
+        )
+    )
+
+    resultado.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "correlaciones_por_municipio.csv"
+        ),
+        index=False,
+        encoding="utf-8-sig"
+    )
+
+    matriz = resultado.set_index(
+        "municipio"
+    )
+
+    matriz.columns = [
+        "Temp-Humedad",
+        "Temp-Precipitación",
+        "Humedad-Precipitación"
+    ]
+
+    heatmap(
+        matriz,
+        "Relaciones climáticas por municipio\nCorrelación de Spearman",
+        "Relación entre variables",
+        "Municipio",
+        "heatmap_correlaciones_por_municipio.png"
+    )
 
 
 # ============================================================
-# DISTRIBUCIONES
+# HEATMAP MUNICIPIO × SEMANA
 # ============================================================
 
-def grafico_distribucion(
+def heatmaps_temporales(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    configuraciones = [
+        (
+            temperatura,
+            "Temperatura media por municipio y semana",
+            "heatmap_temperatura_semanal.png",
+            ".1f"
+        ),
+        (
+            humedad,
+            "Humedad media por municipio y semana",
+            "heatmap_humedad_semanal.png",
+            ".1f"
+        ),
+        (
+            precipitacion,
+            "Precipitación por municipio y semana",
+            "heatmap_precipitacion_semanal.png",
+            ".1f"
+        )
+    ]
+
+    for (
+        variable,
+        titulo,
+        archivo,
+        formato
+    ) in configuraciones:
+
+        matriz = df.pivot_table(
+            index="municipio",
+            columns="semana_epidemiologica",
+            values=variable,
+            aggfunc="mean"
+        )
+
+        matriz.columns = [
+            f"SE{int(x)}"
+            for x in matriz.columns
+        ]
+
+        heatmap(
+            matriz,
+            titulo,
+            "Semana epidemiológica",
+            "Municipio",
+            archivo,
+            formato
+        )
+
+
+# ============================================================
+# EVOLUCIÓN SEMANAL
+# ============================================================
+
+def evolucion_variable(
     df,
     variable,
+    ylabel,
     titulo,
-    xlabel,
     archivo
 ):
 
-    datos = df[
-        df["variable"] == variable
-    ]["valor"].dropna()
-
-    plt.figure(figsize=(9, 5))
-
-    plt.hist(
-        datos,
-        bins=30,
-        edgecolor="black"
+    plt.figure(
+        figsize=(11, 7)
     )
 
-    plt.title(titulo)
-    plt.xlabel(xlabel)
-    plt.ylabel("Frecuencia")
+    for municipio, grupo in df.groupby(
+        "municipio"
+    ):
 
-    plt.tight_layout()
+        grupo = grupo.sort_values(
+            "semana_epidemiologica"
+        )
 
-    plt.savefig(
+        plt.plot(
+            grupo[
+                "semana_epidemiologica"
+            ],
+            grupo[variable],
+            marker="o",
+            label=municipio
+        )
+
+    plt.title(
+        titulo
+    )
+
+    plt.xlabel(
+        "Semana epidemiológica"
+    )
+
+    plt.ylabel(
+        ylabel
+    )
+
+    plt.legend()
+
+    plt.grid(
+        alpha=0.25
+    )
+
+    guardar_figura(
+        archivo
+    )
+
+
+def evoluciones(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    evolucion_variable(
+        df,
+        temperatura,
+        "Temperatura media (°C)",
+        "Evolución semanal de temperatura por municipio",
+        "evolucion_temperatura.png"
+    )
+
+    evolucion_variable(
+        df,
+        humedad,
+        "Humedad relativa media (%)",
+        "Evolución semanal de humedad por municipio",
+        "evolucion_humedad.png"
+    )
+
+    evolucion_variable(
+        df,
+        precipitacion,
+        "Precipitación",
+        "Evolución semanal de precipitación por municipio",
+        "evolucion_precipitacion.png"
+    )
+
+
+# ============================================================
+# SCATTER INTERPRETATIVO
+# TEMPERATURA + HUMEDAD + PRECIPITACIÓN
+# ============================================================
+
+def scatter_multivariable(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    plt.figure(
+        figsize=(11, 8)
+    )
+
+    precip = df[
+        precipitacion
+    ].fillna(0)
+
+    # El tamaño representa precipitación.
+    # Se normaliza únicamente para visualización.
+    max_precip = precip.max()
+
+    if max_precip > 0:
+
+        tamanos = (
+            60
+            +
+            (precip / max_precip)
+            * 500
+        )
+
+    else:
+
+        tamanos = np.repeat(
+            80,
+            len(df)
+        )
+
+    municipios = sorted(
+        df["municipio"].unique()
+    )
+
+    for municipio in municipios:
+
+        mascara = (
+            df["municipio"]
+            == municipio
+        )
+
+        plt.scatter(
+            df.loc[
+                mascara,
+                temperatura
+            ],
+            df.loc[
+                mascara,
+                humedad
+            ],
+            s=tamanos[mascara],
+            alpha=0.65,
+            label=municipio
+        )
+
+    plt.title(
+        "Relación temperatura-humedad-precipitación\n"
+        "Tamaño del punto = precipitación semanal"
+    )
+
+    plt.xlabel(
+        "Temperatura media (°C)"
+    )
+
+    plt.ylabel(
+        "Humedad relativa media (%)"
+    )
+
+    plt.legend()
+
+    plt.grid(
+        alpha=0.2
+    )
+
+    guardar_figura(
+        "temperatura_humedad_precipitacion.png"
+    )
+
+
+# ============================================================
+# SCATTERS BIVARIADOS
+# ============================================================
+
+def scatter_por_municipio(
+    df,
+    x,
+    y,
+    xlabel,
+    ylabel,
+    titulo,
+    archivo
+):
+
+    plt.figure(
+        figsize=(10, 7)
+    )
+
+    for municipio, grupo in df.groupby(
+        "municipio"
+    ):
+
+        plt.scatter(
+            grupo[x],
+            grupo[y],
+            s=70,
+            alpha=0.7,
+            label=municipio
+        )
+
+    plt.title(
+        titulo
+    )
+
+    plt.xlabel(
+        xlabel
+    )
+
+    plt.ylabel(
+        ylabel
+    )
+
+    plt.legend()
+
+    plt.grid(
+        alpha=0.2
+    )
+
+    guardar_figura(
+        archivo
+    )
+
+
+def graficos_relaciones(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    scatter_por_municipio(
+        df,
+        temperatura,
+        humedad,
+        "Temperatura media (°C)",
+        "Humedad relativa media (%)",
+        "Temperatura vs humedad por municipio-semana",
+        "temperatura_vs_humedad.png"
+    )
+
+    scatter_por_municipio(
+        df,
+        temperatura,
+        precipitacion,
+        "Temperatura media (°C)",
+        "Precipitación",
+        "Temperatura vs precipitación por municipio-semana",
+        "temperatura_vs_precipitacion.png"
+    )
+
+    scatter_por_municipio(
+        df,
+        humedad,
+        precipitacion,
+        "Humedad relativa media (%)",
+        "Precipitación",
+        "Humedad vs precipitación por municipio-semana",
+        "humedad_vs_precipitacion.png"
+    )
+
+
+# ============================================================
+# COMBINACIÓN TEMPORAL
+# TEMPERATURA + HUMEDAD
+# ============================================================
+
+def temperatura_humedad_semanal(
+    df,
+    temperatura,
+    humedad
+):
+
+    resumen = (
+        df.groupby(
+            "semana_epidemiologica"
+        )
+        .agg(
+            temperatura=(
+                temperatura,
+                "mean"
+            ),
+            humedad=(
+                humedad,
+                "mean"
+            )
+        )
+        .reset_index()
+    )
+
+    fig, ax1 = plt.subplots(
+        figsize=(11, 7)
+    )
+
+    ax1.plot(
+        resumen[
+            "semana_epidemiologica"
+        ],
+        resumen[
+            "temperatura"
+        ],
+        marker="o"
+    )
+
+    ax1.set_xlabel(
+        "Semana epidemiológica"
+    )
+
+    ax1.set_ylabel(
+        "Temperatura media (°C)"
+    )
+
+    ax2 = ax1.twinx()
+
+    ax2.plot(
+        resumen[
+            "semana_epidemiologica"
+        ],
+        resumen[
+            "humedad"
+        ],
+        marker="s",
+        linestyle="--"
+    )
+
+    ax2.set_ylabel(
+        "Humedad relativa media (%)"
+    )
+
+    plt.title(
+        "Evolución conjunta de temperatura y humedad"
+    )
+
+    fig.tight_layout()
+
+    fig.savefig(
         os.path.join(
             OUTPUT_DIR,
-            archivo
+            "temperatura_humedad_semanal.png"
         ),
-        dpi=300
+        dpi=300,
+        bbox_inches="tight"
     )
 
-    plt.close()
+    plt.close(fig)
 
 
 # ============================================================
-# BOXPLOTS POR MUNICIPIO
+# PRECIPITACIÓN + HUMEDAD
 # ============================================================
 
-def grafico_boxplot(
+def precipitacion_humedad_semanal(
+    df,
+    precipitacion,
+    humedad
+):
+
+    resumen = (
+        df.groupby(
+            "semana_epidemiologica"
+        )
+        .agg(
+            precipitacion=(
+                precipitacion,
+                "mean"
+            ),
+            humedad=(
+                humedad,
+                "mean"
+            )
+        )
+        .reset_index()
+    )
+
+    fig, ax1 = plt.subplots(
+        figsize=(11, 7)
+    )
+
+    ax1.bar(
+        resumen[
+            "semana_epidemiologica"
+        ],
+        resumen[
+            "precipitacion"
+        ],
+        alpha=0.6
+    )
+
+    ax1.set_xlabel(
+        "Semana epidemiológica"
+    )
+
+    ax1.set_ylabel(
+        "Precipitación media"
+    )
+
+    ax2 = ax1.twinx()
+
+    ax2.plot(
+        resumen[
+            "semana_epidemiologica"
+        ],
+        resumen[
+            "humedad"
+        ],
+        marker="o"
+    )
+
+    ax2.set_ylabel(
+        "Humedad relativa media (%)"
+    )
+
+    plt.title(
+        "Precipitación y humedad por semana epidemiológica"
+    )
+
+    fig.tight_layout()
+
+    fig.savefig(
+        os.path.join(
+            OUTPUT_DIR,
+            "precipitacion_humedad_semanal.png"
+        ),
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close(fig)
+
+
+# ============================================================
+# BOXPLOTS
+# ============================================================
+
+def boxplot_variable(
     df,
     variable,
-    titulo,
     ylabel,
+    titulo,
     archivo
 ):
 
@@ -320,201 +1105,572 @@ def grafico_boxplot(
         df["municipio"].unique()
     )
 
-    datos = []
+    datos = [
+        df.loc[
+            df["municipio"] == municipio,
+            variable
+        ].dropna().values
 
-    etiquetas = []
+        for municipio in municipios
+    ]
 
-    for municipio in municipios:
-
-        valores = df[
-            (df["municipio"] == municipio) &
-            (df["variable"] == variable)
-        ]["valor"].dropna()
-
-        if not valores.empty:
-            datos.append(valores)
-            etiquetas.append(municipio)
-
-    plt.figure(figsize=(10, 6))
+    plt.figure(
+        figsize=(11, 7)
+    )
 
     plt.boxplot(
         datos,
-        tick_labels=etiquetas
+        tick_labels=municipios
     )
 
-    plt.title(titulo)
-    plt.ylabel(ylabel)
+    plt.title(
+        titulo
+    )
+
+    plt.ylabel(
+        ylabel
+    )
 
     plt.xticks(
         rotation=25,
         ha="right"
     )
 
-    plt.tight_layout()
-
-    plt.savefig(
-        os.path.join(
-            OUTPUT_DIR,
-            archivo
-        ),
-        dpi=300
+    guardar_figura(
+        archivo
     )
 
-    plt.close()
 
-
-# ============================================================
-# SERIES TEMPORALES DIARIAS
-# ============================================================
-
-def serie_diaria(
+def boxplots(
     df,
-    variable,
-    titulo,
-    ylabel,
-    archivo,
-    metodo="mean"
+    temperatura,
+    humedad,
+    precipitacion
 ):
 
-    datos = df[
-        df["variable"] == variable
-    ].copy()
-
-    datos["fecha"] = (
-        datos["fecha_hora"]
-        .dt.floor("D")
+    boxplot_variable(
+        df,
+        temperatura,
+        "Temperatura media (°C)",
+        "Distribución semanal de temperatura por municipio",
+        "boxplot_temperatura.png"
     )
 
-    if metodo == "sum":
+    boxplot_variable(
+        df,
+        humedad,
+        "Humedad relativa media (%)",
+        "Distribución semanal de humedad por municipio",
+        "boxplot_humedad.png"
+    )
 
-        diario = (
-            datos.groupby(
-                ["municipio", "fecha"]
-            )["valor"]
-            .sum()
-            .reset_index()
-        )
+    boxplot_variable(
+        df,
+        precipitacion,
+        "Precipitación",
+        "Distribución semanal de precipitación por municipio",
+        "boxplot_precipitacion.png"
+    )
 
-    else:
 
-        diario = (
-            datos.groupby(
-                ["municipio", "fecha"]
-            )["valor"]
-            .mean()
-            .reset_index()
-        )
+# ============================================================
+# PERFIL CLIMÁTICO NORMALIZADO
+# ============================================================
 
-    plt.figure(figsize=(12, 6))
+def perfil_climatico(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
 
-    for municipio in sorted(
-        diario["municipio"].unique()
+    perfil = (
+        df.groupby(
+            "municipio"
+        )[
+            [
+                temperatura,
+                humedad,
+                precipitacion
+            ]
+        ]
+        .mean()
+    )
+
+    normalizado = perfil.copy()
+
+    for columna in normalizado.columns:
+
+        minimo = normalizado[
+            columna
+        ].min()
+
+        maximo = normalizado[
+            columna
+        ].max()
+
+        if maximo != minimo:
+
+            normalizado[columna] = (
+                normalizado[columna]
+                - minimo
+            ) / (
+                maximo
+                - minimo
+            )
+
+        else:
+
+            normalizado[columna] = 0
+
+    normalizado.columns = [
+        "Temperatura",
+        "Humedad",
+        "Precipitación"
+    ]
+
+    normalizado.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "perfil_climatico_normalizado.csv"
+        ),
+        encoding="utf-8-sig"
+    )
+
+    heatmap(
+        normalizado,
+        "Perfil climático relativo por municipio\n"
+        "Variables normalizadas entre 0 y 1",
+        "Variable climática",
+        "Municipio",
+        "heatmap_perfil_climatico.png"
+    )
+
+
+# ============================================================
+# VARIABILIDAD POR MUNICIPIO
+# ============================================================
+
+def variabilidad_climatica(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    variabilidad = (
+        df.groupby(
+            "municipio"
+        )[
+            [
+                temperatura,
+                humedad,
+                precipitacion
+            ]
+        ]
+        .std()
+    )
+
+    variabilidad.columns = [
+        "variabilidad_temperatura",
+        "variabilidad_humedad",
+        "variabilidad_precipitacion"
+    ]
+
+    print(
+        "\n========== VARIABILIDAD CLIMÁTICA =========="
+    )
+
+    print(
+        variabilidad.round(2).to_string()
+    )
+
+    variabilidad.to_csv(
+        os.path.join(
+            OUTPUT_DIR,
+            "variabilidad_climatica.csv"
+        ),
+        encoding="utf-8-sig"
+    )
+
+    # Normalizamos porque las unidades son diferentes
+    visual = variabilidad.copy()
+
+    for columna in visual.columns:
+
+        maximo = visual[columna].max()
+
+        if maximo > 0:
+
+            visual[columna] = (
+                visual[columna]
+                / maximo
+            )
+
+    visual.columns = [
+        "Temperatura",
+        "Humedad",
+        "Precipitación"
+    ]
+
+    heatmap(
+        visual,
+        "Variabilidad climática relativa por municipio",
+        "Variable",
+        "Municipio",
+        "heatmap_variabilidad_climatica.png"
+    )
+
+
+# ============================================================
+# SEMANAS EXTREMAS
+# ============================================================
+
+def semanas_extremas(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
+
+    resultados = []
+
+    for municipio, grupo in df.groupby(
+        "municipio"
     ):
 
-        subset = diario[
-            diario["municipio"] == municipio
+        grupo = grupo.copy()
+
+        fila_temp_max = grupo.loc[
+            grupo[
+                temperatura
+            ].idxmax()
         ]
 
-        plt.plot(
-            subset["fecha"],
-            subset["valor"],
-            label=municipio
+        fila_temp_min = grupo.loc[
+            grupo[
+                temperatura
+            ].idxmin()
+        ]
+
+        fila_humedad = grupo.loc[
+            grupo[
+                humedad
+            ].idxmax()
+        ]
+
+        fila_precip = grupo.loc[
+            grupo[
+                precipitacion
+            ].idxmax()
+        ]
+
+        resultados.append({
+            "municipio":
+                municipio,
+
+            "semana_temp_max":
+                int(
+                    fila_temp_max[
+                        "semana_epidemiologica"
+                    ]
+                ),
+
+            "temp_max":
+                fila_temp_max[
+                    temperatura
+                ],
+
+            "semana_temp_min":
+                int(
+                    fila_temp_min[
+                        "semana_epidemiologica"
+                    ]
+                ),
+
+            "temp_min":
+                fila_temp_min[
+                    temperatura
+                ],
+
+            "semana_humedad_max":
+                int(
+                    fila_humedad[
+                        "semana_epidemiologica"
+                    ]
+                ),
+
+            "humedad_max":
+                fila_humedad[
+                    humedad
+                ],
+
+            "semana_precipitacion_max":
+                int(
+                    fila_precip[
+                        "semana_epidemiologica"
+                    ]
+                ),
+
+            "precipitacion_max":
+                fila_precip[
+                    precipitacion
+                ]
+        })
+
+    extremos = pd.DataFrame(
+        resultados
+    )
+
+    print(
+        "\n========== SEMANAS CLIMÁTICAS EXTREMAS =========="
+    )
+
+    print(
+        extremos.round(2).to_string(
+            index=False
         )
+    )
 
-    plt.title(titulo)
-    plt.xlabel("Fecha")
-    plt.ylabel(ylabel)
-
-    plt.legend()
-
-    plt.xticks(rotation=45)
-
-    plt.tight_layout()
-
-    plt.savefig(
+    extremos.to_csv(
         os.path.join(
             OUTPUT_DIR,
-            archivo
+            "semanas_extremas.csv"
         ),
-        dpi=300
+        index=False,
+        encoding="utf-8-sig"
     )
-
-    plt.close()
 
 
 # ============================================================
-# COBERTURA DE OBSERVACIONES
+# MATRIZ DE DISPERSIÓN
 # ============================================================
 
-def analizar_cobertura(df):
+def matriz_dispersion(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
 
-    cobertura = (
-        df.groupby(
-            ["municipio", "variable"]
-        )
-        .agg(
-            registros=("valor", "count"),
-            fecha_inicio=("fecha_hora", "min"),
-            fecha_fin=("fecha_hora", "max")
-        )
-        .reset_index()
+    variables = [
+        temperatura,
+        humedad,
+        precipitacion
+    ]
+
+    datos = df[
+        variables
+    ].dropna()
+
+    nombres = [
+        "Temperatura",
+        "Humedad",
+        "Precipitación"
+    ]
+
+    fig, axes = plt.subplots(
+        3,
+        3,
+        figsize=(11, 11)
     )
 
-    cobertura.to_csv(
+    for i in range(3):
+
+        for j in range(3):
+
+            ax = axes[i, j]
+
+            if i == j:
+
+                ax.hist(
+                    datos[
+                        variables[i]
+                    ],
+                    bins=10,
+                    edgecolor="black"
+                )
+
+            else:
+
+                ax.scatter(
+                    datos[
+                        variables[j]
+                    ],
+                    datos[
+                        variables[i]
+                    ],
+                    alpha=0.65
+                )
+
+            if i == 2:
+
+                ax.set_xlabel(
+                    nombres[j]
+                )
+
+            if j == 0:
+
+                ax.set_ylabel(
+                    nombres[i]
+                )
+
+    fig.suptitle(
+        "Matriz exploratoria de variables climáticas",
+        fontsize=14
+    )
+
+    fig.tight_layout(
+        rect=[0, 0, 1, 0.97]
+    )
+
+    fig.savefig(
         os.path.join(
             OUTPUT_DIR,
-            "cobertura_observaciones.csv"
+            "matriz_dispersion_climatica.png"
         ),
-        index=False
+        dpi=300,
+        bbox_inches="tight"
     )
 
+    plt.close(fig)
+
 
 # ============================================================
-# PRECIPITACIÓN
+# RESUMEN
 # ============================================================
 
-def analizar_precipitacion(df):
+def generar_resumen(
+    df,
+    temperatura,
+    humedad,
+    precipitacion
+):
 
-    lluvia = df[
-        df["variable"] == PRECIP
-    ].copy()
+    correlacion = df[
+        [
+            temperatura,
+            humedad,
+            precipitacion
+        ]
+    ].corr(
+        method="spearman"
+    )
 
-    if lluvia.empty:
-        print(
-            "\nNo existen registros de precipitación."
+    temp_hum = correlacion.loc[
+        temperatura,
+        humedad
+    ]
+
+    temp_prec = correlacion.loc[
+        temperatura,
+        precipitacion
+    ]
+
+    hum_prec = correlacion.loc[
+        humedad,
+        precipitacion
+    ]
+
+    contenido = f"""
+EDA CLIMÁTICO AVANZADO
+======================
+
+FUENTE
+------
+SENAMHI Bolivia - WIS 2.0
+
+UNIDAD PRINCIPAL DE ANÁLISIS
+----------------------------
+Municipio - semana epidemiológica
+
+Observaciones analizadas:
+{len(df)}
+
+Municipios:
+{df["municipio"].nunique()}
+
+Semanas epidemiológicas:
+{df["semana_epidemiologica"].nunique()}
+
+CORRELACIONES DE SPEARMAN
+-------------------------
+Temperatura - Humedad:
+{temp_hum:.3f}
+
+Temperatura - Precipitación:
+{temp_prec:.3f}
+
+Humedad - Precipitación:
+{hum_prec:.3f}
+
+INTERPRETACIÓN
+--------------
+Las correlaciones representan asociaciones exploratorias
+entre las variables climáticas observadas.
+
+Un coeficiente positivo indica que ambas variables tienden
+a aumentar conjuntamente, mientras que un coeficiente
+negativo indica que una tiende a disminuir cuando la otra
+aumenta.
+
+Estas asociaciones no deben interpretarse como relaciones
+causales.
+
+Los análisis por municipio permiten comprobar si las
+relaciones generales se mantienen o cambian entre zonas.
+
+Los heatmaps temporales permiten identificar semanas con
+condiciones climáticas particularmente diferentes.
+
+El perfil normalizado permite comparar municipios aunque
+temperatura, humedad y precipitación utilicen escalas
+distintas.
+
+LIMITACIONES
+------------
+1. La cobertura climática no es igual para todos los
+   municipios.
+
+2. Algunas semanas tienen menos días observados.
+
+3. Palos Blancos y San Buenaventura presentan menor
+   cobertura que Guayaramerín e Ixiamas.
+
+4. Los resultados corresponden al período disponible
+   durante 2026.
+
+5. Correlación no implica causalidad.
+
+6. Las relaciones climáticas observadas no implican por
+   sí mismas una relación con dengue o malaria. Esa parte
+   corresponde al EDA integrado.
+
+CONCLUSIÓN METODOLÓGICA
+-----------------------
+El EDA climático permite estudiar no solamente los niveles
+promedio de temperatura, humedad y precipitación, sino
+también su evolución temporal, variabilidad, relaciones y
+diferencias entre municipios.
+
+Estos resultados sirven como base para la posterior
+integración con información epidemiológica.
+"""
+
+    archivo = os.path.join(
+        OUTPUT_DIR,
+        "resumen_eda_climatico.txt"
+    )
+
+    with open(
+        archivo,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        f.write(
+            contenido.strip()
         )
-        return
-
-    # Cada registro conservado por el descargador
-    # corresponde a precipitación acumulada en 24 h.
-
-    resumen = (
-        lluvia.groupby("municipio")["valor"]
-        .agg([
-            "count",
-            "mean",
-            "median",
-            "max"
-        ])
-        .reset_index()
-    )
-
-    resumen = resumen.rename(
-        columns={
-            "count": "observaciones_24h",
-            "mean": "precipitacion_media_24h",
-            "median": "precipitacion_mediana_24h",
-            "max": "precipitacion_maxima_24h"
-        }
-    )
-
-    resumen.to_csv(
-        os.path.join(
-            OUTPUT_DIR,
-            "resumen_precipitacion.csv"
-        ),
-        index=False
-    )
 
 
 # ============================================================
@@ -528,132 +1684,140 @@ def main():
     )
 
     print(
-        "EDA CLIMÁTICO - SENAMHI"
+        "EDA CLIMÁTICO AVANZADO - SENAMHI"
     )
 
     print(
         "=========================================="
     )
 
-    print(
-        "Fuente: SENAMHI Bolivia - WIS 2.0"
+    semanal, diario = cargar_datos()
+
+    (
+        temperatura,
+        humedad,
+        precipitacion
+    ) = detectar_columnas(
+        semanal
     )
 
-    df = cargar_datos()
-
-    informacion_general(df)
-
-    analizar_calidad(df)
-
-    generar_resumen(df)
-
-    analizar_outliers(df)
-
-    analizar_cobertura(df)
-
-    analizar_precipitacion(df)
-
-
-    # --------------------------------------------------------
-    # DISTRIBUCIONES
-    # --------------------------------------------------------
-
-    grafico_distribucion(
-        df,
-        TEMP,
-        "Distribución de temperatura del aire",
-        "Temperatura (°C)",
-        "distribucion_temperatura.png"
+    informacion_general(
+        semanal
     )
 
-    grafico_distribucion(
-        df,
-        HUMEDAD,
-        "Distribución de humedad relativa",
-        "Humedad relativa (%)",
-        "distribucion_humedad.png"
+    calidad_datos(
+        semanal
     )
 
-    grafico_distribucion(
-        df,
-        PRECIP,
-        "Distribución de precipitación acumulada en 24 horas",
-        "Precipitación (mm)",
-        "distribucion_precipitacion.png"
+    estadisticas_descriptivas(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-
-    # --------------------------------------------------------
-    # BOXPLOTS
-    # --------------------------------------------------------
-
-    grafico_boxplot(
-        df,
-        TEMP,
-        "Temperatura por estación meteorológica",
-        "Temperatura (°C)",
-        "boxplot_temperatura.png"
+    correlaciones(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-    grafico_boxplot(
-        df,
-        HUMEDAD,
-        "Humedad relativa por estación meteorológica",
-        "Humedad (%)",
-        "boxplot_humedad.png"
+    correlaciones_por_municipio(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-    grafico_boxplot(
-        df,
-        PRECIP,
-        "Precipitación 24 h por estación meteorológica",
-        "Precipitación (mm)",
-        "boxplot_precipitacion.png"
+    heatmaps_temporales(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-
-    # --------------------------------------------------------
-    # SERIES TEMPORALES
-    # --------------------------------------------------------
-
-    serie_diaria(
-        df,
-        TEMP,
-        "Temperatura media diaria por estación",
-        "Temperatura (°C)",
-        "serie_temporal_temperatura.png"
+    evoluciones(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-    serie_diaria(
-        df,
-        HUMEDAD,
-        "Humedad relativa media diaria por estación",
-        "Humedad relativa (%)",
-        "serie_temporal_humedad.png"
+    scatter_multivariable(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
-    # IMPORTANTE:
-    # Para precipitación NO sumamos todas las observaciones
-    # intradía porque cada una representa una ventana móvil de
-    # 24 horas y eso produciría doble conteo.
-    # Mostramos el promedio de las observaciones 24 h del día.
-
-    serie_diaria(
-        df,
-        PRECIP,
-        "Precipitación 24 h reportada por estación",
-        "Precipitación (mm)",
-        "serie_temporal_precipitacion.png",
-        metodo="mean"
+    graficos_relaciones(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
     )
 
+    temperatura_humedad_semanal(
+        semanal,
+        temperatura,
+        humedad
+    )
+
+    precipitacion_humedad_semanal(
+        semanal,
+        precipitacion,
+        humedad
+    )
+
+    boxplots(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
+
+    perfil_climatico(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
+
+    variabilidad_climatica(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
+
+    semanas_extremas(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
+
+    matriz_dispersion(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
+
+    generar_resumen(
+        semanal,
+        temperatura,
+        humedad,
+        precipitacion
+    )
 
     print(
         "\n=========================================="
     )
 
     print(
-        "✓ EDA CLIMÁTICO COMPLETADO"
+        "✓ EDA CLIMÁTICO AVANZADO COMPLETADO"
     )
 
     print(
