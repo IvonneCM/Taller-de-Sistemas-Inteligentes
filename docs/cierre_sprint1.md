@@ -41,65 +41,62 @@ archivos no existen en ninguna rama al momento de este cierre:
 | Restricciones de privacidad y licencias de datos | Ignacio | Data |
 | Línea base — Paso 1 (entorno y datos iniciales) | Ignacio | Build/QA/Deploy |
 
-### Bloqueada por un impedimento técnico (no por falta de trabajo)
+### Completada tras resolver el bloqueo técnico
 
-| Tarea | Responsable | Estado real |
+| Tarea | Responsable | Evidencia |
 |---|---|---|
-| Pipeline reproducible de datos (Línea base — Paso 2) | Tania | Construido y probado localmente (`scripts/limpieza_datos.py`, resultados verificados), **pendiente de subir al repositorio** hasta resolver el bloqueo de DVC (§3.1). No se fuerza el commit para no dejar en el repo una "evidencia reproducible" que en realidad nadie más puede reproducir. |
+| Pipeline reproducible de datos (Línea base — Paso 2) | Tania | `scripts/limpieza_datos.py`, `docs/pipeline_datos.md`. Quedó bloqueada por falta de credenciales de DVC (§3.1); se desbloqueó cuando Adriana agregó a Tania como colaboradora en DagsHub. |
 
 ## 2. Backlog pendiente para el siguiente sprint
 
-1. Terminar y subir el pipeline de limpieza (Tania) en cuanto se resuelva
-   el acceso a DVC — ya no requiere trabajo de diseño, solo desbloqueo de
-   credenciales y commit.
-2. Completar las 9 tareas listadas como "pendientes" arriba (Ivonne,
+1. Completar las 9 tareas listadas como "pendientes" arriba (Ivonne,
    Adriana, Ignacio) — ninguna tiene contenido en el repo todavía.
-3. ~~Reconciliar la cifra de precisión del modelo entre `product_goal.md`
-   y `requirements.md` NFR-001~~ — **Resuelto:** `product_goal.md` ahora cita
-   directamente NFR-001 (75%) y NFR-002 (mínimo 2 semanas, objetivo 3-4)
-   en vez de repetir números sueltos.
-4. Decidir formalmente si los 4 municipios con datos reales cruzados
+2. Decidir formalmente si los 4 municipios con datos reales cruzados
    (Guayaramerín, Ixiamas, Palos Blancos, San Buenaventura) son la zona
    piloto oficial, o si se sigue buscando otra — `design.md` §10 sigue
    listándolo como pregunta abierta pese a que el EDA ya opera de facto
    con esos 4.
-5. Resolver la limitación temporal documentada en `docs/eda_inicial.md`
+3. Resolver la limitación temporal documentada en `docs/eda_inicial.md`
    §16: pasar de acumulados SE1-13 municipales a series municipio-semana,
    condición necesaria para poder medir NFR-001/NFR-002 con datos reales.
-6. Una vez cerrada esta evaluación, retomar `tasks.md` desde TASK-001 con
+4. Decidir como equipo si los CSV de `data/processed/` deben moverse a DVC
+   para seguir la misma convención que `data/raw/`, o si se mantiene la
+   convención actual (raw en DVC, processed en git plano) — ver nota en
+   `docs/pipeline_datos.md`.
+5. Una vez cerrada esta evaluación, retomar `tasks.md` desde TASK-001 con
    `FIRST_PROMPT.md` para el desarrollo real del backend (no antes: esta
    evaluación es sobre decisiones y evidencia, no sobre sistema funcionando
    de punta a punta).
 
 ## 3. Bloqueos actuales y plan de resolución
 
-### 3.1 Acceso a DVC (bloqueo activo, detectado hoy)
+### 3.1 Acceso a DVC — RESUELTO
 
 **Qué pasó:** el commit `b2b79a4` (Adriana) configuró DVC contra un remoto
 S3 en DagsHub (`dagshub.com/AdrianaRochaVedia/...`) y movió los CSV raw de
 clima y epidemiología de git plano a punteros `.dvc`. Al traer ese commit,
-los archivos raw reales **desaparecieron del working tree** de quien no
-tenga ya una copia local, y `dvc pull -r origin-s3` falla con
-`Unable to locate credentials` — se verificó directamente en esta máquina.
+los archivos raw reales desaparecieron del working tree de quien no tuviera
+ya una copia local, y `dvc pull -r origin-s3` fallaba con
+`Unable to locate credentials`.
 
-**Impacto:** cualquiera que clone el repo desde cero hoy (incluido el
-docente) no puede reproducir `descargar_senamhi.py → procesar_clima.py →
-integrar_datos.py` ni el nuevo pipeline de limpieza, porque el insumo raw
-no es accesible sin credenciales de ese remoto.
+**Impacto que tuvo:** entre el commit `b2b79a4` y la resolución de este
+bloqueo, cualquiera que clonara el repo desde cero (incluido el docente) no
+podía reproducir `descargar_senamhi.py → procesar_clima.py →
+integrar_datos.py` ni el pipeline de limpieza, porque el insumo raw no era
+accesible sin credenciales de ese remoto.
 
-**Plan de resolución:**
-1. Pedir a Adriana las credenciales del remoto `origin-s3` (o agregar al
-   equipo como colaboradores del repositorio DagsHub) y confirmar si ella
-   ya ejecutó `dvc push` — si no lo hizo, los datos ni siquiera están en el
-   remoto todavía.
-2. Una vez resuelto, decidir como equipo qué CSV de `data/processed/`
-   entran a DVC (hoy la mayoría sigue en git plano, incluidos los
-   originales de Adriana) para no dejar el repositorio con dos
-   convenciones mezcladas.
-3. Recién entonces subir el pipeline de limpieza de Tania.
+**Cómo se resolvió:** Adriana agregó a Tania como colaboradora del
+repositorio en DagsHub; con ese acceso se generaron credenciales S3
+("Use as S3" en la UI de DagsHub) y se configuraron localmente con
+`dvc remote modify --local origin-s3 access_key_id/secret_access_key`.
+Se verificó con `dvc pull -r origin-s3` que los 3 archivos raw (16.778
+registros climáticos, 28 de dengue, 21 de malaria) se recuperan íntegros, y
+se volvió a correr `scripts/limpieza_datos.py` de punta a punta sobre esos
+datos recuperados para confirmar que el pipeline sigue siendo reproducible.
 
-**No es un bloqueo de diseño ni de código** — el trabajo del pipeline en sí
-está terminado; el bloqueo es exclusivamente de acceso/credenciales.
+**Pendiente de decisión de equipo (no bloqueante):** `data/processed/`
+sigue en git plano (igual que los archivos originales de Adriana), no en
+DVC — ver ítem 4 del backlog en §2.
 
 ### 3.2 Fuentes epidemiológicas semanales por municipio
 
@@ -120,14 +117,16 @@ parte del inventario de datos.
 ## 4. Viabilidad del proyecto (evaluación breve)
 
 - **Viable a nivel de datos:** ya existen datos reales (no sintéticos) de
-  SENAMHI y del Ministerio de Salud, con un pipeline de ingesta,
-  control de calidad y (pendiente de subir) imputación que funciona sobre
-  esos datos reales. Esto es más avanzado que lo esperado para una primera
-  evaluación de "decisiones iniciales justificadas".
-- **Riesgo principal no técnico:** la coordinación de acceso compartido
-  (DVC) y la cantidad de tareas del equipo aún sin ningún artefacto en el
-  repo (9 de 17) son el mayor riesgo para llegar a la defensa con el
-  checklist completo, más que cualquier limitación de los datos en sí.
+  SENAMHI y del Ministerio de Salud, con un pipeline de ingesta, control de
+  calidad e imputación que funciona de punta a punta sobre esos datos
+  reales y ya está subido al repositorio. Esto es más avanzado que lo
+  esperado para una primera evaluación de "decisiones iniciales
+  justificadas".
+- **Riesgo principal no técnico:** la cantidad de tareas del equipo aún sin
+  ningún artefacto en el repo (9 de 17, ver §1) es el mayor riesgo para
+  llegar a la defensa con el checklist completo, más que cualquier
+  limitación técnica de los datos. El riesgo de coordinación de acceso a
+  DVC ya se resolvió (§3.1).
 - **Riesgo técnico principal:** la granularidad temporal de los datos
   epidemiológicos (acumulados, no semanales) impide validar hoy las dos
   métricas de éxito centrales del producto (NFR-001, NFR-002). Es un

@@ -49,6 +49,7 @@ Lectura recomendada:
 11. [`../docs/c4/`](../docs/c4/): diagramas C4 de Contexto y Contenedores.
 12. [`../docs/metricas_valor.md`](../docs/metricas_valor.md): métricas de valor y criterios de éxito.
 13. [`../docs/cierre_sprint1.md`](../docs/cierre_sprint1.md): backlog pendiente, bloqueos y próximos pasos.
+14. [`../docs/pipeline_datos.md`](../docs/pipeline_datos.md): pipeline reproducible de limpieza e imputación (Línea Base — Paso 2).
 
 ## Tecnología propuesta
 

@@ -71,12 +71,14 @@ consistente con la Regla de Evidencia de la guía de defensa: se documenta
 la justificación técnica de cómo se medirán, no se deja en blanco ni se
 inventa un resultado.
 
-## 5. Nota sobre el estado del pipeline de limpieza
+## 5. Nota sobre el pipeline de limpieza
 
-El trabajo de imputación climática (que mejoraría directamente los
-porcentajes de cobertura de la tabla del §3) ya está construido y probado,
-pero su publicación en el repositorio está temporalmente detenida por un
-impedimento de acceso a los datos versionados con DVC — ver
-`docs/cierre_sprint1.md` §"Bloqueos". Este documento de métricas se apoya
-únicamente en evidencia ya mergeada en `tani` para no depender de ese
-bloqueo.
+El trabajo de imputación climática (que mejora directamente los porcentajes
+de cobertura de la tabla del §3) ya está construido, probado y subido al
+repositorio (`scripts/limpieza_datos.py`, `docs/pipeline_datos.md`). Con
+los datos imputados, 43 de las 44 filas municipio-semana quedan en
+`confianza_normal` y ninguna en `datos_insuficientes` — una mejora medible
+frente a la cobertura cruda de la tabla anterior. Ese resultado no se
+incorpora a la tabla del §3 porque esta sección documenta específicamente
+la evidencia **sin imputar** que justifica por qué la imputación era
+necesaria; el detalle completo está en `docs/pipeline_datos.md` §3.
