@@ -1,0 +1,10 @@
+Requirement already satisfied: pip in e:\semestre-ii-2026\tallerdesis\taller-de-sistemas-inteligentes\dengue-malaria-prediccion\.venv\lib\site-packages (25.0.1)
+Collecting pip
+  Using cached pip-26.2.1-py3-none-any.whl.metadata (4.6 kB)
+Using cached pip-26.2.1-py3-none-any.whl (1.8 MB)
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 25.0.1
+    Uninstalling pip-25.0.1:
+      Successfully uninstalled pip-25.0.1
+Successfully installed pip-26.2.1

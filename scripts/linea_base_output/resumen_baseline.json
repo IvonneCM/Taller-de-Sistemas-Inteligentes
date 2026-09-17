@@ -1,0 +1,161 @@
+{
+  "experimento_a": {
+    "experimento": "A_persistencia_nacional",
+    "unidad": "nacional_semanal",
+    "semanas_evaluadas": 12,
+    "mae": 8.833333333333334,
+    "rmse": 11.818065267490557,
+    "mape": 70.68244722802756,
+    "nota": "Serie nacional provisional; no es la unidad municipio-semana del producto."
+  },
+  "experimento_b": {
+    "experimento": "B_modelos_nacional",
+    "ventana_inicial_semanas": 5,
+    "objetivos_evaluados": 8,
+    "resultados": [
+      {
+        "modelo": "tendencia_lineal",
+        "objetivos_evaluados": 8,
+        "mae": 10.247871572871576,
+        "rmse": 15.049386558655792,
+        "mape": 108.40572956161189
+      },
+      {
+        "modelo": "persistencia",
+        "objetivos_evaluados": 8,
+        "mae": 10.75,
+        "rmse": 13.856406460551018,
+        "mape": 95.24028252337075
+      },
+      {
+        "modelo": "media_expansiva",
+        "objetivos_evaluados": 8,
+        "mae": 11.43385642135642,
+        "rmse": 13.400565469659158,
+        "mape": 81.30275653363887
+      },
+      {
+        "modelo": "ar1",
+        "objetivos_evaluados": 8,
+        "mae": 12.069377208834268,
+        "rmse": 14.462786926922574,
+        "mape": 96.67949414074941
+      }
+    ],
+    "mejor_modelo_por_mae": "tendencia_lineal",
+    "mejor_mae": 10.247871572871576,
+    "nota": "Walk-forward de un paso; serie nacional provisional, no municipio-semana."
+  },
+  "experimento_c": {
+    "experimento": "C_cross_sectional",
+    "filas": [
+      {
+        "enfermedad": "dengue",
+        "modelo": "media",
+        "n": 4,
+        "n_parametros": 1,
+        "grados_libertad_residual": 3,
+        "r2": 0.0,
+        "r2_ajustado": 0.0,
+        "loocv_valido": true,
+        "loocv_mae": 7.666666666666667,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; PALOS BLANCOS; SAN BUENAVENTURA"
+      },
+      {
+        "enfermedad": "dengue",
+        "modelo": "temperatura",
+        "n": 4,
+        "n_parametros": 2,
+        "grados_libertad_residual": 2,
+        "r2": 0.013436889735232604,
+        "r2_ajustado": -0.4798446653971511,
+        "loocv_valido": true,
+        "loocv_mae": 13.981495201828952,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; PALOS BLANCOS; SAN BUENAVENTURA"
+      },
+      {
+        "enfermedad": "dengue",
+        "modelo": "completo_temp_hum_precip",
+        "n": 4,
+        "n_parametros": 4,
+        "grados_libertad_residual": 0,
+        "r2": 1.0,
+        "r2_ajustado": NaN,
+        "loocv_valido": false,
+        "loocv_mae": NaN,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; PALOS BLANCOS; SAN BUENAVENTURA"
+      },
+      {
+        "enfermedad": "malaria",
+        "modelo": "media",
+        "n": 3,
+        "n_parametros": 1,
+        "grados_libertad_residual": 2,
+        "r2": 0.0,
+        "r2_ajustado": 0.0,
+        "loocv_valido": true,
+        "loocv_mae": 149.0,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; SAN BUENAVENTURA"
+      },
+      {
+        "enfermedad": "malaria",
+        "modelo": "temperatura",
+        "n": 3,
+        "n_parametros": 2,
+        "grados_libertad_residual": 1,
+        "r2": 0.0008156136711275908,
+        "r2_ajustado": -0.9983687726577448,
+        "loocv_valido": false,
+        "loocv_mae": NaN,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; SAN BUENAVENTURA"
+      },
+      {
+        "enfermedad": "malaria",
+        "modelo": "completo_temp_hum_precip",
+        "n": 3,
+        "n_parametros": 4,
+        "grados_libertad_residual": -1,
+        "r2": 1.0,
+        "r2_ajustado": NaN,
+        "loocv_valido": false,
+        "loocv_mae": NaN,
+        "observaciones": "GUAYARAMERIN; IXIAMAS; SAN BUENAVENTURA"
+      }
+    ],
+    "nota": "n=4 (dengue) y n=3 (malaria). El modelo con 3 predictores queda sin grados de libertad (ajuste perfecto, no generalizable); LOOCV solo es valido cuando n-1 > n_params. Se registra como evidencia de que la muestra actual no permite un modelo defendible."
+  },
+  "experimento_d": {
+    "experimento": "D_protocolo_baseline",
+    "unidad_de_prediccion": "municipio + semana_epidemiologica",
+    "objetivo": "casos semanales de dengue/malaria por municipio",
+    "baselines_a_superar": [
+      "persistencia (ultimo valor observado)",
+      "media historica por municipio",
+      "naive estacional (misma semana del anio anterior)",
+      "clasificador por umbral climatico (regla, no aprendido)",
+      "clase mayoritaria / aleatorio (para clasificacion de brote)"
+    ],
+    "metricas_regresion": [
+      "MAE",
+      "RMSE",
+      "MAPE"
+    ],
+    "metricas_clasificacion": [
+      "precision",
+      "recall",
+      "F1",
+      "ROC-AUC"
+    ],
+    "metricas_producto": {
+      "NFR-001": "precision espacial >= 75% en zona piloto",
+      "NFR-002": "anticipacion minima de 2 semanas"
+    },
+    "validacion": "split temporal / walk-forward; nunca split aleatorio, para evitar fuga de informacion entre semanas",
+    "requisito_minimo_de_datos": "serie municipio-semana de casos (al menos ~1 anio por municipio) para entrenar y validar; hoy no existe (solo acumulados SE1-13)",
+    "estado": "pendiente de datos; la referencia numerica actual es solo nacional (exp A y B)"
+  },
+  "entradas": {
+    "dengue_semanal": "data/processed/dengue_semanal_validado.csv",
+    "dataset_integrado": "data/processed/dataset_integrado_municipal.csv"
+  }
+}

@@ -1,0 +1,13 @@
+municipio,variable,registros,outliers,porcentaje_outliers
+GUAYARAMERIN,air_temperature,1771,0,0.0
+GUAYARAMERIN,relative_humidity,1771,41,2.32
+GUAYARAMERIN,total_precipitation_or_total_water_equivalent,1771,171,9.66
+IXIAMAS,air_temperature,1764,0,0.0
+IXIAMAS,relative_humidity,1764,9,0.51
+IXIAMAS,total_precipitation_or_total_water_equivalent,1764,314,17.8
+PALOS BLANCOS,air_temperature,1250,1,0.08
+PALOS BLANCOS,relative_humidity,1251,31,2.48
+PALOS BLANCOS,total_precipitation_or_total_water_equivalent,1251,182,14.55
+SAN BUENAVENTURA,air_temperature,807,1,0.12
+SAN BUENAVENTURA,relative_humidity,807,2,0.25
+SAN BUENAVENTURA,total_precipitation_or_total_water_equivalent,807,49,6.07

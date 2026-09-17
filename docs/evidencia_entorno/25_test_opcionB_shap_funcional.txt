@@ -1,0 +1,3 @@
+shap_values shape: (50, 3)
+OK: SHAP calculo explicaciones sobre XGBoost sin error
+EXIT=0

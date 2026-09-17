@@ -1,0 +1,16 @@
+procesar_clima:
+	changed deps:
+		deleted:            data\raw\clima\senamhi\senamhi_raw_SE01_13_2026.csv
+limpieza_datos:
+	changed deps:
+		deleted:            data\raw\epidemiologia
+integrar_datos:
+	changed deps:
+		deleted:            data\raw\epidemiologia
+data\raw\epidemiologia.dvc:
+	changed outs:
+		not in cache:       data\raw\epidemiologia
+data\raw\clima\senamhi\senamhi_raw_SE01_13_2026.csv.dvc:
+	changed outs:
+		not in cache:       data\raw\clima\senamhi\senamhi_raw_SE01_13_2026.csv
+EXIT=0

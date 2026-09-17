@@ -1,0 +1,9 @@
+data/processed/clima_diario.csv | filas(incl.header)=275 | bytes=35562
+data/processed/clima_diario_imputado.csv | filas(incl.header)=325 | bytes=68627
+data/processed/clima_semanal.csv | filas(incl.header)=45 | bytes=4619
+data/processed/clima_semanal_calidad.csv | filas(incl.header)=45 | bytes=4554
+data/processed/control_calidad_clima.csv | filas(incl.header)=16779 | bytes=2990503
+data/processed/dataset_integrado_municipal.csv | filas(incl.header)=5 | bytes=2399
+data/processed/dengue_municipal_validado.csv | filas(incl.header)=29 | bytes=8831
+data/processed/dengue_semanal_validado.csv | filas(incl.header)=14 | bytes=3285
+data/processed/malaria_municipal_validado.csv | filas(incl.header)=22 | bytes=6425

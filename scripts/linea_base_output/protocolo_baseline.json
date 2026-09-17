@@ -1,0 +1,30 @@
+{
+  "experimento": "D_protocolo_baseline",
+  "unidad_de_prediccion": "municipio + semana_epidemiologica",
+  "objetivo": "casos semanales de dengue/malaria por municipio",
+  "baselines_a_superar": [
+    "persistencia (ultimo valor observado)",
+    "media historica por municipio",
+    "naive estacional (misma semana del anio anterior)",
+    "clasificador por umbral climatico (regla, no aprendido)",
+    "clase mayoritaria / aleatorio (para clasificacion de brote)"
+  ],
+  "metricas_regresion": [
+    "MAE",
+    "RMSE",
+    "MAPE"
+  ],
+  "metricas_clasificacion": [
+    "precision",
+    "recall",
+    "F1",
+    "ROC-AUC"
+  ],
+  "metricas_producto": {
+    "NFR-001": "precision espacial >= 75% en zona piloto",
+    "NFR-002": "anticipacion minima de 2 semanas"
+  },
+  "validacion": "split temporal / walk-forward; nunca split aleatorio, para evitar fuga de informacion entre semanas",
+  "requisito_minimo_de_datos": "serie municipio-semana de casos (al menos ~1 anio por municipio) para entrenar y validar; hoy no existe (solo acumulados SE1-13)",
+  "estado": "pendiente de datos; la referencia numerica actual es solo nacional (exp A y B)"
+}

@@ -1,0 +1,103 @@
+schema: '2.0'
+stages:
+  procesar_clima:
+    cmd: python scripts/procesar_clima.py
+    deps:
+    - path: data/raw/clima/senamhi/senamhi_raw_SE01_13_2026.csv
+      hash: md5
+      md5: c0458753e42c23b95ffb85d162383947
+      size: 2878876
+    - path: scripts/procesar_clima.py
+      hash: md5
+      md5: 919e011e4372bc24ee340fe1ad8b4447
+      size: 16009
+    outs:
+    - path: data/processed/clima_diario.csv
+      hash: md5
+      md5: 258b12eb4eb610d648c4cfef9e6cda87
+      size: 35562
+    - path: data/processed/clima_semanal.csv
+      hash: md5
+      md5: 7f990b79cd88c5e08939a521cfd38059
+      size: 4619
+    - path: data/processed/control_calidad_clima.csv
+      hash: md5
+      md5: 61a43c61ba8f6a6e1cb99bffacd0e481
+      size: 2990503
+  limpieza_datos:
+    cmd: python scripts/limpieza_datos.py
+    deps:
+    - path: data/processed/clima_diario.csv
+      hash: md5
+      md5: 258b12eb4eb610d648c4cfef9e6cda87
+      size: 35562
+    - path: data/raw/epidemiologia
+      hash: md5
+      md5: 385a7f2097d3da522b13b68124b66738.dir
+      size: 14313
+      nfiles: 3
+    - path: scripts/limpieza_datos.py
+      hash: md5
+      md5: 289f2369d0aff3bc20c819633f6f9d84
+      size: 24999
+    outs:
+    - path: data/processed/clima_diario_imputado.csv
+      hash: md5
+      md5: 0cb6a95b192e11778af652a2040debe6
+      size: 68627
+    - path: data/processed/clima_semanal_calidad.csv
+      hash: md5
+      md5: cb1ebaa0a574006f56025aa6e6f9c435
+      size: 4554
+    - path: data/processed/dengue_municipal_validado.csv
+      hash: md5
+      md5: 2f0adfb28cdc7dab2b4cf1b87881157d
+      size: 8831
+    - path: data/processed/dengue_semanal_validado.csv
+      hash: md5
+      md5: f3570ee5f77c0fbd9f88c43712aeadf6
+      size: 3285
+    - path: data/processed/malaria_municipal_validado.csv
+      hash: md5
+      md5: 4f9260043780761606b3f7df871c1d03
+      size: 6425
+    - path: data/processed/resumen_calidad_pipeline.json
+      hash: md5
+      md5: 486d1a4d71e2c99d713a17ec6dfb3ac0
+      size: 1854
+    - path: data/processed/resumen_calidad_pipeline.md
+      hash: md5
+      md5: b817d298daaf0f8970dd61c5b89d47d7
+      size: 1861
+  integrar_datos:
+    cmd: python scripts/integrar_datos.py
+    deps:
+    - path: data/processed/clima_semanal.csv
+      hash: md5
+      md5: 7f990b79cd88c5e08939a521cfd38059
+      size: 4619
+    - path: data/raw/epidemiologia
+      hash: md5
+      md5: 385a7f2097d3da522b13b68124b66738.dir
+      size: 14313
+      nfiles: 3
+    - path: scripts/integrar_datos.py
+      hash: md5
+      md5: cbef00a88e7928614a8027920063d24e
+      size: 18344
+    outs:
+    - path: data/processed/dataset_integrado_municipal.csv
+      hash: md5
+      md5: 3eb37b2e5c1675ae758d633925ffef06
+      size: 2399
+  eda_integrado:
+    cmd: python scripts/eda_integrado.py
+    deps:
+    - path: data/processed/dataset_integrado_municipal.csv
+      hash: md5
+      md5: 3eb37b2e5c1675ae758d633925ffef06
+      size: 2399
+    - path: scripts/eda_integrado.py
+      hash: md5
+      md5: 7cd9c95b178c06b7afdf1a25d67e1db8
+      size: 44343

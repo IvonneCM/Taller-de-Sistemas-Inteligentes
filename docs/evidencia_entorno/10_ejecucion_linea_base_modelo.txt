@@ -1,0 +1,33 @@
+
+LINEA BASE - PASO 3
+Referencia inicial y registro de experimentos
+
+========== EXPERIMENTO A: PERSISTENCIA ==========
+Transiciones evaluadas: 12
+MAE  : 8.833
+RMSE : 11.818
+MAPE : 70.682 %
+
+========== EXPERIMENTO B: MODELOS WALK-FORWARD ==========
+          modelo  objetivos_evaluados       mae      rmse       mape
+tendencia_lineal                    8 10.247872 15.049387 108.405730
+    persistencia                    8 10.750000 13.856406  95.240283
+ media_expansiva                    8 11.433856 13.400565  81.302757
+             ar1                    8 12.069377 14.462787  96.679494
+
+========== EXPERIMENTO C: REGRESION CROSS-SECTIONAL ==========
+enfermedad                   modelo  n  n_parametros  grados_libertad_residual       r2  loocv_valido  loocv_mae
+    dengue                    media  4             1                         3 0.000000          True   7.666667
+    dengue              temperatura  4             2                         2 0.013437          True  13.981495
+    dengue completo_temp_hum_precip  4             4                         0 1.000000         False        NaN
+   malaria                    media  3             1                         2 0.000000          True 149.000000
+   malaria              temperatura  3             2                         1 0.000816         False        NaN
+   malaria completo_temp_hum_precip  3             4                        -1 1.000000         False        NaN
+
+========== EXPERIMENTO D: PROTOCOLO ==========
+Unidad objetivo: municipio + semana_epidemiologica
+Estado: pendiente de datos; la referencia numerica actual es solo nacional (exp A y B)
+
+Linea base completada.
+Resultados en: E:\SEMESTRE-II-2026\TALLERDESIS\Taller-de-Sistemas-Inteligentes\scripts\linea_base_output
+EXIT=0
