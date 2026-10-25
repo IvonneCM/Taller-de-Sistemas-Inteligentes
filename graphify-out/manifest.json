@@ -1,0 +1,1196 @@
+{
+  "data/processed/resumen_calidad_pipeline.json": {
+    "mtime": 1789686855.4423318,
+    "seen": 1791851761.082485,
+    "ast_hash": "db91039e1b8e2d0508319ef59f949cd9",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/.vscode/extensions.json": {
+    "mtime": 1787617851.0,
+    "seen": 1791851761.082489,
+    "ast_hash": "d92752826dd411b970e2ffc9f5419715",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/.vscode/launch.json": {
+    "mtime": 1787617857.0,
+    "seen": 1791851761.082491,
+    "ast_hash": "690f83c661ac0bf669f119378c2dc974",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/.vscode/settings.json": {
+    "mtime": 1787618146.623713,
+    "seen": 1791851761.0824928,
+    "ast_hash": "71fded03d4badbe11f56da3da89e18d2",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/.vscode/tasks.json": {
+    "mtime": 1787617864.0,
+    "seen": 1791851761.082494,
+    "ast_hash": "bfc7529b2e519bc414fa91592b2dbfa3",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082496,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/api/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082498,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/api/routes/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.0825,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/core/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082502,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/etl/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082504,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/etl/conectores/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082506,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/main.py": {
+    "mtime": 1789609342.148561,
+    "seen": 1791851761.082508,
+    "ast_hash": "b8dcb71942c26749d35baafb2010a94d",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/ml/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.08251,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/models/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082512,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/app/schemas/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.0825138,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/tests/__init__.py": {
+    "mtime": 1787617892.0,
+    "seen": 1791851761.082516,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "scripts/descargar_senamhi.py": {
+    "mtime": 1789607599.3294747,
+    "seen": 1791851761.082518,
+    "ast_hash": "972e101c4ffac90fd2a3aa3f96089864",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico.py": {
+    "mtime": 1789610067.8466856,
+    "seen": 1791851761.082519,
+    "ast_hash": "c60163c124c9f2e65f793cad42f93705",
+    "semantic_hash": ""
+  },
+  "scripts/eda_inicial.py": {
+    "mtime": 1789610067.8471346,
+    "seen": 1791851761.0825212,
+    "ast_hash": "d5bb991867f8f331b322c561488b2797",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado.py": {
+    "mtime": 1789610067.8475823,
+    "seen": 1791851761.0825229,
+    "ast_hash": "3d32bd97c878eeedfadfac852999148b",
+    "semantic_hash": ""
+  },
+  "scripts/integrar_datos.py": {
+    "mtime": 1789607599.388971,
+    "seen": 1791851761.082525,
+    "ast_hash": "1659b7c35f8b833a7f2a6dee3a3a4545",
+    "semantic_hash": ""
+  },
+  "scripts/limpieza_datos.py": {
+    "mtime": 1789609808.3270793,
+    "seen": 1791851761.082527,
+    "ast_hash": "29cf911424b6ace6b2aab3835127bacb",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_modelo.py": {
+    "mtime": 1789677212.8953025,
+    "seen": 1791851761.082529,
+    "ast_hash": "ad3fd6d84bd1ccac05ccd647b71fa8c9",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/protocolo_baseline.json": {
+    "mtime": 1789687215.060501,
+    "seen": 1791851761.082531,
+    "ast_hash": "f0a8a9522df4eaeaaae2a1a923f8680d",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/resumen_baseline.json": {
+    "mtime": 1789687316.0932448,
+    "seen": 1791851761.0825322,
+    "ast_hash": "9cfed5e5a3483877b0380dd0da2cee9d",
+    "semantic_hash": ""
+  },
+  "scripts/procesar_clima.py": {
+    "mtime": 1789607599.3892453,
+    "seen": 1791851761.0825338,
+    "ast_hash": "3d1c793552777f29ea5a72864454c791",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787614745.0547407,
+    "seen": 1791851761.082536,
+    "ast_hash": "1b8e8d907175e0f73027b32b189ca1ce",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787614745.056753,
+    "seen": 1791851761.082538,
+    "ast_hash": "fbe381f213ad47debf1b9a62d0d8fa1e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787614745.0541635,
+    "seen": 1791851761.08254,
+    "ast_hash": "b880109831e424e8a3540128fb953157",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787614745.057954,
+    "seen": 1791851761.082541,
+    "ast_hash": "cd594740dfe0f2e992379b427a4125b4",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787614745.0561056,
+    "seen": 1791851761.0825431,
+    "ast_hash": "bf25f694d37a546150c07ddff33fc98d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787614745.055241,
+    "seen": 1791851761.0825448,
+    "ast_hash": "322758a0ab098aeb58c77908bd815844",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/apply.md": {
+    "mtime": 1787614745.0506222,
+    "seen": 1791851761.082547,
+    "ast_hash": "02ef0a1fd105228ca82d57a97a62e418",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/archive.md": {
+    "mtime": 1787614745.0520573,
+    "seen": 1791851761.082549,
+    "ast_hash": "f453ee64528afc02e430240cc27e7cde",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/explore.md": {
+    "mtime": 1787614745.0502715,
+    "seen": 1791851761.082551,
+    "ast_hash": "e34236069468f19e8e5e222036a826ee",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/propose.md": {
+    "mtime": 1787614745.0525334,
+    "seen": 1791851761.0825531,
+    "ast_hash": "91f4ef89493c8f7efe66cab5eca94960",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/sync.md": {
+    "mtime": 1787614745.0514815,
+    "seen": 1791851761.082554,
+    "ast_hash": "429c9fbedcc6fe83c36fb1bbc34c96e0",
+    "semantic_hash": ""
+  },
+  ".claude/commands/opsx/update.md": {
+    "mtime": 1787614745.0509632,
+    "seen": 1791851761.082556,
+    "ast_hash": "0e4881513eaa9f753165b34020247e4b",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787614745.045841,
+    "seen": 1791851761.082558,
+    "ast_hash": "eab842359b130b436d3b97c8c648e307",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787614745.04798,
+    "seen": 1791851761.08256,
+    "ast_hash": "66b3a62d4ed2e09720eb3268c2275a4f",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787614745.0446746,
+    "seen": 1791851761.082562,
+    "ast_hash": "5054f2860f66afaf8fba66b3830ba7c7",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787614745.0491416,
+    "seen": 1791851761.0825632,
+    "ast_hash": "1c44c83bbed8599ecc4c9a19f4d6f12e",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787614745.047122,
+    "seen": 1791851761.082565,
+    "ast_hash": "f394729d142fa9228d98c366402cf880",
+    "semantic_hash": ""
+  },
+  ".claude/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787614745.046353,
+    "seen": 1791851761.082567,
+    "ast_hash": "d50eae983e5ce6147ac5675c799d72e5",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-apply.md": {
+    "mtime": 1787614745.0644224,
+    "seen": 1791851761.082569,
+    "ast_hash": "0e23b6a5b57b2b7e437fb952967b5669",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-archive.md": {
+    "mtime": 1787614745.065583,
+    "seen": 1791851761.082571,
+    "ast_hash": "a13d41db5c358b5c84d1b33e19d4c848",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-explore.md": {
+    "mtime": 1787614745.0640461,
+    "seen": 1791851761.082573,
+    "ast_hash": "3aa6610521d5f21a00b5c037123dd3c6",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-propose.md": {
+    "mtime": 1787614745.0661535,
+    "seen": 1791851761.0825741,
+    "ast_hash": "385778aef37b5595655db0c4e2722fa8",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-sync.md": {
+    "mtime": 1787614745.0651505,
+    "seen": 1791851761.0825758,
+    "ast_hash": "9bffe74dc0be76ecd9debb3960921fd6",
+    "semantic_hash": ""
+  },
+  ".cursor/commands/opsx-update.md": {
+    "mtime": 1787614745.0647495,
+    "seen": 1791851761.082578,
+    "ast_hash": "058f5e4b46d2147581511990d59496a2",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-apply-change/SKILL.md": {
+    "mtime": 1787614745.0607057,
+    "seen": 1791851761.0825799,
+    "ast_hash": "fcb796d79391da1c895fddae250c25bd",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-archive-change/SKILL.md": {
+    "mtime": 1787614745.0626435,
+    "seen": 1791851761.082581,
+    "ast_hash": "01b4b927f8295160fa58721db97506cb",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-explore/SKILL.md": {
+    "mtime": 1787614745.0601885,
+    "seen": 1791851761.0825841,
+    "ast_hash": "7cf64862b37a3e274f812cdfca93c95d",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-propose/SKILL.md": {
+    "mtime": 1787614745.063287,
+    "seen": 1791851761.082585,
+    "ast_hash": "b596a66394cb7c992809ef3afc54ef1a",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-sync-specs/SKILL.md": {
+    "mtime": 1787614745.061853,
+    "seen": 1791851761.0825868,
+    "ast_hash": "9cd36d9a5e25247b10d94a518e423752",
+    "semantic_hash": ""
+  },
+  ".cursor/skills/openspec-update-change/SKILL.md": {
+    "mtime": 1787614745.0613449,
+    "seen": 1791851761.082589,
+    "ast_hash": "dcb19e8eff6daaf3a8eafd92dd780489",
+    "semantic_hash": ""
+  },
+  "data/processed/resumen_calidad_pipeline.md": {
+    "mtime": 1789687316.0389824,
+    "seen": 1791851761.082591,
+    "ast_hash": "25d958ab23584f25e082e82d23182053",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/.github/copilot-instructions.md": {
+    "mtime": 1787617683.0,
+    "seen": 1791851761.082593,
+    "ast_hash": "9bf750da3ded44e2646bb76e635d03c9",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/CLAUDE.md": {
+    "mtime": 1787617666.0,
+    "seen": 1791851761.0825942,
+    "ast_hash": "a942eef94469014e6cd58217c9894d00",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/CONTEXT.md": {
+    "mtime": 1789677750.1892414,
+    "seen": 1791851761.082596,
+    "ast_hash": "46879077d6daab5e275af0dbae13d916",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/FIRST_PROMPT.md": {
+    "mtime": 1787617931.0,
+    "seen": 1791851761.082598,
+    "ast_hash": "57dc54c0abce31e50e9c77daba79c6d0",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/README.md": {
+    "mtime": 1789677702.1987998,
+    "seen": 1791851761.0825999,
+    "ast_hash": "6eae8c9b0856e4132136148cb301da5c",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/design.md": {
+    "mtime": 1789677725.4466982,
+    "seen": 1791851761.082602,
+    "ast_hash": "49bf21253754e28a9dc932b98584121e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/requirements.md": {
+    "mtime": 1789677714.147158,
+    "seen": 1791851761.082603,
+    "ast_hash": "ccaf1b288ec5a7ad7a6ae8ec9b79eaca",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/requirements.txt": {
+    "mtime": 1789659535.9113982,
+    "seen": 1791851761.0826051,
+    "ast_hash": "8d9fa8593d117b3900118286a210273e",
+    "semantic_hash": ""
+  },
+  "dengue-malaria-prediccion/tasks.md": {
+    "mtime": 1789677738.4745579,
+    "seen": 1791851761.082607,
+    "ast_hash": "320d700e0e002949eb42401433f279a2",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-001-postgresql-postgis.md": {
+    "mtime": 1789659535.9117997,
+    "seen": 1791851761.082609,
+    "ast_hash": "d2c9ebcbdfc50af5ed5e8e1d8332acbf",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-002-python-fastapi.md": {
+    "mtime": 1789659535.912184,
+    "seen": 1791851761.08261,
+    "ast_hash": "11dd86592df2cadb97b5dea829eac433",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-003-despliegue-railway.md": {
+    "mtime": 1789659535.912485,
+    "seen": 1791851761.082612,
+    "ast_hash": "5d56789b23fd5517301822c115071bc5",
+    "semantic_hash": ""
+  },
+  "docs/adr/ADR-004-linea-base-nacional-referencia-inicial.md": {
+    "mtime": 1789659535.9127276,
+    "seen": 1791851761.082614,
+    "ast_hash": "7094f8d906923e7ddbe2a783935a8562",
+    "semantic_hash": ""
+  },
+  "docs/adr/README.md": {
+    "mtime": 1789659535.912921,
+    "seen": 1791851761.082616,
+    "ast_hash": "bf9aca86aaa1e466049275431fd5f569",
+    "semantic_hash": ""
+  },
+  "docs/c4/README.md": {
+    "mtime": 1789611990.8460994,
+    "seen": 1791851761.082618,
+    "ast_hash": "19ecde9ab7009c8de4ef6554122df26b",
+    "semantic_hash": ""
+  },
+  "docs/cierre_sprint1.md": {
+    "mtime": 1789659801.5562892,
+    "seen": 1791851761.082619,
+    "ast_hash": "0cd8555bbca4a9eea4a1a3e764c842a4",
+    "semantic_hash": ""
+  },
+  "docs/controles_seguridad.md": {
+    "mtime": 1789609342.1492236,
+    "seen": 1791851761.0826209,
+    "ast_hash": "9875b3e05a89ae3d985275c7d88f719d",
+    "semantic_hash": ""
+  },
+  "docs/declaracion_uso_ia.md": {
+    "mtime": 1789659535.9131114,
+    "seen": 1791851761.082623,
+    "ast_hash": "13ae4fc233aef03b3fd739c3b1f53f9d",
+    "semantic_hash": ""
+  },
+  "docs/eda_inicial.md": {
+    "mtime": 1789609342.1495192,
+    "seen": 1791851761.082625,
+    "ast_hash": "a27c996799c29221532ceae32c002111",
+    "semantic_hash": ""
+  },
+  "docs/entorno_datos_iniciales.md": {
+    "mtime": 1789659535.913332,
+    "seen": 1791851761.082626,
+    "ast_hash": "65660884bc8f54b25c336f263772fddc",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/00_version_python.txt": {
+    "mtime": 1789659535.9136128,
+    "seen": 1791851761.082628,
+    "ast_hash": "b488e65c35d9c71b26a9e40539f8dbc7",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/01_crear_venv_raiz.txt": {
+    "mtime": 1789659535.9137814,
+    "seen": 1791851761.08263,
+    "ast_hash": "505495a845524a233efdaf568f0a0a59",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/02_pip_upgrade_raiz.txt": {
+    "mtime": 1789659535.913926,
+    "seen": 1791851761.0826318,
+    "ast_hash": "b55d4c9e1017c10b05bf21cc4bf60887",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/03_pip_install_raiz.txt": {
+    "mtime": 1789659535.9141433,
+    "seen": 1791851761.082634,
+    "ast_hash": "712a1eaba0ec91f28366da484103a3f1",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/04_dvc_version.txt": {
+    "mtime": 1789659535.9143007,
+    "seen": 1791851761.082635,
+    "ast_hash": "fbf566d11a19ae220244ccdcb54c693e",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/05_dvc_status.txt": {
+    "mtime": 1789659535.9144588,
+    "seen": 1791851761.082637,
+    "ast_hash": "2993ecc1015f9c8bb16283e1b2e5131b",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/06_dvc_pull_intento.txt": {
+    "mtime": 1789659535.9146461,
+    "seen": 1791851761.0826392,
+    "ast_hash": "aca17c6110ba04882e08b9e25cb608be",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/07_punteros_dvc_raw.txt": {
+    "mtime": 1789659535.9148345,
+    "seen": 1791851761.082641,
+    "ast_hash": "714aca77170c2270fdbc6d67ade1a998",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/08_md5_descarga_parcial.txt": {
+    "mtime": 1789659535.9149997,
+    "seen": 1791851761.082643,
+    "ast_hash": "8bf248495a7c28a6ae216c9a465527b1",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/09_intento_procesar_clima.txt": {
+    "mtime": 1789659535.915163,
+    "seen": 1791851761.0826461,
+    "ast_hash": "6aff57c0a64abbae2dc1caa0f60ef4e3",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/10_ejecucion_linea_base_modelo.txt": {
+    "mtime": 1789659535.9153292,
+    "seen": 1791851761.082647,
+    "ast_hash": "dc82107376c75594f3e881f37eb4a20a",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/11_crear_venv_backend.txt": {
+    "mtime": 1789659535.9154992,
+    "seen": 1791851761.082649,
+    "ast_hash": "fdbdc3d0c7b403251ac5407380220523",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/12_pip_upgrade_backend.txt": {
+    "mtime": 1789659535.9156618,
+    "seen": 1791851761.082651,
+    "ast_hash": "194c364ae132a5d3c74d5f3857d54b39",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/13_pip_install_backend.txt": {
+    "mtime": 1789659535.9158394,
+    "seen": 1791851761.082653,
+    "ast_hash": "8972ba06e62ebd57b57448edc3fb8387",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/14_pip_install_backend_sin_psycopg2.txt": {
+    "mtime": 1789659535.916092,
+    "seen": 1791851761.082655,
+    "ast_hash": "0efce1e500287b819f14b181139b39a4",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/15_pip_install_backend_sin_psycopg2_shap.txt": {
+    "mtime": 1789659535.9163117,
+    "seen": 1791851761.082657,
+    "ast_hash": "e2763a83e0995f04f9529e8d484893f6",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/16_uvicorn_arranque.txt": {
+    "mtime": 1789659535.9165027,
+    "seen": 1791851761.082658,
+    "ast_hash": "9060b550c4549c5d00edb5df36d60c0c",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/17_curl_health.txt": {
+    "mtime": 1789659535.9167054,
+    "seen": 1791851761.0826602,
+    "ast_hash": "02c0aa73d8ec4615a4287650acf352e5",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/18_compileall.txt": {
+    "mtime": 1789659535.916857,
+    "seen": 1791851761.0826619,
+    "ast_hash": "fdbdc3d0c7b403251ac5407380220523",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/19_pytest.txt": {
+    "mtime": 1789659535.9170332,
+    "seen": 1791851761.082664,
+    "ast_hash": "4005d555b87a19b0507f1217b6f40e5b",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/20_inventario_processed.txt": {
+    "mtime": 1789659535.917201,
+    "seen": 1791851761.082666,
+    "ast_hash": "eb6d37b3cc440f6ce54fc17e15487391",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/21_test_psycopg2_ultima_version.txt": {
+    "mtime": 1789659535.9173503,
+    "seen": 1791851761.082668,
+    "ast_hash": "1817bd520fb0518912f93b7337d7ebed",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/22_test_shap_ultima_version.txt": {
+    "mtime": 1789659535.9175067,
+    "seen": 1791851761.082669,
+    "ast_hash": "8be2caa9057f56f14b20c9906882bf40",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/23_test_opcionB_full_install.txt": {
+    "mtime": 1789659535.9177017,
+    "seen": 1791851761.0826712,
+    "ast_hash": "196ee688417aefce153ae8fc8d2ad518",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/24_test_opcionB_imports.txt": {
+    "mtime": 1789659535.9178712,
+    "seen": 1791851761.0826728,
+    "ast_hash": "201dfa2becc533d5534f29863a980fe8",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/25_test_opcionB_shap_funcional.txt": {
+    "mtime": 1789659535.9180968,
+    "seen": 1791851761.082675,
+    "ast_hash": "a8b8d79be8fa09debf77c29d2aad1cfa",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/26_pip_install_raiz_pinned.txt": {
+    "mtime": 1789659535.9184022,
+    "seen": 1791851761.082676,
+    "ast_hash": "549198357489e73e64c227b79d5c9db4",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/27_pip_install_backend_opcionB_final.txt": {
+    "mtime": 1789659535.9187393,
+    "seen": 1791851761.082678,
+    "ast_hash": "d6b97dfe17401a2c171d752004ec99dc",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/28_uvicorn_arranque_final.txt": {
+    "mtime": 1789659535.9189124,
+    "seen": 1791851761.08268,
+    "ast_hash": "059707856a4eca7a1b3d2aca59e47756",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/29_curl_health_final.txt": {
+    "mtime": 1789659535.919078,
+    "seen": 1791851761.0826821,
+    "ast_hash": "02c0aa73d8ec4615a4287650acf352e5",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/30_compileall_final.txt": {
+    "mtime": 1789659535.9192634,
+    "seen": 1791851761.0826838,
+    "ast_hash": "fdbdc3d0c7b403251ac5407380220523",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_entorno/31_pytest_final.txt": {
+    "mtime": 1789659535.9194567,
+    "seen": 1791851761.082685,
+    "ast_hash": "97a34e6dfd49f0cadb434254d822181c",
+    "semantic_hash": ""
+  },
+  "docs/evidencia_sprint/informe_sprint1.md": {
+    "mtime": 1789687600.9359207,
+    "seen": 1791851761.082687,
+    "ast_hash": "8e5ee8fc42f415bcb39986443b866011",
+    "semantic_hash": ""
+  },
+  "docs/inventario_datos.md": {
+    "mtime": 1789659535.921195,
+    "seen": 1791851761.082689,
+    "ast_hash": "bd87655356826cd99e9df4a35e54e97d",
+    "semantic_hash": ""
+  },
+  "docs/linea_base.md": {
+    "mtime": 1789677212.8945606,
+    "seen": 1791851761.082691,
+    "ast_hash": "c64ae97c382596e1052285fb49f44c8e",
+    "semantic_hash": ""
+  },
+  "docs/metricas_valor.md": {
+    "mtime": 1789611962.8218138,
+    "seen": 1791851761.0826921,
+    "ast_hash": "601c08c05dbab7c27c890bd79c24a3e3",
+    "semantic_hash": ""
+  },
+  "docs/pipeline_datos.md": {
+    "mtime": 1789612005.588952,
+    "seen": 1791851761.0826938,
+    "ast_hash": "0db8c2d225f6214a3c5df906c78f52dd",
+    "semantic_hash": ""
+  },
+  "docs/priorizacion_casos.md": {
+    "mtime": 1787614656.2711217,
+    "seen": 1791851761.082696,
+    "ast_hash": "245bae5538974ec8ead5cbfcf1c0a590",
+    "semantic_hash": ""
+  },
+  "docs/privacidad_datos.md": {
+    "mtime": 1789659535.9217553,
+    "seen": 1791851761.0826979,
+    "ast_hash": "689c626917dc7b71cd02036440a4cfbb",
+    "semantic_hash": ""
+  },
+  "docs/product_goal.md": {
+    "mtime": 1789610927.3031502,
+    "seen": 1791851761.0827,
+    "ast_hash": "3194db6c85a158da52a6c89ed5c9d7ea",
+    "semantic_hash": ""
+  },
+  "docs/reglas_calidad_datos.md": {
+    "mtime": 1789609342.1498337,
+    "seen": 1791851761.082701,
+    "ast_hash": "f3076efbe0ff36fb30ecdc50e5456f64",
+    "semantic_hash": ""
+  },
+  "docs/resultados_linea_base.md": {
+    "mtime": 1789677212.8949025,
+    "seen": 1791851761.082703,
+    "ast_hash": "5a5a4d31345bb006c0c00d18d81d2abc",
+    "semantic_hash": ""
+  },
+  "docs/risk_register.md": {
+    "mtime": 1789659535.9219425,
+    "seen": 1791851761.0827048,
+    "ast_hash": "4d708828327a1c53a64370caf3e814ed",
+    "semantic_hash": ""
+  },
+  "docs/team_charter.md": {
+    "mtime": 1787614656.2714372,
+    "seen": 1791851761.082707,
+    "ast_hash": "ca8f1008c4c103ed8ef3a8e52884d91c",
+    "semantic_hash": ""
+  },
+  "dvc.yaml": {
+    "mtime": 1789659535.9225342,
+    "seen": 1791851761.082708,
+    "ast_hash": "4022f20a9af6274b3f2395087b7797c4",
+    "semantic_hash": ""
+  },
+  "openspec/config.yaml": {
+    "mtime": 1787614745.0668743,
+    "seen": 1791851761.08271,
+    "ast_hash": "a88f7d80935e1a432dc9b5affe49eb27",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1789659535.924187,
+    "seen": 1791851761.0827122,
+    "ast_hash": "1df9eeaee81a8240becfa1ecc8533de9",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/resumen_eda_climatico.txt": {
+    "mtime": 1789607599.3496876,
+    "seen": 1791851761.082714,
+    "ast_hash": "232a30cfe21ed206542f34942f47b877",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/resumen_eda_integrado.txt": {
+    "mtime": 1789686798.9486535,
+    "seen": 1791851761.0827148,
+    "ast_hash": "125ba579717f774b06badb6128dae64c",
+    "semantic_hash": ""
+  },
+  "docs/fuentes_legales/DAT-002_terminos_condiciones_datos_abiertos_bolivia_2019.pdf": {
+    "mtime": 1789659535.9209564,
+    "seen": 1791851761.082717,
+    "ast_hash": "81b74c4750b233ec960574707806fad2",
+    "semantic_hash": ""
+  },
+  "data/processed/cobertura_antes_despues.png": {
+    "mtime": 1789658272.2858496,
+    "seen": 1791851761.082719,
+    "ast_hash": "a1d75c5ff46488ec94f961d27d308db4",
+    "semantic_hash": ""
+  },
+  "docs/c4/c4-contenedores.svg": {
+    "mtime": 1789610440.0354617,
+    "seen": 1791851761.082721,
+    "ast_hash": "f150dde83075b0eca4209682e7a1037d",
+    "semantic_hash": ""
+  },
+  "docs/c4/c4-contexto.svg": {
+    "mtime": 1789610440.031824,
+    "seen": 1791851761.082722,
+    "ast_hash": "c07de012a5dded1fa64517d0a0d3bb05",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/boxplot_humedad.png": {
+    "mtime": 1789607599.3303561,
+    "seen": 1791851761.082724,
+    "ast_hash": "f5be47f0e8a7a2b4f7421e739e9d2fa6",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/boxplot_precipitacion.png": {
+    "mtime": 1789607599.330918,
+    "seen": 1791851761.082726,
+    "ast_hash": "6b21c05052f9cf2887f9b3831aeeb92e",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/boxplot_temperatura.png": {
+    "mtime": 1789607599.331492,
+    "seen": 1791851761.082728,
+    "ast_hash": "8ca25b7308eeaed775584142be4d1c57",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/distribucion_humedad.png": {
+    "mtime": 1789607599.3326604,
+    "seen": 1791851761.08273,
+    "ast_hash": "ab3b66f21e1abe6ed0f823e72dbca312",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/distribucion_precipitacion.png": {
+    "mtime": 1789607599.333037,
+    "seen": 1791851761.082731,
+    "ast_hash": "201d046ba9247d0c8064cebeea4b1195",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/distribucion_temperatura.png": {
+    "mtime": 1789607599.3334248,
+    "seen": 1791851761.0827332,
+    "ast_hash": "1fde17e02f66427603bef1c7514a6281",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/evolucion_humedad.png": {
+    "mtime": 1789607599.335295,
+    "seen": 1791851761.082735,
+    "ast_hash": "5e3ae871a1fb3b48698e9c2a368150a0",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/evolucion_precipitacion.png": {
+    "mtime": 1789607599.3368516,
+    "seen": 1791851761.082737,
+    "ast_hash": "7278f9646420dc7b52a3e6a479cbfc8d",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/evolucion_temperatura.png": {
+    "mtime": 1789607599.3386874,
+    "seen": 1791851761.0827389,
+    "ast_hash": "0b28ec6b1adc35beaa1a969a5b38e27d",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_correlacion_pearson.png": {
+    "mtime": 1789607599.3393648,
+    "seen": 1791851761.08274,
+    "ast_hash": "7d3bdf70733776824593d772667bc5b1",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_correlacion_spearman.png": {
+    "mtime": 1789607599.3399575,
+    "seen": 1791851761.082742,
+    "ast_hash": "c89d3d2ce808ce6ff4030cca281ea405",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_correlaciones_por_municipio.png": {
+    "mtime": 1789607599.3407414,
+    "seen": 1791851761.0827441,
+    "ast_hash": "8ed7b166972a24f1f498fb1b9258fcd8",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_humedad_semanal.png": {
+    "mtime": 1789607599.341865,
+    "seen": 1791851761.082746,
+    "ast_hash": "64595cf3d4e70728b175c14f33b48cac",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_perfil_climatico.png": {
+    "mtime": 1789607599.342749,
+    "seen": 1791851761.082748,
+    "ast_hash": "bb779dfa4702b544e41d40f1afdaf3b0",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_precipitacion_semanal.png": {
+    "mtime": 1789607599.3437936,
+    "seen": 1791851761.0827498,
+    "ast_hash": "5b0da9c2201f94c2641d99b366bfeac0",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_temperatura_semanal.png": {
+    "mtime": 1789607599.3449657,
+    "seen": 1791851761.082751,
+    "ast_hash": "436458a49e817a3ea6f484e302ddf75b",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/heatmap_variabilidad_climatica.png": {
+    "mtime": 1789607599.3455722,
+    "seen": 1791851761.082753,
+    "ast_hash": "264018df9f5795c7fcb6f2fab7be49cc",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/humedad_vs_precipitacion.png": {
+    "mtime": 1789607599.3463905,
+    "seen": 1791851761.082755,
+    "ast_hash": "238a4cea46f49fd17bfd0a77d6beb046",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/matriz_dispersion_climatica.png": {
+    "mtime": 1789607599.3482323,
+    "seen": 1791851761.0827572,
+    "ast_hash": "144ca9a4370d887c990eada3a020c04a",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/precipitacion_humedad_semanal.png": {
+    "mtime": 1789607599.3493862,
+    "seen": 1791851761.082758,
+    "ast_hash": "eace21ae7a5ccec8329d0056e09e65fa",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/serie_temporal_humedad.png": {
+    "mtime": 1789607599.3528745,
+    "seen": 1791851761.0827599,
+    "ast_hash": "501ab504aa35ae810043e8d7ee02539d",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/serie_temporal_precipitacion.png": {
+    "mtime": 1789607599.3539002,
+    "seen": 1791851761.082762,
+    "ast_hash": "d0467d129202408f1b7a47236644b03d",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/serie_temporal_temperatura.png": {
+    "mtime": 1789607599.3564563,
+    "seen": 1791851761.0827641,
+    "ast_hash": "fb6b915ae99e2d2da92f14fc6097ad67",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/temperatura_humedad_precipitacion.png": {
+    "mtime": 1789607599.3581564,
+    "seen": 1791851761.082766,
+    "ast_hash": "de183187b73b8d540463a60036f4bd54",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/temperatura_humedad_semanal.png": {
+    "mtime": 1789607599.359708,
+    "seen": 1791851761.082767,
+    "ast_hash": "dbcb202969a6bda4bdbb12eb090a4bd7",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/temperatura_vs_humedad.png": {
+    "mtime": 1789607599.3608928,
+    "seen": 1791851761.082769,
+    "ast_hash": "0168c9580715fb48e91a806366bf6165",
+    "semantic_hash": ""
+  },
+  "scripts/eda_climatico_output/temperatura_vs_precipitacion.png": {
+    "mtime": 1789607599.3617558,
+    "seen": 1791851761.082771,
+    "ast_hash": "9adbe1c8f032aadc20e312f7834a7362",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/casos_vs_incidencia_dengue.png": {
+    "mtime": 1789687316.041,
+    "seen": 1791851761.082773,
+    "ast_hash": "3cb4dabff4c0cb4e68a04c53357ad53e",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/cobertura_climatica.png": {
+    "mtime": 1789687316.0429223,
+    "seen": 1791851761.082775,
+    "ast_hash": "56045eca14d1c7e196073a942fa6188c",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/cobertura_vs_dengue.png": {
+    "mtime": 1789687316.0439017,
+    "seen": 1791851761.082776,
+    "ast_hash": "b0433f7c3265da22d27115815ab610d1",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/composicion_malaria.png": {
+    "mtime": 1789687316.045181,
+    "seen": 1791851761.0827782,
+    "ast_hash": "237752d769d95fdb410e972cf03d5099",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/dengue_por_municipio.png": {
+    "mtime": 1789687316.0468307,
+    "seen": 1791851761.08278,
+    "ast_hash": "81d5c704f28c2fa88d1fb73b1b75580b",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/heatmap_clima_enfermedades.png": {
+    "mtime": 1789687316.0487628,
+    "seen": 1791851761.082782,
+    "ast_hash": "8d8dacc0962bfc25d3afca6c7e84d36b",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/heatmap_correlacion_integrada_pearson.png": {
+    "mtime": 1789687316.050971,
+    "seen": 1791851761.082784,
+    "ast_hash": "73b8c120ef19fd782a72326b919ea9c5",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/heatmap_correlacion_integrada_spearman.png": {
+    "mtime": 1789687316.0534148,
+    "seen": 1791851761.0827851,
+    "ast_hash": "e5a8a020c9e5420d6b99cb9732de86f4",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/heatmap_municipios_variables.png": {
+    "mtime": 1789687316.0562198,
+    "seen": 1791851761.082787,
+    "ast_hash": "f121bbc9360185d104b7853a82e3b020",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/heatmap_perfil_integrado.png": {
+    "mtime": 1789687316.0580175,
+    "seen": 1791851761.0827892,
+    "ast_hash": "da4909769c9be771d7ee1ea1b6fe2672",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/humedad_media_municipio.png": {
+    "mtime": 1789687316.0598145,
+    "seen": 1791851761.0827909,
+    "ast_hash": "0ed835f073c88faa03beb5ac8946dc52",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/humedad_vs_dengue.png": {
+    "mtime": 1789687316.0615408,
+    "seen": 1791851761.082793,
+    "ast_hash": "8bcf85555acf0cdb85eb5f3933fbf47a",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/humedad_vs_incidencia_dengue.png": {
+    "mtime": 1789687316.0632737,
+    "seen": 1791851761.082794,
+    "ast_hash": "948e111965bad7b5ac2d2608ec41a7a8",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/humedad_vs_malaria.png": {
+    "mtime": 1789687316.0645754,
+    "seen": 1791851761.082796,
+    "ast_hash": "922a1f6e357caa176109f78f8f2c8efb",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/malaria_por_municipio.png": {
+    "mtime": 1789687316.0659044,
+    "seen": 1791851761.0827992,
+    "ast_hash": "0ad993c5a74dd08cc6925cd950582cf3",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/perfil_climatico_dengue.png": {
+    "mtime": 1789687316.0683424,
+    "seen": 1791851761.0828009,
+    "ast_hash": "cca9605578e0be60be2fec94c28f22d2",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/perfil_climatico_malaria.png": {
+    "mtime": 1789687316.0700283,
+    "seen": 1791851761.082803,
+    "ast_hash": "5692b817fd1d3dbc0e2378b94fd4602f",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/precipitacion_media_dia.png": {
+    "mtime": 1789687316.071152,
+    "seen": 1791851761.082805,
+    "ast_hash": "bb11374e88389f53250a3838e1fa9754",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/precipitacion_vs_dengue.png": {
+    "mtime": 1789687316.0732212,
+    "seen": 1791851761.082807,
+    "ast_hash": "d47df78918c36a477a6528c46281281f",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/precipitacion_vs_incidencia_dengue.png": {
+    "mtime": 1789687316.074304,
+    "seen": 1791851761.082808,
+    "ast_hash": "ba42007b1ae1efc93f20af0cb5f42bba",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/precipitacion_vs_malaria.png": {
+    "mtime": 1789687316.0752592,
+    "seen": 1791851761.0828102,
+    "ast_hash": "4419a4ba2a489b8a0c445892e3257551",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/temperatura_media_municipio.png": {
+    "mtime": 1789687316.0763588,
+    "seen": 1791851761.0828118,
+    "ast_hash": "39d4f3ab35f0ac6ecac6f4f02f6ca884",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/temperatura_vs_dengue.png": {
+    "mtime": 1789687316.0778294,
+    "seen": 1791851761.082814,
+    "ast_hash": "08c6c33ddf6e0b0d57b6483f17837429",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/temperatura_vs_incidencia_dengue.png": {
+    "mtime": 1789687316.0788221,
+    "seen": 1791851761.082816,
+    "ast_hash": "0c158373aaac713b54ee0a0ce732b0a8",
+    "semantic_hash": ""
+  },
+  "scripts/eda_integrado_output/temperatura_vs_malaria.png": {
+    "mtime": 1789687316.0811002,
+    "seen": 1791851761.082818,
+    "ast_hash": "37efed776d2c767c7c43e548af0af7db",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/comparacion_dengue_malaria.png": {
+    "mtime": 1789607599.3795676,
+    "seen": 1791851761.0828202,
+    "ast_hash": "20a349d9d2b093f8cee2c109b2da9cf5",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/dengue_por_municipio.png": {
+    "mtime": 1789607599.3805583,
+    "seen": 1791851761.0828211,
+    "ast_hash": "14198d5d6f7db030dfb3316a05890599",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/dengue_serie_temporal.png": {
+    "mtime": 1789607599.3815846,
+    "seen": 1791851761.0828228,
+    "ast_hash": "0731846facca7b4775bf85b15e7607dc",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/dengue_top_municipios.png": {
+    "mtime": 1789607599.3822694,
+    "seen": 1791851761.082825,
+    "ast_hash": "05568ecfeaec9eb4fb582408205b8a01",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/dengue_treemap.png": {
+    "mtime": 1789607599.3829858,
+    "seen": 1791851761.082827,
+    "ast_hash": "01c739eaa632151f6b3a7bce7a6152a4",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/distribucion_dengue.png": {
+    "mtime": 1789607599.383333,
+    "seen": 1791851761.082828,
+    "ast_hash": "bb7044bed57505ef9d492d5fbde221bf",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/distribucion_malaria.png": {
+    "mtime": 1789607599.3837085,
+    "seen": 1791851761.0828302,
+    "ast_hash": "f57f82b9711e46a37a1c2d6a2cf689d4",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/distribucion_variables.png": {
+    "mtime": 1789607599.3842425,
+    "seen": 1791851761.0828319,
+    "ast_hash": "bf0c50ed22062cabd84f60952a0bc304",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/malaria_por_especie.png": {
+    "mtime": 1789607599.384923,
+    "seen": 1791851761.082834,
+    "ast_hash": "702bcf698db1cec666299688b93c8ee2",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/malaria_por_municipio.png": {
+    "mtime": 1789607599.3858519,
+    "seen": 1791851761.082835,
+    "ast_hash": "97ca7051d3487d0accde4447d7feee46",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/malaria_top_municipios.png": {
+    "mtime": 1789607599.3866665,
+    "seen": 1791851761.082837,
+    "ast_hash": "31a27bc3aa952523a40984a1124cc462",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/malaria_treemap.png": {
+    "mtime": 1789607599.38749,
+    "seen": 1791851761.082839,
+    "ast_hash": "7e6e7aa6e840fdc9945b9ea6efef7006",
+    "semantic_hash": ""
+  },
+  "scripts/eda_output/ranking_combinado_municipios.png": {
+    "mtime": 1789607599.3883889,
+    "seen": 1791851761.0828412,
+    "ast_hash": "2fca420b4fd5fee4beb05e1a3c49cf5e",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/expA_persistencia_nacional.png": {
+    "mtime": 1789687316.0841515,
+    "seen": 1791851761.082842,
+    "ast_hash": "4578f54db4ea538744724667d992ffab",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/expB_comparacion_modelos.png": {
+    "mtime": 1789687316.08586,
+    "seen": 1791851761.082844,
+    "ast_hash": "be1044758691190c64c631a90bada140",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/expC_inviabilidad_municipal.png": {
+    "mtime": 1789687316.0897846,
+    "seen": 1791851761.082846,
+    "ast_hash": "a7a164fe9f66f5bf227ff4280eecb0b0",
+    "semantic_hash": ""
+  },
+  "scripts/linea_base_output/linea_base_nacional.png": {
+    "mtime": 1789687316.0926166,
+    "seen": 1791851761.082848,
+    "ast_hash": "c71fe18b6721e81f2d69143fe7e8e443",
+    "semantic_hash": ""
+  }
+}
