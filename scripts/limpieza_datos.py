@@ -80,6 +80,13 @@ OUT_DENGUE_SEM = os.path.join(PROCESSED_DIR, "dengue_semanal_validado.csv")
 OUT_RESUMEN_MD = os.path.join(PROCESSED_DIR, "resumen_calidad_pipeline.md")
 OUT_RESUMEN_JSON = os.path.join(PROCESSED_DIR, "resumen_calidad_pipeline.json")
 
+# Respaldo de coordenadas que NO depende de data/raw/clima/senamhi (bloqueado
+# por DVC en una maquina sin credenciales de DagsHub, ver CONTEXT.md): el
+# control de calidad climatico de Adriana ya trae latitud/longitud reales de
+# cada estacion y SI esta commiteado en el repo (no es un dato nuevo, es el
+# mismo que se usaria del raw).
+CONTROL_CALIDAD_CLIMA = os.path.join(PROCESSED_DIR, "control_calidad_clima.csv")
+
 VARIABLES_CLIMATICAS = ["temperatura_media", "humedad_media", "precipitacion_24h"]
 
 # Columnas que no deben existir en ningun dataset epidemiologico (REQ-020).
@@ -501,33 +508,68 @@ def main():
 
     print("\n[1/5] Validando datos epidemiologicos...")
 
-    dengue = pd.read_csv(DENGUE_MUNICIPAL)
-    malaria = pd.read_csv(MALARIA_MUNICIPAL)
-    dengue_sem = pd.read_csv(DENGUE_SEMANAL_NACIONAL)
+    epi_reconstruida_desde_cache = False
 
-    for df in (dengue, malaria):
-        df["municipio"] = df["municipio"].astype(str).str.strip().str.upper()
+    try:
+        dengue = pd.read_csv(DENGUE_MUNICIPAL)
+        malaria = pd.read_csv(MALARIA_MUNICIPAL)
+        dengue_sem = pd.read_csv(DENGUE_SEMANAL_NACIONAL)
 
-    dengue_val = validar_epidemiologia_municipal(
-        dengue, "casos_dengue_acumulados_se1_13", DENGUE_MUNICIPAL
-    )
-    malaria_val = validar_epidemiologia_municipal(
-        malaria, "total_malaria", MALARIA_MUNICIPAL
-    )
-    dengue_sem_val = validar_dengue_semanal_nacional(dengue_sem)
+        for df in (dengue, malaria):
+            df["municipio"] = df["municipio"].astype(str).str.strip().str.upper()
+
+        dengue_val = validar_epidemiologia_municipal(
+            dengue, "casos_dengue_acumulados_se1_13", DENGUE_MUNICIPAL
+        )
+        malaria_val = validar_epidemiologia_municipal(
+            malaria, "total_malaria", MALARIA_MUNICIPAL
+        )
+        dengue_sem_val = validar_dengue_semanal_nacional(dengue_sem)
+
+        dengue_val.to_csv(OUT_DENGUE_MUN, index=False, encoding="utf-8-sig")
+        malaria_val.to_csv(OUT_MALARIA_MUN, index=False, encoding="utf-8-sig")
+        dengue_sem_val.to_csv(OUT_DENGUE_SEM, index=False, encoding="utf-8-sig")
+
+    except FileNotFoundError as error:
+        # data/raw/epidemiologia/ esta versionado con DVC y el pull puede
+        # fallar por falta de credenciales de DagsHub en esta maquina (ver
+        # CONTEXT.md, bloqueo reconfirmado 2026-09-17). En vez de abortar
+        # todo el pipeline -incluida la parte de clima, que NO depende de
+        # esto- se reutilizan los CSV ya validados de una corrida anterior,
+        # dejando constancia explicita de que NO se revalido epidemiologia
+        # en esta ejecucion.
+        print(f"AVISO: no se pudo leer un crudo epidemiologico ({error}).")
+        print(
+            "Esto es el bloqueo de credenciales DVC ya documentado en "
+            "CONTEXT.md, no un error nuevo. Se reutilizan los CSV ya "
+            "validados en data/processed/ en vez de abortar el pipeline."
+        )
+        epi_reconstruida_desde_cache = True
+
+        faltantes = [
+            ruta for ruta in (OUT_DENGUE_MUN, OUT_MALARIA_MUN, OUT_DENGUE_SEM)
+            if not os.path.exists(ruta)
+        ]
+        if faltantes:
+            raise FileNotFoundError(
+                "No se puede continuar: faltan los crudos epidemiologicos Y "
+                f"tampoco hay un CSV ya validado para reutilizar en {faltantes}. "
+                "Se necesita al menos una de las dos fuentes."
+            ) from error
+
+        dengue_val = pd.read_csv(OUT_DENGUE_MUN)
+        malaria_val = pd.read_csv(OUT_MALARIA_MUN)
+        dengue_sem_val = pd.read_csv(OUT_DENGUE_SEM)
 
     catalogo_municipios = set(dengue_val["municipio"]) | set(malaria_val["municipio"])
     cobertura_municipal = marcar_cobertura_municipal(
         dengue_val, malaria_val, catalogo_municipios
     )
 
-    dengue_val.to_csv(OUT_DENGUE_MUN, index=False, encoding="utf-8-sig")
-    malaria_val.to_csv(OUT_MALARIA_MUN, index=False, encoding="utf-8-sig")
-    dengue_sem_val.to_csv(OUT_DENGUE_SEM, index=False, encoding="utf-8-sig")
-
     print(
         "Dengue municipal:", len(dengue_val), "filas |",
-        int((dengue_val["estado_calidad"] == "rechazado").sum()), "rechazadas"
+        int((dengue_val["estado_calidad"] == "rechazado").sum()), "rechazadas",
+        "| reutilizado de corrida anterior" if epi_reconstruida_desde_cache else "| revalidado ahora"
     )
     print(
         "Malaria municipal:", len(malaria_val), "filas |",
@@ -568,12 +610,32 @@ def main():
 
     print("\n[3/5] Imputando variables climaticas segun reglas_calidad_datos.md...")
 
-    raw = pd.read_csv(RAW_SENAMHI)
+    try:
+        raw_coordenadas = pd.read_csv(RAW_SENAMHI)
+        fuente_coordenadas = RAW_SENAMHI
+    except FileNotFoundError:
+        # Mismo bloqueo de DVC que en el paso 1. control_calidad_clima.csv
+        # SI esta commiteado (no pasa por DVC) y tiene las mismas
+        # coordenadas reales de estacion -lat/lon-, asi que no se inventa
+        # nada nuevo, solo se lee la misma coordenada desde otro archivo
+        # que si esta disponible.
+        print(
+            f"AVISO: {RAW_SENAMHI} no disponible (bloqueo DVC). "
+            f"Usando coordenadas de estacion desde {CONTROL_CALIDAD_CLIMA}."
+        )
+        raw_coordenadas = pd.read_csv(CONTROL_CALIDAD_CLIMA)
+        fuente_coordenadas = CONTROL_CALIDAD_CLIMA
+
+    raw_coordenadas["municipio"] = (
+        raw_coordenadas["municipio"].astype(str).str.strip().str.upper()
+    )
     coordenadas = (
-        raw.groupby("municipio")[["latitud", "longitud"]].mean().apply(tuple, axis=1)
+        raw_coordenadas.groupby("municipio")[["latitud", "longitud"]]
+        .mean().apply(tuple, axis=1)
         .to_dict()
     )
     vecinos = calcular_vecino_mas_cercano(coordenadas)
+    print(f"Coordenadas de estacion tomadas de: {fuente_coordenadas}")
 
     print("Municipio vecino mas cercano usado como respaldo de imputacion:")
     for m, (v, d) in vecinos.items():
@@ -628,8 +690,9 @@ def main():
 
     with open(OUT_RESUMEN_MD, "w", encoding="utf-8") as f:
         f.write("# Resumen de calidad del pipeline de datos\n\n")
-        f.write(f"Generado: {pd.Timestamp.now().isoformat()}\n\n")
-        f.write(f"Duracion de ejecucion: {duracion:.2f} segundos\n\n")
+        # Sin fecha ni duracion a proposito: este archivo lo rastrea DVC y
+        # debe salir bit a bit igual en cada corrida (la duracion se imprime
+        # en consola).
         f.write("## Epidemiologia\n\n")
         f.write("```json\n" + json.dumps(
             resumen["epidemiologia"], ensure_ascii=False, indent=2
