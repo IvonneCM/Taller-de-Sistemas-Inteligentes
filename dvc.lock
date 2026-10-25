@@ -101,3 +101,19 @@ stages:
       hash: md5
       md5: 3d32bd97c878eeedfadfac852999148b
       size: 42093
+  ventanas_temporales_clima:
+    cmd: python scripts/ventanas_temporales_clima.py
+    deps:
+    - path: data/processed/clima_semanal_calidad.csv
+      hash: md5
+      md5: 15795090415b1990b1d663d02c95250f
+      size: 4509
+    - path: scripts/ventanas_temporales_clima.py
+      hash: md5
+      md5: 3bcc384d75d884531b70ddec8c3a4dda
+      size: 3727
+    outs:
+    - path: data/processed/clima_semanal_ventanas.csv
+      hash: md5
+      md5: 2a50883bbd730bfba8d60915b587f96d
+      size: 18099

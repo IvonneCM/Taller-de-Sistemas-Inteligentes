@@ -34,6 +34,15 @@ stages:
       - data/processed/resumen_calidad_pipeline.json:
           cache: false
 
+  ventanas_temporales_clima:
+    cmd: python scripts/ventanas_temporales_clima.py
+    deps:
+      - scripts/ventanas_temporales_clima.py
+      - data/processed/clima_semanal_calidad.csv
+    outs:
+      - data/processed/clima_semanal_ventanas.csv:
+          cache: false
+
   integrar_datos:
     cmd: python scripts/integrar_datos.py
     deps:

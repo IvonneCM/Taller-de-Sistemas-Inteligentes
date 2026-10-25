@@ -1,8 +1,8 @@
 # Resumen de calidad del pipeline de datos
 
-Generado: 2026-09-17T11:40:51.203840
+Generado: 2026-10-25T13:21:05.698126
 
-Duracion de ejecucion: 0.11 segundos
+Duracion de ejecucion: 0.13 segundos
 
 ## Epidemiologia
 
