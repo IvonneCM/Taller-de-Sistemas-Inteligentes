@@ -38,8 +38,8 @@ stages:
       nfiles: 3
     - path: scripts/limpieza_datos.py
       hash: md5
-      md5: 29cf911424b6ace6b2aab3835127bacb
-      size: 24341
+      md5: 6959f686a035123efebca95d54a9833b
+      size: 27411
     outs:
     - path: data/processed/clima_diario_imputado.csv
       hash: md5
@@ -67,8 +67,8 @@ stages:
       size: 1778
     - path: data/processed/resumen_calidad_pipeline.md
       hash: md5
-      md5: 25d958ab23584f25e082e82d23182053
-      size: 1770
+      md5: 02efa4b656c8d0124e65a6a14a992ca9
+      size: 1694
   integrar_datos:
     cmd: python scripts/integrar_datos.py
     deps:
@@ -101,3 +101,153 @@ stages:
       hash: md5
       md5: 3d32bd97c878eeedfadfac852999148b
       size: 42093
+  ventanas_temporales_clima:
+    cmd: python scripts/ventanas_temporales_clima.py
+    deps:
+    - path: data/processed/clima_semanal_calidad.csv
+      hash: md5
+      md5: 30519f63708269b1f80454105e5d4ed1
+      size: 4512
+    - path: scripts/ventanas_temporales_clima.py
+      hash: md5
+      md5: 3bcc384d75d884531b70ddec8c3a4dda
+      size: 3727
+    outs:
+    - path: data/processed/clima_semanal_ventanas.csv
+      hash: md5
+      md5: c12f1b11b3bf9868fff3c9b015e64057
+      size: 18123
+  extraer_dengue_semanal:
+    cmd: python scripts/extraer_dengue_semanal.py
+    deps:
+    - path: data/boletines/SE13.pdf
+      hash: md5
+      md5: 2eeac18ca01ce39f06af91f1f025d916
+      size: 1330261
+    - path: data/processed/dengue_municipal_validado.csv
+      hash: md5
+      md5: d819dadcccd4c09bccd1971c242807bb
+      size: 8802
+    - path: scripts/extraer_dengue_semanal.py
+      hash: md5
+      md5: 930f42a33b80a313553c78d5da04d03b
+      size: 8289
+    outs:
+    - path: data/processed/dengue_municipal_semanal.csv
+      hash: md5
+      md5: 00e7ea0de00964b9c40398781c8b3e6c
+      size: 42172
+  clima_nasa_power:
+    cmd: python scripts/clima_nasa_power.py
+    deps:
+    - path: data/reference/municipios_coordenadas.csv
+      hash: md5
+      md5: 091440dcb9e315947c9c8d832ddd97d8
+      size: 7685
+    - path: scripts/clima_nasa_power.py
+      hash: md5
+      md5: 115f653fac511142fc9a7afddbd4dda9
+      size: 6166
+    outs:
+    - path: data/processed/clima_nasa_power_semanal.csv
+      hash: md5
+      md5: aab0e5df115a8286fe18d3a4ef26e471
+      size: 116511
+    - path: data/raw/clima/nasa_power/nasa_power_diario.csv
+      hash: md5
+      md5: cefef96630c5fdb3a13edd81204abceb
+      size: 409855
+  extraer_malaria_boletines:
+    cmd: python scripts/extraer_malaria_boletines.py
+    deps:
+    - path: data/boletines
+      hash: md5
+      md5: e21ccbe172cc88a5cb1cc58b7f65c4e2.dir
+      size: 13269291
+      nfiles: 9
+    - path: data/raw/epidemiologia/malaria_bolivia_municipal_SE01_13_2026.csv
+      hash: md5
+      md5: d9ef53d75e490bd468e708321e98cbfd
+      size: 5077
+    - path: scripts/extraer_malaria_boletines.py
+      hash: md5
+      md5: d01d78e672a39f0aef5b8ae43b53fc95
+      size: 9359
+    outs:
+    - path: data/processed/malaria_acumulado_por_boletin.csv
+      hash: md5
+      md5: ca1b31fe5bd97654bff634c2856ae4db
+      size: 5372
+    - path: data/processed/malaria_municipal_bloques.csv
+      hash: md5
+      md5: a37356dfd1151d7de0729e01eba989cb
+      size: 8806
+  extraer_dengue_revisiones:
+    cmd: python scripts/extraer_dengue_revisiones.py
+    deps:
+    - path: data/boletines
+      hash: md5
+      md5: e21ccbe172cc88a5cb1cc58b7f65c4e2.dir
+      size: 13269291
+      nfiles: 9
+    - path: data/processed/dengue_municipal_semanal.csv
+      hash: md5
+      md5: 00e7ea0de00964b9c40398781c8b3e6c
+      size: 42172
+    - path: scripts/extraer_dengue_revisiones.py
+      hash: md5
+      md5: 261789831e5c02c49124c5d2cf87fe90
+      size: 9268
+    outs:
+    - path: data/processed/dengue_revisiones_boletines.csv
+      hash: md5
+      md5: 0140d19b1f77e43193eb25b0edb18d29
+      size: 23212
+    - path: data/processed/dengue_revisiones_resumen.csv
+      hash: md5
+      md5: c32a1f4c11f34ad9fc22e0c1162476c1
+      size: 223
+  construir_panel_semanal:
+    cmd: python scripts/construir_panel_semanal.py
+    deps:
+    - path: data/processed/clima_nasa_power_semanal.csv
+      hash: md5
+      md5: aab0e5df115a8286fe18d3a4ef26e471
+      size: 116511
+    - path: data/processed/clima_semanal.csv
+      hash: md5
+      md5: 3f11ac75d103a276bb08e11eb0de2f65
+      size: 4574
+    - path: data/processed/dengue_municipal_semanal.csv
+      hash: md5
+      md5: 00e7ea0de00964b9c40398781c8b3e6c
+      size: 42172
+    - path: scripts/construir_panel_semanal.py
+      hash: md5
+      md5: 0e3c92328f907876b1c91e1f193c9937
+      size: 5818
+    outs:
+    - path: data/processed/panel_semanal_dengue_clima.csv
+      hash: md5
+      md5: 95ade6f14e7e95ff5f6923731741c927
+      size: 195525
+  construir_panel_malaria:
+    cmd: python scripts/construir_panel_malaria.py
+    deps:
+    - path: data/processed/clima_nasa_power_semanal.csv
+      hash: md5
+      md5: aab0e5df115a8286fe18d3a4ef26e471
+      size: 116511
+    - path: data/processed/malaria_municipal_bloques.csv
+      hash: md5
+      md5: a37356dfd1151d7de0729e01eba989cb
+      size: 8806
+    - path: scripts/construir_panel_malaria.py
+      hash: md5
+      md5: e5a499cd30ca4df4bce6918b24610caf
+      size: 3822
+    outs:
+    - path: data/processed/panel_bloques_malaria_clima.csv
+      hash: md5
+      md5: 9e58afeb65f3d883be5b00a3b42a7c67
+      size: 20253
