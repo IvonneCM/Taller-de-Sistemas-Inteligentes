@@ -18,6 +18,30 @@ ya descargados a un dataset listo para el modelo de Adriana:
                                      disponibles; si no, se conserva el
                                      `dataset_integrado_municipal.csv` ya
                                      existente y se avisa claramente).
+  4. scripts/extraer_dengue_semanal.py -> dengue por semana y municipio,
+                                     extraido con verificacion automatica
+                                     del Boletin N.13 (NUEVO, 2026-10-25).
+                                     Solo dengue -- malaria no tiene
+                                     desglose semanal en la fuente.
+  5. scripts/clima_nasa_power.py -> clima de reanalisis para los 42
+                                     municipios con casos (SENAMHI solo
+                                     cubre 4). Cacheado: sin red reutiliza
+                                     data/raw/clima/nasa_power/.
+  6. scripts/extraer_malaria_boletines.py -> malaria por bloques de semanas,
+                                     por diferencia de acumulados de los
+                                     boletines SE5, 7, 8, 9 y 13.
+  7. scripts/extraer_dengue_revisiones.py -> cuanto se corrige el dato de
+                                     dengue entre boletines (riesgo de datos).
+  8. scripts/construir_panel_semanal.py -> panel municipio-semana de DENGUE
+                                     (28 municipios x 13 semanas) con clima,
+                                     rezagos y objetivos a 3 y 4 semanas.
+                                     Es el dataset para el modelo.
+  9. scripts/construir_panel_malaria.py -> panel de MALARIA por bloques +
+                                     clima (no hay serie semanal en la fuente).
+ 10. scripts/validar_contrato.py -> comprueba columnas, claves, rangos y
+                                     ausencia de fuga de datos en los paneles.
+                                     A diferencia de los demas pasos, si
+                                     falla el pipeline termina con error.
 
 Uso:
     python scripts/pipeline_completo.py
@@ -39,9 +63,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS_DIR = os.path.join(BASE_DIR, "scripts")
 
 PASOS = [
-    ("1/3 — Limpieza, validacion e imputacion", "limpieza_datos.py"),
-    ("2/3 — Ventanas temporales climaticas", "ventanas_temporales_clima.py"),
-    ("3/3 — Integracion y agregacion por zona", "integrar_datos.py"),
+    ("1/10 — Limpieza, validacion e imputacion", "limpieza_datos.py"),
+    ("2/10 — Ventanas temporales climaticas (SENAMHI)", "ventanas_temporales_clima.py"),
+    ("3/10 — Integracion y agregacion por zona", "integrar_datos.py"),
+    ("4/10 — Extraccion de dengue semanal por municipio", "extraer_dengue_semanal.py"),
+    ("5/10 — Clima NASA POWER para todos los municipios", "clima_nasa_power.py"),
+    ("6/10 — Malaria por bloques (diferencias entre boletines)", "extraer_malaria_boletines.py"),
+    ("7/10 — Revisiones de dengue entre boletines", "extraer_dengue_revisiones.py"),
+    ("8/10 — Panel semanal de dengue (clima + rezagos + objetivos)", "construir_panel_semanal.py"),
+    ("9/10 — Panel de malaria por bloques + clima", "construir_panel_malaria.py"),
+    ("10/10 — Validacion del contrato de datos", "validar_contrato.py"),
 ]
 
 
@@ -80,6 +111,13 @@ def main():
     for archivo, ok in resultados.items():
         estado = "OK" if ok else "OMITIDO (ver aviso arriba) — se conserva el resultado anterior"
         print(f" - {archivo}: {estado}")
+
+    if not resultados.get("validar_contrato.py", True):
+        print(
+            "\nERROR: los datos generados NO cumplen el contrato publicado "
+            "(ver problemas arriba). No usar estos paneles para entrenar."
+        )
+        sys.exit(1)
 
     if not all(resultados.values()):
         print(

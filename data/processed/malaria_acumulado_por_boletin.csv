@@ -1,0 +1,104 @@
+﻿municipio,se_corte,vivax,falciparum,mixta,total,boletin,suma_coincide_total,fila_inconsistente
+BELLA FLOR,5,7,0,0,7,SE05.pdf,False,False
+BELLA FLOR,7,9,0,0,9,SE07.pdf,True,False
+BELLA FLOR,8,9,0,0,9,SE08.pdf,True,False
+BELLA FLOR,9,9,0,0,9,SE09.pdf,True,False
+BELLA FLOR,13,11,0,0,11,SE13 (transcripcion validada),True,False
+COBIJA,5,2,0,0,2,SE05.pdf,False,False
+COBIJA,7,4,1,2,7,SE07.pdf,True,False
+COBIJA,8,6,1,2,9,SE08.pdf,True,False
+COBIJA,9,7,2,2,11,SE09.pdf,True,False
+COBIJA,13,16,3,2,21,SE13 (transcripcion validada),True,False
+EUREKA(SANTOS MERCADO),5,28,0,0,28,SE05.pdf,False,False
+EUREKA(SANTOS MERCADO),7,38,0,0,38,SE07.pdf,True,False
+EUREKA(SANTOS MERCADO),8,38,0,0,38,SE08.pdf,True,False
+EUREKA(SANTOS MERCADO),9,38,0,0,38,SE09.pdf,True,False
+EUREKA(SANTOS MERCADO),13,55,3,0,58,SE13 (transcripcion validada),True,False
+FILADELFIA,5,0,0,0,0,SE05.pdf,False,False
+FILADELFIA,7,0,0,0,0,SE07.pdf,True,False
+GUAYARAMERIN,5,91,57,2,150,SE05.pdf,False,False
+GUAYARAMERIN,7,121,63,4,188,SE07.pdf,True,False
+GUAYARAMERIN,8,130,70,6,206,SE08.pdf,True,False
+GUAYARAMERIN,9,143,71,6,220,SE09.pdf,True,False
+GUAYARAMERIN,13,199,87,7,293,SE13 (transcripcion validada),True,False
+INGAVI(HUMAITA),5,17,0,0,17,SE05.pdf,False,False
+INGAVI(HUMAITA),7,18,0,0,18,SE07.pdf,True,False
+INGAVI(HUMAITA),8,19,0,0,19,SE08.pdf,True,False
+INGAVI(HUMAITA),9,25,0,0,25,SE09.pdf,True,False
+INGAVI(HUMAITA),13,29,0,0,29,SE13 (transcripcion validada),True,False
+IXIAMAS,5,21,3,1,25,SE05.pdf,False,False
+IXIAMAS,7,21,3,1,25,SE07.pdf,True,False
+IXIAMAS,8,21,3,1,25,SE08.pdf,True,False
+IXIAMAS,9,32,11,2,45,SE09.pdf,True,False
+IXIAMAS,13,100,52,4,156,SE13 (transcripcion validada),True,False
+NACEBE(SANTA ROSA DEL ABUNA),5,16,0,0,16,SE05.pdf,False,False
+NACEBE(SANTA ROSA DEL ABUNA),7,18,0,0,18,SE07.pdf,True,False
+NACEBE(SANTA ROSA DEL ABUNA),8,18,0,0,18,SE08.pdf,True,False
+NACEBE(SANTA ROSA DEL ABUNA),9,21,0,0,21,SE09.pdf,True,False
+NACEBE(SANTA ROSA DEL ABUNA),13,31,1,0,32,SE13 (transcripcion validada),True,False
+NUEVO MANOA(NUEVA ESPERANZA),5,25,1,0,26,SE05.pdf,False,False
+NUEVO MANOA(NUEVA ESPERANZA),7,33,1,0,34,SE07.pdf,True,False
+NUEVO MANOA(NUEVA ESPERANZA),8,33,1,0,34,SE08.pdf,True,False
+NUEVO MANOA(NUEVA ESPERANZA),9,34,2,0,36,SE09.pdf,True,False
+NUEVO MANOA(NUEVA ESPERANZA),13,52,3,0,55,SE13 (transcripcion validada),True,False
+PORVENIR,5,3,0,0,3,SE05.pdf,False,False
+PORVENIR,7,3,0,0,3,SE07.pdf,True,False
+PORVENIR,8,3,0,0,3,SE08.pdf,True,False
+PORVENIR,9,3,0,0,3,SE09.pdf,True,False
+PORVENIR,13,4,0,0,4,SE13 (transcripcion validada),True,False
+PUERTO GONZALO MORENO,5,10,1,0,11,SE05.pdf,False,False
+PUERTO GONZALO MORENO,7,14,1,0,15,SE07.pdf,True,False
+PUERTO GONZALO MORENO,8,17,1,0,18,SE08.pdf,True,False
+PUERTO GONZALO MORENO,9,18,2,0,20,SE09.pdf,True,False
+PUERTO GONZALO MORENO,13,32,2,0,34,SE13 (transcripcion validada),True,False
+PUERTO RICO,5,7,1,0,8,SE05.pdf,False,False
+PUERTO RICO,7,10,1,0,11,SE07.pdf,True,False
+PUERTO RICO,8,13,1,0,14,SE08.pdf,True,False
+PUERTO RICO,9,13,1,0,14,SE09.pdf,True,False
+PUERTO RICO,13,21,1,0,22,SE13 (transcripcion validada),True,False
+REYES,5,10,0,0,10,SE05.pdf,False,False
+REYES,7,10,0,0,10,SE07.pdf,True,False
+REYES,8,11,0,0,11,SE08.pdf,True,False
+REYES,9,11,0,0,11,SE09.pdf,True,False
+REYES,13,17,0,1,18,SE13 (transcripcion validada),True,False
+RIBERALTA,5,139,12,4,155,SE05.pdf,False,False
+RIBERALTA,7,253,19,7,279,SE07.pdf,True,False
+RIBERALTA,8,310,28,10,348,SE08.pdf,True,False
+RIBERALTA,9,369,35,14,418,SE09.pdf,True,False
+RIBERALTA,13,597,58,27,682,SE13 (transcripcion validada),True,False
+RURRENABAQUE,13,1,0,0,1,SE13 (transcripcion validada),True,False
+SAN BUENAVENTURA,5,1,0,0,0,SE05.pdf,False,True
+SAN BUENAVENTURA,7,1,0,0,1,SE07.pdf,True,False
+SAN BUENAVENTURA,8,1,0,0,1,SE08.pdf,True,False
+SAN BUENAVENTURA,9,1,0,0,1,SE09.pdf,True,False
+SAN BUENAVENTURA,13,1,0,0,1,SE13 (transcripcion validada),True,False
+SAN LORENZO(PND),5,9,0,0,9,SE05.pdf,False,False
+SAN LORENZO(PND),7,11,0,0,11,SE07.pdf,True,False
+SAN LORENZO(PND),8,11,0,0,11,SE08.pdf,True,False
+SAN LORENZO(PND),9,14,0,0,14,SE09.pdf,True,False
+SAN LORENZO(PND),13,21,3,0,24,SE13 (transcripcion validada),True,False
+SAN PEDRO(PND),5,2,0,0,2,SE05.pdf,False,False
+SAN PEDRO(PND),7,3,0,0,3,SE07.pdf,True,False
+SAN PEDRO(PND),8,4,0,0,4,SE08.pdf,True,False
+SAN PEDRO(PND),9,5,0,0,5,SE09.pdf,True,False
+SAN PEDRO(PND),13,15,0,0,15,SE13 (transcripcion validada),True,False
+SANTA ROSA (BNI),5,4,1,0,5,SE05.pdf,False,False
+SANTA ROSA (BNI),7,6,1,0,7,SE07.pdf,True,False
+SANTA ROSA (BNI),8,10,1,0,11,SE08.pdf,True,False
+SANTA ROSA (BNI),9,12,1,0,13,SE09.pdf,True,False
+SANTA ROSA (BNI),13,18,1,0,19,SE13 (transcripcion validada),True,False
+SENA,5,20,7,0,27,SE05.pdf,False,False
+SENA,7,37,14,0,51,SE07.pdf,True,False
+SENA,8,47,16,0,63,SE08.pdf,True,False
+SENA,9,54,19,0,73,SE09.pdf,True,False
+SENA,13,92,34,0,126,SE13 (transcripcion validada),True,False
+TRINIDAD,5,0,1,1,2,SE05.pdf,False,False
+TRINIDAD,7,0,1,1,2,SE07.pdf,True,False
+TRINIDAD,8,0,1,1,2,SE08.pdf,True,False
+TRINIDAD,9,0,1,1,2,SE09.pdf,True,False
+TRINIDAD,13,0,1,1,2,SE13 (transcripcion validada),True,False
+VILLA NUEVA (LOMA ALTA),5,4,0,0,4,SE05.pdf,False,False
+VILLA NUEVA (LOMA ALTA),7,5,0,0,5,SE07.pdf,True,False
+VILLA NUEVA (LOMA ALTA),8,5,0,0,5,SE08.pdf,True,False
+VILLA NUEVA (LOMA ALTA),9,5,1,0,6,SE09.pdf,True,False
+VILLA NUEVA (LOMA ALTA),13,11,1,0,12,SE13 (transcripcion validada),True,False

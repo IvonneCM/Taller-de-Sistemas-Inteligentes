@@ -1,100 +1,222 @@
-# CONTEXT.md — Bitácora de sesión del proyecto
+# CONTEXT.md — Bitácora completa del proyecto
 
-> ▶️ **Desarrollo del backend retomado el 2026-10-25.** La Primera
-> Evaluación ya cerró con evidencia (ver `../docs/cierre_sprint1.md`), por
-> lo que el bloqueo de este archivo quedó resuelto. Fase 1 y parte de la
-> Fase 2 de `tasks.md` ya tienen código real — ver bloque de reanudación.
+> Este archivo reemplaza al `CONTEXT.md` anterior. Léelo primero, en cada
+> sesión nueva, antes de tocar código — así lo pide `CLAUDE.md`.
 
-## Bloque de reanudación
+---
 
-- **Tarea activa:** TASK-005 a TASK-010 implementadas y verificadas en esta
-  sesión (2026-10-25, Tania). **Pendiente antes de marcarlas `[x]` en
-  `tasks.md`:** confirmar con el equipo las divergencias listadas abajo
-  (regla de `CLAUDE.md`: no marcar `[x]` sin confirmar que no hubo
-  divergencia respecto a `design.md`).
-- **Fase actual:** Fase 1 (Infraestructura base) y Fase 2 (Capa de datos)
-  de `tasks.md`, ya no Sprint 1 de la evaluación.
-- **Estado:** el proyecto ya tiene EDA real (no sintético), reglas de
-  calidad documentadas, C4, métricas de valor y cierre de sprint escritos.
-  Ver `docs/cierre_sprint1.md` para el estado tarea-por-tarea de todo el
-  equipo, verificado contra el repositorio.
-- **Bloqueos:** el remoto DVC (`origin-s3`, DagsHub) configurado para
-  versionar `data/raw/` no tiene credenciales disponibles en esta máquina;
-  `dvc pull` falla. Reconfirmado con evidencia el 2026-09-17 (ver
-  `docs/entorno_datos_iniciales.md` §6.1); ya no bloquea solo a Tania, sino
-  a cualquier máquina nueva que clone el repo sin credenciales de DagsHub.
-- **Resuelto (2026-09-17):** en Python 3.13, `psycopg2-binary==2.9.9` y
-  `shap==0.46.0` no instalaban por falta de *wheels* precompilados para esa
-  versión de Python. Se decidió la Opción B (`docs/entorno_datos_iniciales.md`
-  §5.3): se actualizaron a `psycopg2-binary==2.9.13`, `shap==0.52.0` y
-  `numpy==2.5.3` en `dengue-malaria-prediccion/requirements.txt`, verificado
-  con instalación limpia y una prueba funcional real de SHAP+XGBoost antes
-  de aplicar el cambio. También se fijaron las 9 versiones del
-  `requirements.txt` raíz a las ya verificadas en esta sesión.
+## 1. Qué es este proyecto
 
-## Registro de sesiones
+**Sistema Inteligente de Predicción Temprana de Brotes de Dengue/Malaria**
+— proyecto universitario para la materia **Taller de Sistemas
+Inteligentes**, equipo de 5 personas.
 
-| Sesión | Fecha | Resumen | Archivos afectados |
+**Objetivo del producto:** predecir zonas con riesgo de brote de dengue o
+malaria en Bolivia con **3-4 semanas de anticipación**, usando datos
+epidemiológicos, climáticos y geoespaciales, para activar campañas de
+fumigación preventiva y asignar recursos médicos antes de que ocurra el
+brote.
+
+**Usuarios:** autoridades de salud pública, equipos de prevención del
+SEDES, médicos epidemiólogos, coordinadores sanitarios municipales.
+
+**Equipo (ClickUp):** Tania Perez, Ivonne Colque, Adriana Rocha Vedia,
+Dilan Mamani Pamuri, Ignacio Retamozo Torrez. (Roger aparece en el
+workspace pero nunca se le asignó tarea — probablemente el docente/facilitador.)
+
+**Repositorio:** `github.com/IvonneCM/Taller-de-Sistemas-Inteligentes`,
+rama **`tani`**, todo el proyecto vive en el subdirectorio
+`dengue-malaria-prediccion/`.
+
+**Stack:**
+- Backend: Python 3.12 + FastAPI
+- Base de datos: PostgreSQL 16 + PostGIS
+- ML: scikit-learn / XGBoost + SHAP (explicabilidad), pipeline batch semanal
+- Frontend: React + Leaflet/Mapbox
+- Despliegue: Railway · Entrenamiento offline: Google Colab
+- Agentes de IA usados en el proyecto: Claude Code + GitHub Copilot
+
+---
+
+## 2. Metodología: Spec Driven Development (SDD)
+
+Se siguió un flujo de documentación-antes-que-código:
+
+```
+Solicitud de cambio → requirements.md → design.md → tasks.md →
+configuración de agentes IA (CLAUDE.md / copilot-instructions.md) → CONTEXT.md
+```
+
+Reglas no negociables (ya en `CLAUDE.md`, no repetirlas aquí en detalle):
+no inventar datos reales no verificados, no datos personales de pacientes,
+no alertas sin justificación, tabla `predicciones` inmutable,
+`requirements.md` es la fuente de autoridad, no exponer credenciales.
+
+---
+
+## 3. La evaluación del docente (lo más importante para las próximas 2-3 semanas)
+
+Esta es la **primera evaluación** del proyecto, con una rúbrica específica
+que el docente compartió en clase. Puntos clave:
+
+> **"No se espera el sistema final completo, sino decisiones iniciales
+> justificadas, trazables y viables."**
+
+**Secuencia obligatoria de la presentación (7 puntos, en este orden):**
+1. Problema y Contexto
+2. Product Goal y Valor
+3. Datos
+4. Arquitectura
+5. Riesgos y Seguridad
+6. Línea Base y Evidencia
+7. Gestión y Cierre
+
+**Checklist que el docente revisará en vivo:**
+| Punto | Debe estar listo cuando... |
+|---|---|
+| README | Actualizado, con instrucciones para reproducir el avance |
+| Definiciones | Problema, métricas, exclusiones y criterios de éxito documentados |
+| Datos | Inventario, EDA/perfilado, calidad y reglas de preparación documentados |
+| Arquitectura y Riesgos | Modelos C4, ADRs documentados, Risk Register inicial |
+| Scrum | Product Goal, Backlog priorizado, evidencia de trabajo del sprint |
+| Línea Base | Scripts/pipeline reproducible y registro de experimentos |
+| Uso de IA | Declaración transparente de qué IA se usó + evidencia de revisión humana |
+
+**Reglas que el docente aplica activamente:**
+- Regla de evidencia: sin resultados aún → presentar la justificación técnica de cómo se establecerá la línea base, no dejarlo en blanco.
+- Un experimento fallido SÍ es evidencia válida si está documentado y se usó para decidir.
+- Un diagrama no basta — toda decisión técnica debe justificarse frente al problema, los datos y la viabilidad.
+- Transparencia de IA obligatoria (no se penaliza usar IA, sí ocultarlo).
+
+---
+
+## 4. Qué existe ya en el repositorio (todo generado, pendiente de commit/push)
+
+### Documentación base (raíz de `dengue-malaria-prediccion/`)
+- `requirements.md` — 20 REQ + 10 NFR, cada uno con criterio de aceptación
+- `design.md` — arquitectura completa, modelo de datos, endpoints, §10 con preguntas abiertas
+- `tasks.md` — 36 tareas atómicas en 6 fases (esto es el plan de **desarrollo del backend**, posterior a esta primera evaluación)
+- `CLAUDE.md` / `.github/copilot-instructions.md` — reglas para agentes de IA
+- `README.md`, `.env.example`, `.gitignore`, `requirements.txt`
+- `.vscode/` (settings, launch, tasks, extensions) — paquete de trabajo para VS Code
+- `FIRST_PROMPT.md` — primer prompt para arrancar TASK-001 cuando toque desarrollo
+- `app/` — esqueleto de carpetas FastAPI (solo `__init__.py` y un `main.py` mínimo con `/health`)
+
+### `docs/`
+- `docs/c4/` — Diagramas C4 Nivel 1 (Contexto) y Nivel 2 (Contenedores), en `.svg` y `.png`, más `README.md` con la justificación de cada decisión frente al problema/datos/viabilidad
+- `docs/metricas_valor.md` — métricas del sistema final (NFR-001/002) vs. métricas de valor de esta entrega
+- `docs/cierre_sprint1.md` — backlog pendiente, bloqueos, viabilidad, próximos pasos (insumo del punto 7 de la presentación)
+- `docs/eda_inicial.md` + `docs/eda_summary.json` + `docs/eda_assets/*.png` — EDA inicial sobre datos **sintéticos** (ver §6)
+- `docs/pipeline_datos.md` + `docs/pipeline_summary.json` — pipeline reproducible de limpieza/imputación
+
+### `notebooks/`
+- `00_generar_datos_sinteticos.py` — genera datos sintéticos con la estructura de SEDES/SENAMHI (semilla fija = reproducible)
+- `01_eda_inicial.py` — perfilado (cobertura, outliers, distribuciones)
+- `02_pipeline_limpieza.py` — limpieza + imputación, produce `data/processed/*.csv`
+
+### `data/` (gitignored — se regeneran corriendo los scripts, no se versionan)
+- `data/raw/` — datos sintéticos crudos
+- `data/processed/` — datos ya limpios/imputados
+
+### Fuera del repo (entregados a Tania como archivos, no forman parte del código)
+- Deck de 11 slides (.pptx) resumiendo todo el proceso SDD
+- PDF "Guía para la Defensa" con las tareas de cada persona y checklist
+
+---
+
+## 5. Backlog en ClickUp (espacio "Taller de Sistemas Inteligentes")
+
+**Listas:** Discovery, Data, Architecture, Risk, Build/QA/Deploy (+ carpeta
+"Información del Equipo" y "Ceremonies/Meeting Tracker", sin tareas).
+
+**Campos personalizados en todas las tareas:** Criterio de aceptación,
+Enlace a evidencia, Estado de bloqueo, Riesgo asociado, Sprint.
+
+- **Sprint 0** (9 tareas en Discovery): Team Charter, Product Goal,
+  priorización de casos, requisitos con OpenSpec, diseño técnico,
+  generación de proyecto base, plan de implementación, config. de Claude
+  Code, config. de ClickUp — **todas en estado Done**.
+- **Sprint 1** (17 tareas nuevas, repartidas entre los 5): cubren
+  exactamente los huecos del checklist del docente (métricas, alcance,
+  uso de IA, README, inventario de datos, EDA, reglas de calidad,
+  privacidad, C4, ADR, Risk Register, seguridad, Línea Base en 3 pasos,
+  evidencia de sprint, cierre).
+
+### Las 4 tareas de Tania (Sprint 1) y su estado real
+
+| Tarea | Lista | Estado en ClickUp | Estado real |
 |---|---|---|---|
-| 5 | 2026-10-25 | El equipo adoptó el reparto "Reparto_de_Desarrollo_MVP_Paralelo.pdf" (3 contratos: esquema de datos de Tania, contrato de API de Ivonne, interfaz del modelo de Adriana). Tania cerró su frente "Fase 1 — Pipeline de datos" (root del repo, no el backend): agregó `scripts/ventanas_temporales_clima.py` (rezagos y promedios móviles climáticos, NUEVO), hizo resiliente `scripts/limpieza_datos.py` al bloqueo de credenciales DVC (antes abortaba todo el pipeline si faltaba `data/raw/epidemiologia` o el crudo de SENAMHI; ahora reutiliza los CSV ya validados y las coordenadas de `control_calidad_clima.csv` como respaldo, sin inventar nada), creó `scripts/pipeline_completo.py` (un solo comando) y registró la nueva etapa en `dvc.yaml`/`dvc.lock`. Publicó el contrato de esquema en `../docs/contrato_esquema_datos_procesados.md` y la guía de ejecución en `../docs/pipeline_de_datos.md`. Verificado: pipeline corrido 2 veces con hashes MD5 idénticos (reproducible). | scripts/ventanas_temporales_clima.py, scripts/pipeline_completo.py, scripts/limpieza_datos.py, dvc.yaml, dvc.lock, docs/contrato_esquema_datos_procesados.md, docs/pipeline_de_datos.md, CONTEXT.md |
-| 4 | 2026-10-25 | Tania retomó el backend. Se resolvieron las 2 preguntas abiertas de `design.md` §10 (zona piloto: se confirman los 4 municipios de facto; granularidad epidemiológica: CORREGIDO a acumulado SE1-13 real, no semanal — `docs/resultados_linea_base.md` Exp. C/D confirma que la serie municipio-semana no existe y no puede derivarse sin fabricar datos). Se implementaron y verificaron TASK-005 a TASK-010: modelos ORM + migración Alembic (PostgreSQL 16 + PostGIS 3.4 local), conector climático (`app/etl/conectores/senamhi.py`), conector epidemiológico acumulado (`app/etl/conectores/epidemiologia.py`), y el módulo de limpieza/imputación (`app/etl/limpieza.py`, con el paso de calendario diario global que faltaba para no subestimar los huecos reales). Se corrió el pipeline completo contra los datos reales de `data/processed/` (274 filas de clima, 4 dengue, 3 malaria insertadas; luego revertidas con TRUNCATE para no ensuciar la BD de desarrollo antes de dejarla a los tests). 14/14 tests pasan, 89% cobertura en `app/etl` y `app/models`. | app/core/database.py, app/models/*, app/etl/*, alembic/*, tests/*, .env (no versionado), CONTEXT.md |
-| 1 | 2026-08-24 | Se generó la documentación inicial completa (requirements.md, design.md, tasks.md) a partir de la solicitud de cambio original y la entrevista de stack/despliegue/herramientas. | requirements.md, design.md, tasks.md, CLAUDE.md, .github/copilot-instructions.md, CONTEXT.md |
-| 2 | 2026-09-16 | Se resolvieron con datos reales las dos primeras preguntas abiertas de `design.md` §10 (fuente climática y epidemiológica) a partir del EDA de Adriana. Tania completó C4, métricas de valor y cierre de Sprint 1; construyó (sin subir todavía) el pipeline de limpieza/imputación. Se detectó y corrigió la inconsistencia de precisión entre `product_goal.md` y NFR-001/NFR-002, y se documentó el bloqueo de credenciales de DVC. | design.md, product_goal.md, tasks.md, docs/c4/, docs/metricas_valor.md, docs/cierre_sprint1.md, CONTEXT.md |
-| 3 | 2026-09-17 | Ignacio cerró sus dos tareas pendientes del backlog de Sprint 1. (a) Privacidad y licencias: se confirmó con evidencia de columnas que ninguna fuente usada expone datos de pacientes, y se leyó el marco legal boliviano real (DAT-002, CTIC-EPB 2019) para las licencias de Ministerio de Salud/SENAMHI/SEDES. (b) Línea Base — Paso 1: se crearon y probaron de punta a punta dos entornos venv (raíz y backend) en una máquina limpia, se confirmó el bloqueo real de `dvc pull` y se documentó el estado inicial de los datos crudos (no disponibles) vs. procesados (preexistentes). Se encontraron y documentaron (sin corregir unilateralmente) dos paquetes del backend incompatibles con Python 3.13. | docs/privacidad_datos.md, docs/fuentes_legales/, docs/entorno_datos_iniciales.md, docs/evidencia_entorno/, docs/cierre_sprint1.md, README.md (backend), CONTEXT.md |
+| Documentar métricas de valor y criterios de éxito | Discovery | **Done** | Completa — `docs/metricas_valor.md` |
+| Preparar cierre: backlog, bloqueos, próximos pasos | Discovery | **Done** | Completa — `docs/cierre_sprint1.md` |
+| Elaborar diagramas C4 (Contexto y Contenedores) | Architecture | **Done** | Completa — `docs/c4/` |
+| Construir pipeline reproducible de datos (Línea Base — Paso 2) | Build/QA/Deploy | **Sin marcar** (sigue en backlog) | **Contenido ya construido** (`notebooks/02_pipeline_limpieza.py`, `docs/pipeline_datos.md`) — falta subir al repo y marcar Done en ClickUp |
 
-## Decisiones clave
+**Importante:** el EDA inicial (`docs/eda_inicial.md`, notebooks 00 y 01) es
+la tarea de **Adriana**, no de Tania — se construyó de forma adelantada
+para desbloquear el pipeline de Tania, que dependía de él. Avisar a
+Adriana antes de que ella suba/reclame ese entregable como propio, o
+decidir juntas cómo se reparte el crédito.
 
-- **Stack:** Python + FastAPI + PostgreSQL (decisión del usuario).
-- **Extensión PostGIS:** agregada por necesidad de análisis geoespacial
-  (mapas de calor por zona/municipio/departamento), no era explícita en el
-  pedido original pero se infiere de los requisitos.
-- **Despliegue:** Railway, sugerido por Claude y aceptado por el usuario,
-  con alternativa de entrenar el modelo offline (Colab/servidor universidad)
-  si el cómputo de Railway resulta insuficiente para el entrenamiento.
-- **Ejecución del pipeline de predicción:** batch semanal (no tiempo real),
-  decisión de diseño razonable dado el horizonte de predicción de 3-4
-  semanas; queda como supuesto a confirmar con el usuario.
-- **Fuente climática confirmada:** SENAMHI Bolivia (WIS 2.0).
-- **Fuente epidemiológica confirmada:** Ministerio de Salud y Deportes de
-  Bolivia, Boletín Epidemiológico N.º 13, 2026 (acumulados municipales
-  SE1-13, no series semanales — ver limitación abajo).
+---
 
-## Preguntas abiertas (ver detalle en `design.md` §10)
+## 6. Decisiones y supuestos clave (para no repetir el razonamiento)
 
-- ~~Zona piloto oficial~~ **Resuelto (2026-10-25):** se confirman los 4
-  municipios de facto (Guayaramerín, Ixiamas, Palos Blancos, San
-  Buenaventura) como zona piloto oficial — únicos con cruce real de datos.
-- ~~Granularidad epidemiológica~~ **Resuelto (2026-10-25):** el proyecto
-  opera con el acumulado SE1-13 por municipio (lo único que la fuente
-  entrega); no se construye una serie semanal porque no existe el dato base
-  para hacerlo sin fabricarlo (ver `docs/resultados_linea_base.md` Exp. D).
-  Mejora futura: solicitar a SEDES/Min. de Salud el desagregado semanal.
-- Necesidad de notificaciones por correo electrónico para alertas en esta
-  primera versión.
-- Frecuencia de reentrenamiento del modelo.
+- **Fuente de datos:** el curso (LAB_01/"CASO D") ya identificó **SEDES**
+  (epidemiológico) y **SENAMHI** (climático) como las fuentes objetivo,
+  elegidas por acceso más viable — pero el **acceso real aún no está
+  confirmado**. Por eso todo el EDA y el pipeline corren sobre datos
+  **sintéticos** con la misma estructura, dejándolo explícito en cada
+  documento.
+- **Zona piloto:** aún no seleccionada. Bloquea la validación real de
+  NFR-001 (75% precisión espacial) y NFR-002 (2 semanas de anticipación).
+- **Regla de limpieza pendiente de confirmar con Dilan:** un outlier en
+  `casos_confirmados` (posible brote real) NO se limpia automáticamente —
+  solo se marca `posible_senal_brote=True`. Esto está implementado en el
+  pipeline de Tania pero falta que Dilan lo confirme en su tarea de
+  "Definir reglas de calidad, limpieza e imputación de datos".
+- **Limitación conocida del pipeline:** el reindexado de calendario se
+  hace por grupo (municipio/enfermedad), no contra un calendario global
+  fijo — puede haber un desfase de 1 fila entre grupos. Documentado en
+  `docs/pipeline_datos.md` §5, pendiente de arreglar antes de usar datos reales.
+- **`tasks.md` (36 tareas, 6 fases) es el plan de desarrollo del backend
+  real** — es POSTERIOR a esta primera evaluación. No hay que empezarlo
+  todavía; la evaluación actual es sobre documentación/decisiones, no
+  sobre código funcionando.
 
-## Divergencias pendientes (confirmar antes de marcar TASK-005/010 como `[x]`)
+---
 
-- ~~El pipeline de limpieza/imputación de datos (TASK-010, adelantado como
-  prototipo en Sprint 1) no está subido al repositorio~~ **Resuelto:**
-  `scripts/limpieza_datos.py` sí está en el repo (no depende de DVC, solo
-  los datos crudos que consume). Se reutilizó su lógica en
-  `app/etl/limpieza.py` tal como pedía la nota de la tarea.
-- **Granularidad epidemiológica (TASK-009):** `fecha_reporte` no representa
-  un reporte diario ni semanal real — es el domingo de la SE13 del año,
-  fecha de cierre del periodo acumulado SE1-13 (única granularidad que la
-  fuente entrega). Documentado en el docstring del conector. Si en el
-  futuro el Min. de Salud entrega series semanales, este conector deberá
-  rehacerse (no extenderse).
-- **`casos_epidemiologicos`:** se agregó una `UNIQUE(municipio_id,
-  enfermedad_id, fecha_reporte, fuente)` no especificada en `design.md` §3,
-  para poder reingerir sin duplicar. No contradice el diseño, lo completa.
-- **`municipios.geometria`:** es un cuadrado referencial (~5 km) centrado en
-  la coordenada real de la estación SENAMHI de cada municipio piloto, NO el
-  polígono administrativo oficial del INE (no se tenía ese archivo
-  disponible). Pendiente: cargar el polígono real antes de calcular áreas o
-  cualquier métrica espacial que dependa de la forma exacta del municipio.
-- **`app/core/database.py`:** se creó con lo mínimo (Base, engine, sesión)
-  para que los modelos y Alembic funcionaran, adelantándose parcialmente a
-  TASK-003 (config.py, de Ignacio). Revisar que no se dupliquen al
-  implementar TASK-003.
+## 7. Próximos pasos inmediatos (en orden)
+
+1. **Verificar y hacer commit/push de todo lo ya generado** a la rama
+   `tani` (todo lo descrito en §4 ya existe como archivos, solo falta
+   confirmarlo en el repo real de Tania).
+2. **Actualizar el campo "Enlace a evidencia"** de las 3 tareas ya
+   marcadas Done, y marcar como Done la 4ª (pipeline) una vez esté en el
+   repo.
+3. **Coordinar con el equipo** las piezas que aún dependen de otras
+   personas: Risk Register y controles de seguridad (Adriana/Dilan),
+   Línea Base Pasos 1 y 3 (Ignacio/Ivonne), confirmación de la regla de
+   limpieza de outliers (Dilan).
+4. **Resolver, como equipo,** las preguntas abiertas de la sección 6 antes
+   de la defensa (fuente real de datos, zona piloto) — o decidir
+   explícitamente presentar con datos sintéticos y justificarlo (es una
+   opción válida según la Regla de Evidencia del docente).
+5. **Ensayar la secuencia de 7 puntos** de la presentación con el
+   contenido de la sección 3 de este documento.
+6. Solo **después** de la defensa: retomar `tasks.md` desde TASK-001 con
+   `FIRST_PROMPT.md` para empezar el desarrollo real del backend.
+
+---
+
+## 8. Cómo debe trabajar Claude Code a partir de aquí
+
+Seguir el protocolo ya definido en `CLAUDE.md`: leer este archivo primero,
+confirmar la tarea activa antes de programar, una tarea atómica a la vez,
+preguntar ante cualquier ambigüedad en vez de asumir, y actualizar este
+`CONTEXT.md` al cerrar cada sesión (nueva entrada en un futuro "Registro de
+sesiones", decisiones nuevas, bloqueos resueltos o nuevos).
+
+Si el pedido inmediato de Tania es "sube esto al repo", el trabajo es
+`git add / commit / push` sobre lo ya generado (§4) — no generar contenido
+nuevo. Si pide continuar con tareas pendientes del equipo, seguir el
+backlog de la sección 5.

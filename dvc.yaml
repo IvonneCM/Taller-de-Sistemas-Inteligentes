@@ -53,6 +53,75 @@ stages:
       - data/processed/dataset_integrado_municipal.csv:
           cache: false
 
+  extraer_dengue_semanal:
+    cmd: python scripts/extraer_dengue_semanal.py
+    deps:
+      - scripts/extraer_dengue_semanal.py
+      - data/boletines/SE13.pdf
+      - data/processed/dengue_municipal_validado.csv
+    outs:
+      - data/processed/dengue_municipal_semanal.csv:
+          cache: false
+
+  clima_nasa_power:
+    cmd: python scripts/clima_nasa_power.py
+    deps:
+      - scripts/clima_nasa_power.py
+      - data/reference/municipios_coordenadas.csv
+    outs:
+      # persist: DVC no debe borrar el crudo antes de correr la etapa; si no,
+      # cada repro volveria a descargarlo de NASA y el resultado podria cambiar.
+      - data/raw/clima/nasa_power/nasa_power_diario.csv:
+          cache: false
+          persist: true
+      - data/processed/clima_nasa_power_semanal.csv:
+          cache: false
+
+  extraer_malaria_boletines:
+    cmd: python scripts/extraer_malaria_boletines.py
+    deps:
+      - scripts/extraer_malaria_boletines.py
+      - data/boletines
+      - data/raw/epidemiologia/malaria_bolivia_municipal_SE01_13_2026.csv
+    outs:
+      - data/processed/malaria_acumulado_por_boletin.csv:
+          cache: false
+      - data/processed/malaria_municipal_bloques.csv:
+          cache: false
+
+  extraer_dengue_revisiones:
+    cmd: python scripts/extraer_dengue_revisiones.py
+    deps:
+      - scripts/extraer_dengue_revisiones.py
+      - data/boletines
+      - data/processed/dengue_municipal_semanal.csv
+    outs:
+      - data/processed/dengue_revisiones_boletines.csv:
+          cache: false
+      - data/processed/dengue_revisiones_resumen.csv:
+          cache: false
+
+  construir_panel_semanal:
+    cmd: python scripts/construir_panel_semanal.py
+    deps:
+      - scripts/construir_panel_semanal.py
+      - data/processed/clima_nasa_power_semanal.csv
+      - data/processed/clima_semanal.csv
+      - data/processed/dengue_municipal_semanal.csv
+    outs:
+      - data/processed/panel_semanal_dengue_clima.csv:
+          cache: false
+
+  construir_panel_malaria:
+    cmd: python scripts/construir_panel_malaria.py
+    deps:
+      - scripts/construir_panel_malaria.py
+      - data/processed/malaria_municipal_bloques.csv
+      - data/processed/clima_nasa_power_semanal.csv
+    outs:
+      - data/processed/panel_bloques_malaria_clima.csv:
+          cache: false
+
   eda_integrado:
     cmd: python scripts/eda_integrado.py
     deps:

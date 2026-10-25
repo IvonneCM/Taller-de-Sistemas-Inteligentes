@@ -690,8 +690,9 @@ def main():
 
     with open(OUT_RESUMEN_MD, "w", encoding="utf-8") as f:
         f.write("# Resumen de calidad del pipeline de datos\n\n")
-        f.write(f"Generado: {pd.Timestamp.now().isoformat()}\n\n")
-        f.write(f"Duracion de ejecucion: {duracion:.2f} segundos\n\n")
+        # Sin fecha ni duracion a proposito: este archivo lo rastrea DVC y
+        # debe salir bit a bit igual en cada corrida (la duracion se imprime
+        # en consola).
         f.write("## Epidemiologia\n\n")
         f.write("```json\n" + json.dumps(
             resumen["epidemiologia"], ensure_ascii=False, indent=2

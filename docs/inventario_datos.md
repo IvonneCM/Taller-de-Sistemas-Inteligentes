@@ -251,7 +251,8 @@ Los siguientes archivos estan en `data/processed/` y son generados por los scrip
 | # | Fuente | Que falta | Impacto |
 |---|---|---|---|
 | 1 | SENAMHI | Ampliar a mas años para estacionalidad | Medianas historicas, validacion de reglas de calidad |
-| 2 | Epidemiologia | Obtener casos semana-a-semana por municipio (no acumulados) | **Critico:** sin esto no hay modelo temporal |
+| 2 | Epidemiologia (dengue) | ~~Obtener casos semana-a-semana por municipio~~ **RESUELTO 2026-10-25:** el Boletin N.13 trae el desglose semanal por municipio en su propia tabla (columnas SE1-SE13), no extraido antes. Ver `scripts/extraer_dengue_semanal.py` y `docs/contrato_esquema_datos_procesados.md` §7bis. | Impacto cerrado para dengue |
+| 2b | Epidemiologia (malaria) | Obtener casos semana-a-semana por municipio | **Parcialmente resuelto (2026-10-25):** ningun boletin trae la serie semanal, pero restando los acumulados de los boletines SE5, 7, 8, 9 y 13 se reconstruyen **bloques** (SE1-5, SE6-7, SE8, SE9, SE10-13) con verificacion contra los totales impresos (ver `scripts/extraer_malaria_boletines.py`). Solo SE8 y SE9 son semanas individuales. Sigue pendiente una serie semanal real: requiere solicitud directa a SEDES (fila 2.2 de la matriz de fuentes), sin respuesta hasta hoy. |
 
 ---
 
