@@ -50,7 +50,7 @@ SELECT PostGIS_Version();
 | Root Directory | `dengue-malaria-prediccion` |
 | Dockerfile Path | `./dengue-malaria-prediccion/Dockerfile`. Render define este campo como la ruta al Dockerfile **relativa a la raíz del repositorio** (por defecto `./Dockerfile`), de modo que debe incluir el directorio del backend. |
 | Instance Type | Free |
-| Docker Command | `sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'"` (puede estar en la sección **Advanced**) |
+| Docker Command | **Vacío.** Se usa el `CMD` de la imagen (ver más abajo) |
 
    El contexto de construcción de Docker debe ser `dengue-malaria-prediccion`,
    porque el `Dockerfile` copia `app/`, `alembic/` y los `requirements-*.txt` desde
@@ -65,12 +65,24 @@ SELECT PostGIS_Version();
    | Health Check Path | `/health` |
    | Auto-Deploy | On Commit |
    | Docker Build Context Directory | `dengue-malaria-prediccion` |
-   | Pre-Deploy Command | vacío (las migraciones van en el Docker Command) |
+   | Pre-Deploy Command | vacío |
 
-   El **Pre-Deploy Command** de Render sería la ubicación natural de
-   `alembic upgrade head`, pero no se confirmó que esté disponible en el plan
-   gratuito **[Verificar]**; por eso la migración va en el Docker Command, que
-   funciona en cualquier plan.
+   **El campo Docker Command debe quedar vacío.** Una prueba real en Render con
+   `sh -c "alembic upgrade head && uvicorn ..."` falló con
+   `sh: 1: alembic upgrade head && uvicorn ...: not found` y código de salida 127:
+   Render no interpretó ese campo como lo haría Docker, y la shell buscó un
+   programa con el texto completo como nombre. Por eso la lógica de arranque vive
+   en el `CMD` del `Dockerfile` (etapa `api`), que ya está probado:
+
+   ```
+   if [ "$RUN_MIGRATIONS" = "1" ]; then alembic upgrade head; fi && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'
+   ```
+
+   Con la variable `RUN_MIGRATIONS=1` se aplican las migraciones antes de arrancar;
+   si fallan, el contenedor termina con error y la API no arranca. El
+   **Pre-Deploy Command** de Render sería otra ubicación posible para las
+   migraciones, pero no se confirmó que esté disponible en el plan gratuito
+   **[Verificar]**.
 
 3. En **Environment** se definen:
 
@@ -79,11 +91,12 @@ SELECT PostGIS_Version();
 | `DATABASE_URL` | La cadena directa de Neon del paso 1.3 |
 | `SECRET_KEY` | La clave generada en el paso 0 (más de 32 caracteres) |
 | `ENVIRONMENT` | `production` |
+| `RUN_MIGRATIONS` | `1` (aplica las migraciones al arrancar) |
 
    `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES` y `REFRESH_TOKEN_EXPIRE_DAYS` tienen
    valores por defecto. Con `ENVIRONMENT=production`, la API se niega a arrancar si
    `SECRET_KEY` es la de ejemplo o tiene menos de 32 caracteres. Render asigna el
-   puerto mediante `PORT`, que el comando anterior ya usa.
+   puerto mediante `PORT`, que el `CMD` de la imagen ya usa.
 4. Se crea el servicio. Render construye la imagen, la despliega y ofrece una URL
    pública con HTTPS del tipo `https://<nombre>.onrender.com`.
 
@@ -186,6 +199,7 @@ Las variables `DATABASE_URL` y `SECRET_KEY` se registran en el repositorio, en
 
 | Síntoma | Causa probable |
 |---|---|
+| `sh: 1: ... not found` y salida 127 | El campo Docker Command de Render no está vacío. Se borra y se redespliega. |
 | El despliegue falla al arrancar con un error de `alembic` | `DATABASE_URL` incorrecta, o PostGIS no activado en Neon (paso 1.2). Se revisan los logs de Render. |
 | La API no arranca por `SECRET_KEY` | La variable falta, es la de ejemplo o tiene menos de 32 caracteres. |
 | `/health` tarda más de un minuto | El servicio estaba dormido; es el comportamiento esperado del plan gratuito. |

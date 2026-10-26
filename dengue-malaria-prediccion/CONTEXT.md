@@ -340,6 +340,12 @@ backlog de la sección 5.
 - Las migraciones se aplican con el Docker Command de Render
   (`alembic upgrade head && uvicorn ...`); se probó en local con la imagen `api`
   contra una base vacía y `PORT=10000`: migra y responde 200.
+- Primer despliegue en Render (2026-10-26): el build funcionó, pero el Docker
+  Command `sh -c "alembic upgrade head && uvicorn ..."` falló con `sh: 1: ...: not
+  found` (exit 127): Render no lo interpreta como Docker. Solución: la lógica pasó
+  al `CMD` del `Dockerfile` con `RUN_MIGRATIONS=1`, y el campo queda vacío.
+  Probado en local: migra y responde 200; sin la variable no migra; con una
+  migración que falla el contenedor sale con código 1.
 - Corrección (el usuario vio el panel de Render): Dockerfile Path es relativo a la
   raíz del repo (`./dengue-malaria-prediccion/Dockerfile`) y Health Check Path /
   Auto-Deploy no están en el formulario de creación.
