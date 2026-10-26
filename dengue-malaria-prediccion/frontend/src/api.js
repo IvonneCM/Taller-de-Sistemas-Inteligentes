@@ -60,9 +60,9 @@ export function usuarioDelToken(token = tokens?.acceso) {
 
 export function haySesion() { return tokens !== null; }
 
-async function conTiempo(url, opciones) {
+async function conTiempo(url, opciones, tiempoMs = TIEMPO_MAXIMO_MS) {
   const control = new AbortController();
-  const temporizador = setTimeout(() => control.abort(), TIEMPO_MAXIMO_MS);
+  const temporizador = setTimeout(() => control.abort(), tiempoMs);
   try {
     return await fetch(url, { ...opciones, signal: control.signal });
   } catch (error) {
@@ -167,13 +167,15 @@ export async function salir() {
   }
 }
 
-/** GET autenticado con refresco y un reintento ante 401. */
-export async function pedir(ruta, { params, _reintento = false } = {}) {
+/** Petición autenticada (GET por defecto) con refresco y un reintento ante 401. */
+export async function pedir(ruta, { params, metodo = "GET", datos, tiempoMs, _reintento = false } = {}) {
   if (!tokens) throw new ApiError(401, "Inicia sesión para continuar.");
   if (!tokens.acceso) await refrescar();
   const respuesta = await conTiempo(`${BASE}${ruta}${consulta(params)}`, {
+    method: metodo,
+    body: datos,
     headers: { Authorization: `Bearer ${tokens.acceso}` },
-  });
+  }, tiempoMs);
   if (respuesta.status === 401 && !_reintento) {
     try {
       await refrescar();
@@ -182,7 +184,7 @@ export async function pedir(ruta, { params, _reintento = false } = {}) {
       emitir("sesion-vencida");
       throw new ApiError(401, "Tu sesión venció. Vuelve a entrar.");
     }
-    return pedir(ruta, { params, _reintento: true });
+    return pedir(ruta, { params, metodo, datos, tiempoMs, _reintento: true });
   }
   const cuerpo = await leerCuerpo(respuesta);
   if (!respuesta.ok) {
@@ -193,6 +195,13 @@ export async function pedir(ruta, { params, _reintento = false } = {}) {
     throw errorDe(respuesta, cuerpo);
   }
   return cuerpo;
+}
+
+/** Envía un archivo como multipart (campo `archivo`). Leer un PDF tarda más que una consulta. */
+export function enviarArchivo(ruta, archivo) {
+  const formulario = new FormData();
+  formulario.append("archivo", archivo);
+  return pedir(ruta, { metodo: "POST", datos: formulario, tiempoMs: 60000 });
 }
 
 // Solo para pruebas.

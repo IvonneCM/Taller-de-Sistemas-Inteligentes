@@ -9,6 +9,7 @@ vi.mock("../api.js", () => ({
   restaurarSesion: vi.fn(),
   alCambiarSesion: vi.fn(() => () => {}),
   usuarioDelToken: vi.fn(),
+  enviarArchivo: vi.fn(),
 }));
 
 // Leaflet necesita medidas reales del navegador: se sustituye por una lista de botones.
@@ -185,7 +186,7 @@ describe("vista de malaria", () => {
     expect(pedir).not.toHaveBeenCalledWith("/zonas/1/prediccion", expect.anything());
   });
 
-  it("al elegir una zona muestra su detalle y su porcentaje de la zona piloto", async () => {
+  it("al elegir una zona muestra su detalle y su porcentaje del total mostrado", async () => {
     simular();
     await montarEnMapa();
     await userEvent.click(await screen.findByRole("button", { name: /^Guayaramerín/ }));
@@ -280,6 +281,22 @@ describe("vistas y permisos", () => {
     simular({ rol: "admin" });
     render(<App />);
     expect(await screen.findByRole("tab", { name: "Historial" })).toBeInTheDocument();
+  });
+
+  it("la carga de boletines y su aviso solo aparecen para epidemiólogos y administración", async () => {
+    simular({ rol: "autoridad" });
+    const { unmount } = render(<App />);
+    await screen.findByRole("tab", { name: "Alertas" });
+    expect(screen.queryByRole("tab", { name: "Datos" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Falta cargar boletines")).not.toBeInTheDocument();
+    unmount();
+
+    simular({ rol: "epidemiologo" });
+    render(<App />);
+    expect(await screen.findByText("Falta cargar boletines")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cargar un boletín" }));
+    expect(screen.getByRole("tab", { name: "Datos" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("heading", { name: "Cargar un boletín epidemiológico" })).toBeInTheDocument();
   });
 
   it("las alertas vacías explican cuándo se emite una", async () => {

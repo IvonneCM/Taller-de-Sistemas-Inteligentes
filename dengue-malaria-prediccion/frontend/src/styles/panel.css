@@ -143,3 +143,18 @@ details.mas.aviso[open] { padding-bottom: var(--e-md); }
 .vistas .segmentado { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .vistas .segmentado::-webkit-scrollbar { display: none; }
 .vistas .segmentado button { flex: 0 0 auto; }
+
+/* Carga de boletines (vista Datos). */
+.panel-boletin { display: grid; gap: var(--e-md); }
+.barra-herramientas .campo input[type="file"] { padding: var(--e-sm); }
+.resultado-boletin .tarjeta-cuerpo { display: grid; gap: var(--e-md); }
+.verificacion-ok { color: var(--riesgo-bajo-texto); font-weight: 600; }
+.verificacion-ok::before { content: "✓ "; }
+.cifras-boletin { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e-lg); }
+.cifras-boletin li { display: grid; }
+.cifras-boletin strong { font-size: 1.75rem; line-height: 1.1; }
+.lista-simple { padding-left: var(--e-lg); color: var(--texto-2); }
+.aviso-exito { background: var(--riesgo-bajo-tinte); }
+.aviso-exito h3 { color: var(--riesgo-bajo-texto); }
+.aviso-atraso { background: var(--riesgo-medio-tinte); }
+.resultado-boletin tbody th { font: var(--t-fila); font-weight: 500; color: var(--texto); }

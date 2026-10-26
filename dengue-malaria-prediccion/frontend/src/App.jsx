@@ -7,6 +7,7 @@ import { Acceso } from "./components/Acceso.jsx";
 import { Alertas } from "./components/Alertas.jsx";
 import { Barra } from "./components/Barra.jsx";
 import { Campanas } from "./components/Campanas.jsx";
+import { CargaBoletin } from "./components/CargaBoletin.jsx";
 import { Cargando } from "./components/Estado.jsx";
 import { Historial } from "./components/Historial.jsx";
 import { Resumen } from "./components/Resumen.jsx";
@@ -50,24 +51,28 @@ function Aplicacion() {
     { valor: "mapa", etiqueta: "Mapa" },
     { valor: "alertas", etiqueta: "Alertas" },
     ...(veCampanas(usuario.rol) ? [{ valor: "campanas", etiqueta: "Campañas" }] : []),
-    ...(esTecnico(usuario.rol) ? [{ valor: "historial", etiqueta: "Historial" }] : []),
+    ...(esTecnico(usuario.rol) ? [{ valor: "historial", etiqueta: "Historial" }, { valor: "datos", etiqueta: "Datos" }] : []),
   ];
+  const datosGuardados = () => { panel.recargar(); casos.recargar(); };
 
   return (
     <div className="app">
       <Barra
         usuario={usuario} enfermedad={enfermedad} alCambiarEnfermedad={elegirEnfermedad} alSalir={cerrar}
-        mostrarEnfermedad={vista !== "campanas" && vista !== "resumen"}
+        mostrarEnfermedad={!["campanas", "resumen", "datos"].includes(vista)}
       />
       <main className="contenido">
         <div className="vistas">
           <Segmentado rol="tab" etiqueta="Vista" opciones={vistas} valor={vista} alCambiar={setVista} />
         </div>
-        {vista === "resumen" && <Resumen panel={panel} irA={setVista} />}
+        {vista === "resumen" && <Resumen panel={panel} irA={setVista} puedeCargarDatos={esTecnico(usuario.rol)} />}
         {vista === "mapa" && <VistaMapa enfermedad={enfermedad} riesgo={riesgo} casos={casos} usuario={usuario} />}
         {vista === "alertas" && <Alertas key={enfermedad} {...paneles} irA={setVista} alCambiarEnfermedad={elegirEnfermedad} />}
         {vista === "campanas" && <Campanas usuario={usuario} />}
         {vista === "historial" && esTecnico(usuario.rol) && <Historial key={enfermedad} {...paneles} />}
+        {vista === "datos" && esTecnico(usuario.rol) && (
+          <CargaBoletin ultimaSemana={panel.datos?.dengue?.ultima_semana} alGuardar={datosGuardados} />
+        )}
       </main>
     </div>
   );

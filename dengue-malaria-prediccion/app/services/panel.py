@@ -11,7 +11,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.etl.fuentes import FUENTE_MINSALUD_SEMANAL
+from app.etl.fuentes import LIKE_FUENTE_SEMANAL
 from app.models import Alerta, CasoEpidemiologico, Departamento, Enfermedad, Municipio
 from app.services.alertas import LIMITE_MAXIMO, listar_alertas
 from app.services.predicciones import _vigentes
@@ -31,8 +31,8 @@ def _semana(fecha: date, casos: int) -> dict:
 def _top_municipios(db: Session, enfermedad: str, *, semanal: bool) -> tuple[list[dict], int]:
     """(top de municipios por casos, total de municipios con casos)."""
     condicion = (
-        CasoEpidemiologico.fuente == FUENTE_MINSALUD_SEMANAL
-        if semanal else CasoEpidemiologico.fuente != FUENTE_MINSALUD_SEMANAL
+        CasoEpidemiologico.fuente.like(LIKE_FUENTE_SEMANAL)
+        if semanal else CasoEpidemiologico.fuente.not_like(LIKE_FUENTE_SEMANAL)
     )
     filas = db.execute(
         select(Municipio.id, Municipio.nombre, Departamento.nombre,
@@ -62,7 +62,7 @@ def resumen_panel(db: Session) -> dict:
         for fecha, total in db.execute(
             select(CasoEpidemiologico.fecha_reporte, func.sum(CasoEpidemiologico.casos_confirmados))
             .join(Enfermedad, Enfermedad.id == CasoEpidemiologico.enfermedad_id)
-            .where(Enfermedad.nombre == "dengue", CasoEpidemiologico.fuente == FUENTE_MINSALUD_SEMANAL)
+            .where(Enfermedad.nombre == "dengue", CasoEpidemiologico.fuente.like(LIKE_FUENTE_SEMANAL))
             .group_by(CasoEpidemiologico.fecha_reporte)
             .order_by(CasoEpidemiologico.fecha_reporte)
         ).all()
@@ -101,7 +101,7 @@ def resumen_panel(db: Session) -> dict:
         select(func.coalesce(func.sum(CasoEpidemiologico.casos_confirmados), 0),
                func.max(CasoEpidemiologico.fecha_reporte))
         .join(Enfermedad, Enfermedad.id == CasoEpidemiologico.enfermedad_id)
-        .where(Enfermedad.nombre == "malaria", CasoEpidemiologico.fuente != FUENTE_MINSALUD_SEMANAL)
+        .where(Enfermedad.nombre == "malaria", CasoEpidemiologico.fuente.not_like(LIKE_FUENTE_SEMANAL))
     ).one()
 
     return {

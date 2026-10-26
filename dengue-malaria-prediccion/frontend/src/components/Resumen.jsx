@@ -31,8 +31,17 @@ function Indicador({ titulo, valor, pie, clase = "" }) {
   );
 }
 
+const DIA_MS = 24 * 60 * 60 * 1000;
+// Un boletín sale cada semana: con más de dos semanas sin datos nuevos, se avisa.
+const SEMANAS_DE_ATRASO_PARA_AVISAR = 2;
+
+function semanasDeAtraso(fechaIso, hoy = new Date()) {
+  const fecha = new Date(`${fechaIso}T00:00:00`);
+  return Number.isNaN(fecha.getTime()) ? 0 : Math.floor((hoy - fecha) / (7 * DIA_MS));
+}
+
 /** Vista de entrada: indicadores de ambas enfermedades en una sola pantalla. */
-export function Resumen({ panel, irA }) {
+export function Resumen({ panel, irA, puedeCargarDatos = false }) {
   if (panel.fase === "cargando") return <Cargando etiqueta="Cargando el resumen" />;
   if (panel.fase === "error") return <ErrorCarga error={panel.error} alReintentar={panel.recargar} titulo="No se pudo cargar el resumen" />;
   const d = panel.datos;
@@ -44,6 +53,7 @@ export function Resumen({ panel, irA }) {
   const hayAlertas = alertas.vigentes > 0;
   const riesgo = dengue.riesgo;
   const sinDatos = !dengue.total_casos && !malaria.total_casos && !riesgo.total;
+  const atraso = dengue.ultima_semana ? semanasDeAtraso(dengue.ultima_semana.fecha) : 0;
 
   return (
     <section className="resumen aparece" aria-label="Resumen de la situación">
@@ -64,6 +74,14 @@ export function Resumen({ panel, irA }) {
           <button type="button" className="boton boton-fantasma" onClick={() => irA("mapa")}>Abrir el mapa</button>
         </div>
       </div>
+
+      {puedeCargarDatos && atraso >= SEMANAS_DE_ATRASO_PARA_AVISAR && (
+        <div className="aviso aviso-atraso" role="status">
+          <h3>Falta cargar boletines</h3>
+          <p>Los casos de dengue llegan hasta la semana {dengue.ultima_semana.semana} ({fechaLarga(dengue.ultima_semana.fecha)}), hace {atraso} semanas. Las predicciones se basan en esos datos.</p>
+          <button type="button" className="boton boton-pequeno" onClick={() => irA("datos")}>Cargar un boletín</button>
+        </div>
+      )}
 
       {sinDatos && (
         <div className="aviso"><h3>Todavía no hay datos cargados</h3>
