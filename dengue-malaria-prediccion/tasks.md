@@ -5,7 +5,7 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 35 de 48: la capa de datos (005 a
+> web) y la CI de GitHub está en verde. Hechas 36 de 48: la capa de datos (005 a
 > 010), el baseline (012), el motor de predicción, las alertas y la autenticación
 > (014, 015, 017, 018), toda la API (019 a 025, 047), las pruebas y la cobertura
 > (032), el manejo de errores (040), la vista de campañas (031) y casi toda la
@@ -254,12 +254,12 @@ control de acceso por rol.*
 *Meta de la fase: interfaz funcional diferenciada por rol, con mapas de
 calor navegables.*
 
-- [ ] **TASK-027** [REQ-006] Implementar vista de mapa de calor
+- [x] **TASK-027** [REQ-006] Implementar vista de mapa de calor
       (React + Leaflet/Mapbox) consumiendo `GET /zonas/riesgo`, con
       selector de nivel de agregación (zona/municipio/departamento).
       *Verificación:* prueba manual — el mapa cambia de color según nivel de
       riesgo y responde al cambio de agregación.
-      *Estado 2026-10-26 (sin marcar):* hay mapa navegable con Leaflet (`frontend/src/components/MapaZonas.jsx`) que consume `GET /zonas/riesgo` (dengue) y `GET /casos/resumen` (malaria), con cambio de enfermedad. **Falta el selector de nivel de agregación** (zona, municipio, departamento): hoy solo hay municipio.
+      *Verificado 2026-10-26:* mapa navegable con Leaflet (`MapaZonas.jsx`) que consume `GET /zonas/riesgo` (dengue) y `GET /casos/resumen` (malaria), con selector **Municipio / Departamento** (`VistaMapa.jsx`, `agregacion.js`). En el modelo de datos la «zona» es el municipio (design.md §3), por eso hay dos niveles. Por departamento se muestra el mayor riesgo y la mayor probabilidad entre sus municipios (criterio de peor caso, solo de visualización: no es una predicción nueva) y, en malaria, la suma de casos. Prueba manual en el navegador contra el sistema en Docker: el mapa cambia de color según el riesgo (dengue: Beni y La Paz en riesgo medio) y responde al cambio de agregación (malaria: Beni 293 y La Paz 157, 450 en total). 120 pruebas de interfaz en verde.
 
 - [x] **TASK-028** [REQ-007] Implementar vista simplificada para autoridades
       (indicadores generales, zonas críticas) y vista detallada para
@@ -284,7 +284,7 @@ calor navegables.*
       campañas de fumigación y recomendación de recursos por municipio.
       *Verificación:* prueba manual con coordinador municipal de ejemplo.
       *Estado 2026-10-26:* sin avance. Necesita los endpoints de TASK-024 y 025, que no existen.
-      *Verificado 2026-10-26:* pestaña «Campañas» (`frontend/src/components/Campanas.jsx`) para SEDES y coordinación municipal. Prueba manual en el navegador con `coordinador@demo.local` contra el sistema en Docker: ve su municipio (Guayaramerín, 44 %, riesgo medio) con sus recomendaciones y la advertencia de reglas provisionales. SEDES ve el orden de todos los municipios sin recomendaciones. 108 pruebas de interfaz en verde.
+      *Verificado 2026-10-26:* pestaña «Campañas» (`frontend/src/components/Campanas.jsx`) para SEDES y coordinación municipal. Prueba manual en el navegador con `coordinador@demo.local` contra el sistema en Docker: ve su municipio (Guayaramerín, 44 %, riesgo medio) con sus recomendaciones y la advertencia de reglas provisionales. SEDES ve el orden de todos los municipios sin recomendaciones. 120 pruebas de interfaz en verde.
 
 ---
 
@@ -298,7 +298,7 @@ considerarse listo para el piloto.*
       en esos módulos.
       *Verificación:* `pytest --cov=app/etl --cov=app/ml` reporta ≥ 70%.
       *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
-      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (345 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
+      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (389 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
 
 - [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.
@@ -316,6 +316,7 @@ considerarse listo para el piloto.*
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
+      *Estado 2026-10-26 (sin marcar):* `docs/revision_seguridad.md` y el comando `python -m app.core.revision_seguridad` (6 controles OK: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio; 42 pruebas que verifican que cada control detecta lo que debe). **Falta HTTPS en el despliegue** (TASK-004, hoy NO VERIFICADO) **y la firma del equipo.** La revisión encontró hallazgos para decidir antes de exponer la API: `python-multipart` y `python-jose` con avisos de seguridad (H-1, H-2), y sin límite de intentos de login (H-3).
 
 - [ ] **TASK-036** Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,
@@ -339,7 +340,7 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       vistas de las TASK-027 a 031 no pueden pedir datos (la API exige JWT).
       *Persona sugerida:* Tania o Ignacio. *Depende de:* TASK-017 (hecha).
       *Verificación:* prueba manual con dos roles; `npm run build` sin errores.
-      *Verificado 2026-10-26:* `frontend/src/components/Acceso.jsx` y `src/api.js`. Prueba manual en el navegador con `epidemiologo@demo.local` y `autoridad@demo.local` (cada una ve su vista), y recarga de la página sin pedir contraseña de nuevo. 108 pruebas de interfaz en verde (login, refresco único ante 401, sesión vencida, tiempo máximo, cierre de sesión) y `npm run build` sin errores. Decisión: access token en memoria y refresh token en `sessionStorage` (riesgo M-11).
+      *Verificado 2026-10-26:* `frontend/src/components/Acceso.jsx` y `src/api.js`. Prueba manual en el navegador con `epidemiologo@demo.local` y `autoridad@demo.local` (cada una ve su vista), y recarga de la página sin pedir contraseña de nuevo. 120 pruebas de interfaz en verde (login, refresco único ante 401, sesión vencida, tiempo máximo, cierre de sesión) y `npm run build` sin errores. Decisión: access token en memoria y refresh token en `sessionStorage` (riesgo M-11).
 
 - [x] **TASK-038** [REQ-001, REQ-002, REQ-013] Datos de demostración
       reproducibles con un solo comando: registra el modelo en `modelos`,

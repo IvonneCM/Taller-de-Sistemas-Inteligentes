@@ -74,7 +74,7 @@ Lectura del flujo observable en la demostración: **persona → interfaz → API
 
 | Diseño original | Realidad hoy |
 |---|---|
-| Dashboard con selector de agregación zona, municipio y departamento | Solo municipio |
+| Dashboard con selector de agregación zona, municipio y departamento | Municipio y departamento (la «zona» es el municipio); por departamento se muestra el peor caso, no una predicción nueva |
 | Ingesta por `POST /datos/clima` y `/datos/casos` | La ingesta es por comando (`app/etl`), no por la API |
 | `GET /campanas/priorizacion` y `/municipios/{id}/recursos` | Implementados (TASK-024 y 025); las reglas de riesgo y las recomendaciones son provisionales |
 | Tarea programada semanal en Railway | No implementada (TASK-016); la predicción se ejecuta a mano |

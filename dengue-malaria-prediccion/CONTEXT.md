@@ -227,7 +227,7 @@ backlog de la sección 5.
 
 ### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
 
-**Estado:** implementado y verificado en local: **345 tests del backend, 108 de la
+**Estado:** implementado y verificado en local: **389 tests del backend, 120 de la
 interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
 Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
 exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
@@ -262,6 +262,8 @@ Hallazgo: `app/services/casos.py` importaba `pandas` y la imagen `api` no lo tra
 vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
 
 **Integraciones posteriores (2026-10-26):** TASK-015 (Ivonne) y TASK-024/025 (Adriana) integradas en `dilan`. Las pruebas de integración de Adriana venían omitidas (necesitan una base exclusiva): corridas contra PostgreSQL, 46 de 46 pasan; el CI ya las ejecuta. Se agregó la pestaña «Campañas» (TASK-031) y un E2E por rol.
+
+**TASK-027 y 035 (2026-10-26):** selector Municipio/Departamento en el mapa (por departamento: peor caso en dengue, suma en malaria) y revisión de seguridad verificable (`python -m app.core.revision_seguridad`, `docs/revision_seguridad.md`). Hallazgos para decidir: `python-multipart 0.0.9` y `python-jose 3.3.0` con avisos (H-1, H-2), sin límite de intentos de login (H-3) y sin cabeceras de seguridad en nginx (H-4). No se cambiaron los `requirements`.
 
 **Pendientes (no son de esta sesión)**
 1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.

@@ -12,9 +12,16 @@ from app.core.config import get_settings
 
 observabilidad.configure_logging(get_settings().LOG_LEVEL)
 
+# TASK-035: en produccion no se publica la documentacion interactiva ni el
+# esquema OpenAPI (describen todos los endpoints y no hacen falta para operar).
+_produccion = get_settings().ENVIRONMENT.lower() == "production"
+
 app = FastAPI(
     title="Sistema de Prediccion Temprana de Brotes de Dengue/Malaria",
     version="0.1.0",
+    docs_url=None if _produccion else "/docs",
+    redoc_url=None if _produccion else "/redoc",
+    openapi_url=None if _produccion else "/openapi.json",
 )
 
 observabilidad.instalar(app)

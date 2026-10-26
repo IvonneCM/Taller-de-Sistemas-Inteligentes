@@ -75,6 +75,7 @@ Lectura recomendada:
 23. [`../docs/contrato_api.md`](../docs/contrato_api.md): endpoints, roles y formato de errores.
 24. [`../docs/resultados_experimentales.md`](../docs/resultados_experimentales.md): resultados contra la línea base, con los intentos fallidos.
 25. [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md): guion de la demostración y Plan B.
+26. [`../docs/revision_seguridad.md`](../docs/revision_seguridad.md): revisión de seguridad con evidencia, hallazgos y firma.
 
 ## Tecnología propuesta
 
@@ -249,6 +250,15 @@ oscuro, contraste revisado por prueba automática). El access token vive solo en
 memoria; el refresh token en `sessionStorage` (ver riesgo M-11 en
 `../docs/risk_register.md`).
 
+### Revisión de seguridad
+
+```bash
+python -m app.core.revision_seguridad                             # sale con código 1 si hay una falla
+python -m app.core.revision_seguridad --url https://<despliegue>  # además comprueba HTTPS
+```
+
+Verifica que no haya datos personales de pacientes, alertas sin justificación, contraseñas sin hash ni secretos versionados. El checklist, los hallazgos y la firma del equipo están en [`../docs/revision_seguridad.md`](../docs/revision_seguridad.md). Con `ENVIRONMENT=production` la API no publica `/docs` ni `/openapi.json`.
+
 ### Observabilidad y errores
 
 Cada respuesta trae `X-Request-ID`, que también aparece en los logs de esa
@@ -268,8 +278,8 @@ alembic check
 ```
 
 `pytest` necesita la base de datos del paso "Configuración" y un `.env` con
-`SECRET_KEY`. Estado verificado el 2026-10-26: **345 tests del backend** y
-**108 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
+`SECRET_KEY`. Estado verificado el 2026-10-26: **389 tests del backend** y
+**120 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
 (`pytest --cov=app/etl --cov=app/ml`). Los tests necesitan `DATABASE_URL`
 apuntando a una base con las migraciones aplicadas. Cada test corre dentro de
 una transacción que se revierte y parte de las tablas de datos vacías, así que

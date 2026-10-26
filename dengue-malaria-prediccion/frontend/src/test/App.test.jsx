@@ -28,7 +28,7 @@ import { pedir, restaurarSesion, salir } from "../api.js";
 import App from "../App.jsx";
 
 const geo = { type: "MultiPolygon", coordinates: [[[[0, 0], [1, 0], [1, 1], [0, 0]]]] };
-const zona = (id, nombre, dep) => ({ municipio_id: id, municipio: nombre, departamento_id: 1, departamento: dep, centroide: { lat: -10, lon: -65 }, geometria: geo });
+const zona = (id, nombre, dep) => ({ municipio_id: id, municipio: nombre, departamento_id: dep === "BENI" ? 1 : 2, departamento: dep, centroide: { lat: -10 - id, lon: -65 }, geometria: geo });
 
 const CASOS = [
   { ...zona(1, "GUAYARAMERIN", "BENI"), enfermedad_id: 2, enfermedad: "malaria", granularidad: "acumulado", total_casos: 293, desde: "2026-03-29", hasta: "2026-03-29", registros: 1, fuente: "Boletín N.º 13" },
@@ -67,12 +67,12 @@ const RECURSOS = {
   nota: "Los umbrales de riesgo y las recomendaciones son decisiones provisionales del MVP.",
 };
 
-function simular({ rol = "epidemiologo", alertas = [], fallo = null, ranking = RANKING } = {}) {
+function simular({ rol = "epidemiologo", alertas = [], fallo = null, ranking = RANKING, riesgo = RIESGO } = {}) {
   restaurarSesion.mockResolvedValue({ id: 1, rol });
   pedir.mockImplementation(async (ruta) => {
     if (fallo && ruta === fallo.ruta) throw fallo.error;
     if (ruta === "/casos/resumen") return CASOS;
-    if (ruta === "/zonas/riesgo") return RIESGO;
+    if (ruta === "/zonas/riesgo") return riesgo;
     if (ruta === "/alertas") return alertas;
     if (ruta === "/campanas/priorizacion") return ranking;
     if (/^\/municipios\/\d+\/recursos$/.test(ruta)) return RECURSOS;
@@ -196,6 +196,84 @@ describe("vistas y permisos", () => {
     expect(await screen.findByText("Lluvia reciente y casos en alza.")).toBeInTheDocument();
     expect(screen.getByText(/Precipitación, hace 2 semanas/)).toBeInTheDocument();
     expect(screen.getByText("82 %")).toBeInTheDocument();
+  });
+});
+
+describe("nivel de agregación (TASK-027)", () => {
+  const dengue = (id, nombre, dep, nivel, prob) => ({
+    ...zona(id, nombre, dep), enfermedad_id: 1, enfermedad: "dengue", nivel_riesgo: nivel, probabilidad_pct: prob,
+    nivel_confianza: "alto", fecha_generacion: "2026-10-26T12:00:00Z", fecha_estimada_riesgo: "2026-11-16",
+  });
+  const RIESGO_DEPTOS = [
+    dengue(3, "PALOS BLANCOS", "LA PAZ", "alto", 71.0),
+    dengue(1, "GUAYARAMERIN", "BENI", "medio", 44.39),
+    dengue(2, "IXIAMAS", "LA PAZ", "bajo", 15.46),
+  ];
+
+  it("por defecto muestra municipios y ofrece Departamento", async () => {
+    simular();
+    render(<App />);
+    expect(await screen.findByRole("radio", { name: "Municipio" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Departamento" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("malaria por departamento suma los casos de sus municipios", async () => {
+    simular();
+    render(<App />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
+
+    const filas = within(await screen.findByRole("region", { name: "Departamentos" })).getAllByRole("button");
+    expect(filas).toHaveLength(2);
+    expect(filas[0]).toHaveTextContent("Beni");
+    expect(filas[0]).toHaveTextContent("293");
+    expect(filas[1]).toHaveTextContent("La Paz");
+    expect(filas[1]).toHaveTextContent("157"); // 156 + 1
+    expect(screen.getByText("450")).toBeInTheDocument();
+    expect(screen.getByText(/No hay una cifra oficial del departamento/)).toBeInTheDocument();
+    const puntos = screen.getAllByRole("button", { name: /^punto / });
+    expect(puntos).toHaveLength(2); // un punto por departamento, no por municipio
+  });
+
+  it("dengue por departamento muestra el mayor riesgo entre sus municipios", async () => {
+    simular({ riesgo: RIESGO_DEPTOS });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
+
+    const filas = within(await screen.findByRole("region", { name: "Departamentos" })).getAllByRole("button");
+    expect(filas[0]).toHaveTextContent("La Paz");       // 71 % de Palos Blancos
+    expect(filas[0]).toHaveTextContent("71 %");
+    expect(filas[0]).toHaveTextContent("Riesgo alto");
+    expect(filas[1]).toHaveTextContent("Beni");
+    expect(screen.getByText(/criterio de peor caso/)).toBeInTheDocument();
+    expect(screen.getByText(/No es una predicción propia del departamento/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^punto / })[0]).toHaveAttribute("data-color", "--riesgo-alto");
+  });
+
+  it("al elegir un departamento lista sus municipios con su propio riesgo", async () => {
+    simular({ riesgo: RIESGO_DEPTOS });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
+    await userEvent.click(within(await screen.findByRole("region", { name: "Departamentos" })).getAllByRole("button")[0]);
+
+    const lista = await screen.findByRole("list", { name: "Municipios del departamento" });
+    const items = within(lista).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent("Palos Blancos");
+    expect(items[0]).toHaveTextContent("Riesgo alto");
+    expect(items[1]).toHaveTextContent("Ixiamas");
+    expect(items[1]).toHaveTextContent("Riesgo bajo");
+  });
+
+  it("volver a Municipio restablece la lista y la selección", async () => {
+    simular({ riesgo: RIESGO_DEPTOS });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
+    await userEvent.click(await screen.findByRole("radio", { name: "Municipio" }));
+    expect((await screen.findAllByRole("button", { name: /^punto / }))).toHaveLength(3);
+    expect(screen.getByTestId("mapa")).toHaveAttribute("data-seleccionado", "");
   });
 });
 

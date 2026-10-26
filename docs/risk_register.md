@@ -353,6 +353,8 @@ inicial: la complementa con lo que se aprendió al construir el MVP.
 | M-13 | **Confianza de la predicción** mide la proporción de datos climáticos faltantes o imputados (NFR-007); **no** mide qué tan bien acierta el modelo. | Declarado en la interfaz ("Confianza de los datos") | No leerla como probabilidad de acierto | `app/ml/prediccion.py` |
 | M-14 | **Sin datos de pacientes**: todo es conteo agregado por municipio. Es una protección, y también un límite (no hay detalle individual). | Por diseño (REQ-020) | — | `privacidad_datos.md` |
 | M-15 | **Reglas de campañas y recomendaciones provisionales**: los cortes de riesgo (33,33 % y 66,67 %) y los textos de recomendación son decisiones del MVP, no protocolos de SEDES. | Declarado en la API y en la interfaz | Validar con SEDES antes de usarlas para decidir | `docs/decisiones_task_024_025.md` |
+| M-16 | **Dependencias con avisos de seguridad**: `python-multipart 0.0.9` (10 avisos; se usa en el login público) y `python-jose 3.3.0` (4 avisos, 2 sin corrección). | Abierto | Subir `python-multipart` a 0.0.31 (probado) y `python-jose` a 3.4.0 o migrar a PyJWT | `docs/revision_seguridad.md` H-1 y H-2 |
+| M-17 | **Sin límite de intentos de login ni cabeceras de seguridad en nginx.** | Abierto | Limitar intentos y agregar cabeceras antes de exponer la API | `docs/revision_seguridad.md` H-3 y H-4 |
 
 Los riesgos M-08 y M-10 bloquean parte de la demostración completa; el
 resto son límites que deben decirse en voz alta durante la defensa.
