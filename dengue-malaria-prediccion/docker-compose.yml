@@ -4,6 +4,9 @@
 #   docker compose up --build api                 -> base de datos + API
 #   docker compose up --build api web             -> ... + frontend en http://localhost:8080
 #   docker compose run --rm ml python -m <modulo> -> ETL / prediccion (imagen ml)
+#   docker compose run --rm -e SEED_DEMO_PASSWORD=<clave> ml python -m app.etl.seed_demo
+#                                                 -> datos y usuarios de demostracion
+#                                                    (con la API ya levantada: ella crea las tablas)
 x-app-env: &app-env
   # Variables de config.py, tomadas de .env. Explicitas (sin env_file) para que
   # tambien lleguen con `docker compose run` y no se filtre POSTGRES_PASSWORD.
@@ -15,6 +18,9 @@ x-app-env: &app-env
     ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
     REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
     ENVIRONMENT: ${ENVIRONMENT:-development}
+    # Local: la API crea/actualiza las tablas al arrancar (alembic upgrade head).
+    # Sin esto, un clon limpio sirve la interfaz pero el login falla con 500.
+    RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
 
 services:
   db:
@@ -62,6 +68,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Los CSV procesados no van en la imagen; seed_demo y el panel los buscan en /data.
+    volumes:
+      - ../data:/data:ro
     command: ["python", "-c", "import pandas, sklearn, xgboost, shap; print('imagen ml lista')"]
 
 volumes:

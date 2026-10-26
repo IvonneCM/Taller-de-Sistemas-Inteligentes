@@ -454,6 +454,14 @@ TASK-023 queda sin marcar (ver pendientes).
 - Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
   conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
 
+**Docker: la interfaz no era usable desde un clon limpio (2026-10-26)**
+- Síntoma reproducido: `docker compose up api web` servía la UI en :8080, pero la
+  base no tenía tablas y el login daba 500 (`relation "usuarios" does not exist`).
+- Arreglo: `RUN_MIGRATIONS` (por defecto 1) en `docker-compose.yml` para que la API
+  migre al arrancar, y el servicio `ml` monta `../data:/data:ro` para poder correr
+  `seed_demo` dentro de Docker. Probado en un proyecto limpio: login 401 sin datos,
+  tras el seed login 200 y `/api/zonas/riesgo` devuelve las 4 zonas piloto.
+
 **TASK-033 cerrada con limitación (2026-10-26)**
 - `scripts/prueba_carga_zonas_riesgo.py` (base temporal local, datos simulados,
   se borra sola; se niega a correr contra hosts no locales). p95 con 350
