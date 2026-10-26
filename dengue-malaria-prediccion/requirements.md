@@ -5,6 +5,12 @@
 **Proyecto:** Sistema Inteligente de Predicción Temprana de Brotes (SIPTB)
 **Tipo:** Proyecto universitario
 
+> ⏸️ **Estado:** esta especificación es la fuente de autoridad del proyecto,
+> pero el desarrollo del backend que implementa estos requisitos está en
+> pausa hasta cerrar la primera evaluación (ver
+> `README.md` → "Cuándo se retoma"). §6.1 se actualizó el 2026-09-17 con las
+> exclusiones confirmadas por el estado real de los datos.
+
 ---
 
 ## 1. Visión general

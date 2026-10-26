@@ -1,5 +1,15 @@
 # Sistema de Predicción Temprana de Brotes de Dengue/Malaria
 
+> ⏸️ **Desarrollo del backend en pausa.** Esta carpeta contiene la
+> especificación y el esqueleto inicial del backend (Fase 1 de `tasks.md`),
+> generados con Spec Driven Development antes de esta primera evaluación.
+> El trabajo real de esta evaluación (EDA, calidad de datos, pipeline,
+> arquitectura, riesgos, línea base) vive en `../docs/`, `../scripts/` y
+> `../data/`, en la raíz del repositorio — no aquí. Estos documentos se
+> mantienen como referencia y como punto de partida para cuando el equipo
+> retome el desarrollo del backend (ver "Cuándo se retoma" más abajo), no
+> porque haya trabajo activo de código sucediendo en ellos ahora mismo.
+
 Proyecto universitario orientado a apoyar a SEDES, autoridades de salud y
 coordinadores municipales en la identificación de zonas con riesgo de brotes
 de dengue o malaria con 3-4 semanas de anticipación. La propuesta combina
@@ -8,16 +18,17 @@ preventivas.
 
 ## Estado actual
 
-Este proyecto tiene dos frentes de trabajo con avance distinto, que conviene
-no confundir:
+Este proyecto tiene dos frentes de trabajo con avance muy distinto, que
+conviene no confundir:
 
-**Backend (este directorio):** en **Fase 1 — infraestructura base**.
+**Backend (este directorio) — pausado en Fase 1 — infraestructura base.**
 Incluye especificación funcional y no funcional, diseño de arquitectura,
 modelo de datos y API propuesta, backlog técnico dividido por fases,
 estructura inicial del backend con FastAPI y el endpoint local `GET
 /health`. Todavía no están implementados la conexión a PostgreSQL/PostGIS,
 las migraciones Alembic, los conectores ETL formales (`app/etl/`), el
-motor de predicción, la autenticación ni el dashboard.
+motor de predicción, la autenticación ni el dashboard. **No hay trabajo de
+código previsto aquí hasta cerrar esta evaluación** (ver `CONTEXT.md`).
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -52,7 +63,11 @@ Lectura recomendada:
 14. [`../docs/pipeline_datos.md`](../docs/pipeline_datos.md): pipeline reproducible de limpieza e imputación (Línea Base — Paso 2).
 15. [`../docs/privacidad_datos.md`](../docs/privacidad_datos.md): restricciones de privacidad y licencias de datos.
 16. [`../docs/entorno_datos_iniciales.md`](../docs/entorno_datos_iniciales.md): entorno reproducible y estado inicial de los datos (Línea Base — Paso 1).
-15. [`../docs/linea_base.md`](../docs/linea_base.md): línea base y registro de experimentos (Línea Base — Paso 3).
+17. [`../docs/linea_base.md`](../docs/linea_base.md): línea base y registro de experimentos (Línea Base — Paso 3).
+18. [`../docs/inventario_datos.md`](../docs/inventario_datos.md): inventario de fuentes de datos epidemiológicos y climáticos.
+19. [`../docs/adr/`](../docs/adr/): registro de decisiones de arquitectura (ADR).
+20. [`../docs/risk_register.md`](../docs/risk_register.md): Risk Register inicial.
+21. [`../docs/declaracion_uso_ia.md`](../docs/declaracion_uso_ia.md): declaración de uso de IA y revisión humana.
 
 ## Tecnología propuesta
 
@@ -180,6 +195,16 @@ Taller-de-Sistemas-Inteligentes/
   validar NFR-001/NFR-002 aún no está confirmada oficialmente; los cuatro
   municipios con cruce de datos real (Guayaramerín, Ixiamas, Palos Blancos,
   San Buenaventura) son la referencia usada hasta ahora (ver `design.md` §10).
+
+## Cuándo se retoma el desarrollo del backend
+
+Recién **después** de esta primera evaluación (defensa de decisiones
+iniciales), siguiendo `tasks.md` desde TASK-001 con `FIRST_PROMPT.md`. Antes
+de retomarlo, TASK-008/009/010 (conectores de ingesta y limpieza) deben
+reutilizar la lógica ya construida y verificada en `../scripts/` y
+`../docs/pipeline_datos.md`, no rediseñarla desde cero — ver la nota en cada
+tarea de `tasks.md`. Ver `../docs/cierre_sprint1.md` para el backlog
+completo pendiente antes de ese momento.
 
 ## Flujo de trabajo
 

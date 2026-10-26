@@ -4,6 +4,13 @@
 **Fecha:** 2026-08-24
 **Basado en:** `requirements.md` v1.0
 
+> ⏸️ **Estado:** diseño de arquitectura vigente (ver también los ADR en
+> `../docs/adr/` y los diagramas C4 en `../docs/c4/`), pero la
+> implementación del backend está en pausa hasta cerrar la primera
+> evaluación. §10 se actualizó el 2026-09-16/17: las preguntas sobre fuente
+> climática y epidemiológica ya están resueltas con datos reales; la zona
+> piloto sigue sin confirmación oficial del equipo.
+
 ---
 
 ## 1. Stack tecnológico
