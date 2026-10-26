@@ -1,0 +1,15 @@
+# Imagen "ml" del Dockerfile (ETL, limpieza, prediccion y SHAP), ademas de
+# requirements-api.txt.
+-r requirements-api.txt
+
+# --- Machine Learning / Explicabilidad ---
+scikit-learn==1.5.2
+# xgboost-cpu = xgboost sin las librerias de GPU de NVIDIA (~470 MB que no se
+# usan); misma version, mismo `import xgboost`.
+xgboost-cpu==2.1.1
+shap==0.52.0
+pandas==2.2.3
+numpy==2.5.3
+
+# --- Tareas programadas ---
+apscheduler==3.10.4

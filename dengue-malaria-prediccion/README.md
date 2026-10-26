@@ -19,14 +19,16 @@ preventivas.
 Este proyecto tiene dos frentes de trabajo con avance muy distinto, que
 conviene no confundir:
 
-**Backend (este directorio) — avance incremental.**
-Incluye la especificación funcional y no funcional, el diseño de
-arquitectura, el modelo de datos y el backlog técnico. Ya están
-implementados la conexión a PostgreSQL/PostGIS, las migraciones Alembic,
-los conectores ETL formales, el baseline XGBoost con explicabilidad SHAP y
-la autenticación JWT con RBAC. Todavía faltan los endpoints de datos, el
-pipeline de predicción completo y el dashboard. Ver `CONTEXT.md` para el
-estado exacto y las decisiones pendientes.
+**Backend (este directorio) — Fase 1 cerrada salvo el despliegue en la nube; Fase 2 (capa de datos) implementada.**
+Incluye especificación funcional y no funcional, diseño de arquitectura,
+modelo de datos y API propuesta, backlog técnico dividido por fases,
+estructura inicial del backend con FastAPI y el endpoint local `GET
+/health`. Ya existen la conexión a PostgreSQL/PostGIS, las migraciones
+Alembic, los conectores ETL formales (`app/etl/`), el baseline XGBoost con
+explicabilidad SHAP, la autenticación JWT con RBAC y la configuración por
+entorno. Todavía faltan los endpoints de datos, el pipeline de predicción
+completo y el dashboard. Ver `CONTEXT.md` (§9) para el estado exacto y las
+decisiones pendientes.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -73,16 +75,19 @@ Lectura recomendada:
 - **Base de datos:** PostgreSQL 16 con PostGIS.
 - **ML:** scikit-learn, XGBoost y SHAP.
 - **Frontend:** React con Leaflet o Mapbox; aún no incluido.
-- **Despliegue:** Railway; aún no configurado.
+- **Despliegue:** Railway previsto (ADR-003), pero **pendiente de decidir** proveedor (TASK-004). `Dockerfile` y `docker-compose.yml` ya funcionan en local.
 
 ## Reproducir el avance actual
 
 ### Requisitos
 
 - Git.
-- Python 3.12 o una versión compatible con las dependencias fijadas en
-  `requirements.txt`.
+- Python 3.12 (la versión fijada en el `Dockerfile`) o una compatible con las
+  dependencias de `requirements.txt`.
+- Docker, para la base de datos PostgreSQL + PostGIS.
 
+El endpoint `/health` no necesita base de datos, pero `pytest`, `alembic` y los
+conectores ETL sí.
 PostgreSQL 16 con PostGIS es necesario para autenticación, migraciones y
 las pruebas de API. Para desarrollo local se puede levantar con Docker.
 
@@ -104,6 +109,33 @@ En Windows, la activación del entorno es:
 .venv\Scripts\Activate.ps1
 ```
 
+### Configuración
+
+```bash
+cp .env.example .env     # y reemplazar los marcadores "cambiar-..." por valores propios
+docker compose up -d db  # PostgreSQL 16 + PostGIS en el puerto 5433
+alembic upgrade head
+```
+
+`app/core/config.py` lee `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`,
+`ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS` y `ENVIRONMENT` del
+entorno o de `.env`. `DATABASE_URL` y `SECRET_KEY` son obligatorias: sin ellas
+la aplicación no arranca. `docker compose up --build` levanta además la API en
+`http://localhost:8000`.
+
+Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend):
+
+| Servicio | Imagen | Tamaño | Comando |
+|---|---|---|---|
+| `api` | target `api` | 323 MB | `docker compose up --build api` |
+| `web` | `frontend/Dockerfile` (nginx) | 74 MB | `docker compose up --build api web` → http://localhost:8080 |
+| `ml` | target `ml` (pandas, xgboost-cpu, shap) | 1,1 GB | `docker compose run --rm ml python -m <modulo>` |
+
+El `frontend/` es solo un esqueleto (mapa base y comprobación de `/health`); no
+implementa las vistas de TASK-027 a 031. Si ya tenías el entorno virtual con
+`xgboost` instalado, ejecuta `pip uninstall xgboost` antes de
+`pip install -r requirements.txt`: ahora se usa `xgboost-cpu`, que instala el
+mismo módulo `xgboost` sin las librerías de GPU.
 El archivo `.env.example` documenta las variables necesarias. Copiarlo como
 `.env` y completar `DATABASE_URL`, `SECRET_KEY` y `SEED_DEMO_PASSWORD`. El
 archivo `.env` está ignorado por Git y nunca debe commitearse.
@@ -185,6 +217,8 @@ pytest tests/ml -q
 alembic check
 ```
 
+`pytest` necesita la base de datos del paso "Configuración" y un `.env` con
+`SECRET_KEY`. Estado verificado el 2026-10-25: 27 tests en verde.
 Los tests de API necesitan `DATABASE_URL` apuntando a una base con las
 migraciones aplicadas. Los fixtures crean sus usuarios dentro de una
 transacción y revierten los cambios al terminar.
@@ -203,8 +237,14 @@ dengue-malaria-prediccion/
 │   ├── ml/                 # reservado para predicción y explicabilidad
 │   ├── models/             # reservado para modelos ORM
 │   └── schemas/            # reservado para esquemas Pydantic
-├── tests/                  # estructura inicial, todavía sin casos
-├── requirements.txt
+├── tests/
+├── frontend/               # esqueleto React + Vite + Leaflet (Fase 5); Dockerfile propio
+├── Dockerfile              # targets api y ml
+├── docker-compose.yml      # db, api, web y ml (profile "jobs")
+├── requirements.txt        # entorno local completo
+├── requirements-api.txt    # imagen api
+├── requirements-ml.txt     # imagen ml
+├── requirements-dev.txt    # pytest, black, ruff
 ├── requirements.md
 ├── design.md
 ├── tasks.md

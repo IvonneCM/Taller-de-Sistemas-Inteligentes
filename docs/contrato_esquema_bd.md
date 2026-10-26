@@ -8,16 +8,15 @@
 ## Cómo levantar la base y verificar
 
 ```bash
-docker run -d --name dengue-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=dengue_malaria \
-  -p 127.0.0.1:5433:5432 postgis/postgis:16-3.4      # 5433 si el 5432 está ocupado
-export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria
 cd dengue-malaria-prediccion
+cp .env.example .env                                  # y completar las claves "cambiar-..."
+docker compose up -d db                               # PostGIS 16-3.4 en el puerto 5433 (POSTGRES_HOST_PORT)
 .venv/bin/alembic upgrade head
 .venv/bin/python -m app.etl.seed_catalogo            # departamentos, enfermedades, 4 municipios piloto
 .venv/bin/python -m pytest tests -q                   # 24 tests
 ```
 
-Las credenciales son solo para desarrollo local (las mismas de `.env.example`); nunca se suben credenciales reales.
+Las credenciales salen de tu `.env` local (ignorado por Git); `.env.example` solo trae marcadores. Nunca se suben credenciales reales.
 
 ## Tablas que existen hoy
 
@@ -105,6 +104,15 @@ Reglas para quien consuma la tabla (features, API):
 4. **Datos provisionales.** El boletín se corrige después: la última semana publicada muestra ~39 % de los casos que terminan reportándose (ver `data/processed/dengue_revisiones_resumen.csv`).
 5. **Un año, 13 semanas.** No hay historia de años anteriores en la base.
 
-## Tablas previstas en `design.md` §3 que todavía NO existen
+## Tablas agregadas por TASK-019 a 023 (Dilan)
 
-`modelos`, `predicciones`, `alertas`, `umbrales_configuracion`, `brotes_confirmados`. Las crean las tareas del motor de predicción y de alertas (Ola 1/2 de Ivonne y Dilan). Cuando se agreguen, este contrato se amplía en el mismo commit que la migración.
+Migración `7c1e5d9a3b42`. Reglas completas y divergencias en `design.md` §3.
+
+| Tabla | Para qué | Restricciones destacadas |
+|---|---|---|
+| `predicciones` | salida del motor (TASK-014); solo INSERT (NFR-009) | `CHECK` de 21 a 28 días entre `fecha_generacion` (fecha UTC) y `fecha_estimada_riesgo`; niveles en (`bajo`,`medio`,`alto`); probabilidad 0-100; `variables_explicativas` JSONB NOT NULL y debe ser una lista; índice `(municipio_id, enfermedad_id, fecha_generacion)` |
+| `alertas` | alertas emitidas (TASK-015); solo INSERT | `justificacion` NOT NULL y no vacía; `umbral_aplicado` 0-100; FK a `predicciones` |
+| `umbrales_configuracion` | umbrales editables (REQ-010) | `UNIQUE (enfermedad_id, departamento_id)` con `NULLS NOT DISTINCT`; 0-100 |
+| `brotes_confirmados` | comparación predicción vs. realidad (REQ-008) | todos los campos NOT NULL. **Nadie los carga todavía.** |
+
+`modelos` ya existía desde TASK-012. Quien inserte en `predicciones` (TASK-014) debe pasar `variables_explicativas` como lista; `None` falla (no se guarda como JSON `null`).

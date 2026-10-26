@@ -1,0 +1,5 @@
+html, body, #root { height: 100%; margin: 0; font-family: system-ui, sans-serif; }
+.app { display: flex; flex-direction: column; height: 100%; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background: #14532d; color: #fff; }
+header h1 { margin: 0; font-size: 1.1rem; }
+.mapa { flex: 1; }
