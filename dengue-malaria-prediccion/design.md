@@ -220,6 +220,8 @@
 | POST | `/datos/clima` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | POST | `/datos/casos` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | GET | `/modelo/desempeno` | REQ-016 | epidemiólogo, admin |
+| GET | `/casos/resumen` | REQ-008, REQ-014 | todos los roles autenticados (casos observados por zona; TASK-047) |
+| GET | `/health` · `/health/ready` | NFR-003 | público (disponibilidad y base de datos; TASK-040) |
 | GET | `/departamentos` | REQ-017 | todos |
 | GET | `/enfermedades` | REQ-018 | todos |
 

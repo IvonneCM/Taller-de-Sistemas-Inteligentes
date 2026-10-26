@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ENVIRONMENT: str = "development"
+    # TASK-040 (NFR-003): diagnostico y limites de espera ante una base lenta o caida.
+    LOG_LEVEL: str = "INFO"
+    DB_CONNECT_TIMEOUT_SECONDS: int = 5
+    DB_STATEMENT_TIMEOUT_MS: int = 15000
+    DB_POOL_TIMEOUT_SECONDS: int = 10
 
     @model_validator(mode="after")
     def _rechazar_secreto_debil_en_produccion(self) -> "Settings":
