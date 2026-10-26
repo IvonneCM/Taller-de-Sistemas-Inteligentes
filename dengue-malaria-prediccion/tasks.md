@@ -3,12 +3,11 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ⏸️ **Estado:** ninguna tarea de este plan ha comenzado. Es el plan de
-> desarrollo del backend, **posterior** a esta primera evaluación — no
-> retomar antes de cerrarla (ver `README.md` → "Cuándo se retoma"). Cuando
-> se retome, empezar por TASK-001 con `FIRST_PROMPT.md`. TASK-008, TASK-009
-> y TASK-010 ya tienen notas agregadas sobre trabajo previo reutilizable en
-> `../scripts/` y `../docs/`.
+> ▶️ **Estado (2026-10-25):** la Fase 2 (capa de datos, TASK-005 a TASK-010)
+> está implementada y verificada contra PostgreSQL 16 + PostGIS 3.4 reales
+> (23 tests en verde, migración aplicada con `alembic upgrade head`). El resto
+> de las tareas sigue pendiente. TASK-009 se implementó con serie SEMANAL de
+> dengue (decisión 2 del reparto "Listo para Empezar"); ver su nota abajo.
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -47,25 +46,28 @@ base de datos PostGIS lista.*
 *Meta de la fase: modelo de datos completo, migraciones aplicadas, y
 pipeline de ingesta/limpieza funcionando con datos de prueba.*
 
-- [ ] **TASK-005** [REQ-017, REQ-018] Crear modelos ORM y migraciones Alembic
+- [x] **TASK-005** [REQ-017, REQ-018] Crear modelos ORM y migraciones Alembic
       para `departamentos`, `municipios` (con columna geometría PostGIS) y
       `enfermedades`.
       *Verificación:* `alembic upgrade head` crea las tablas; `\d municipios`
       muestra la columna `geometria` como tipo geometry.
+      *Verificado 2026-10-25:* `alembic upgrade head` en PostGIS 3.4 crea las 7 tablas; `\d municipios` muestra `geometria geometry(MultiPolygon,4326)` con índice GIST `idx_municipios_geometria`.
 
-- [ ] **TASK-006** [REQ-013, REQ-015] Crear modelos y migraciones para
+- [x] **TASK-006** [REQ-013, REQ-015] Crear modelos y migraciones para
       `casos_epidemiologicos` y `datos_climaticos`, incluyendo `fuente`,
       `fecha_ingesta` y `es_dato_imputado`.
       *Verificación:* inserción de prueba respeta constraints (`CHECK >= 0`,
       `UNIQUE(municipio_id, fecha)` en clima).
+      *Verificado 2026-10-25:* en PostgreSQL real, `casos_confirmados = -1` falla con `ck_casos_no_negativos` y un segundo clima con el mismo `(municipio_id, fecha)` falla con `uq_clima_municipio_fecha`. `fuente`, `fecha_ingesta` y `es_dato_imputado` son NOT NULL.
 
-- [ ] **TASK-007** [REQ-019, REQ-020] Crear modelos y migraciones para
+- [x] **TASK-007** [REQ-019, REQ-020] Crear modelos y migraciones para
       `usuarios` y `roles`, con `password_hash` y sin campos de datos
       personales de pacientes.
       *Verificación:* intento de insertar un usuario con contraseña en texto
       plano falla la revisión de código / test unitario de hashing.
+      *Verificado 2026-10-25:* `usuarios` tiene `email`, `password_hash` (NOT NULL), `rol_id` y `municipio_asignado_id`; ningún campo de pacientes. `tests/test_modelo_usuarios.py` fija el esquema. El hashing con bcrypt es TASK-017.
 
-- [ ] **TASK-008** [REQ-014] Implementar conector de ingesta para datos
+- [x] **TASK-008** [REQ-014] Implementar conector de ingesta para datos
       climáticos públicos. **Fuente ya confirmada:** SENAMHI Bolivia (WIS
       2.0) — ver `docs/eda_inicial.md` §2.2. Existe ya una descarga
       funcional fuera de `app/etl/conectores/` (`scripts/descargar_senamhi.py`);
@@ -73,8 +75,9 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       reemplazarla ni volver a diseñarla.
       *Verificación:* test que ingiere un CSV/JSON de muestra y valida que
       los registros aparecen en `datos_climaticos` con `fuente` poblada.
+      *Verificado 2026-10-25:* `tests/etl/test_senamhi.py` (5 tests) pasa contra PostGIS real.
 
-- [ ] **TASK-009** [REQ-014] Implementar conector de ingesta para datos
+- [x] **TASK-009** [REQ-014] Implementar conector de ingesta para datos
       epidemiológicos históricos. **Fuente ya confirmada:** Ministerio de
       Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13 — ver
       `docs/eda_inicial.md` §2.1. **Limitación conocida:** la fuente entrega
@@ -82,8 +85,9 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       esa granularidad mejora antes de dar por cerrada esta tarea (ver
       `docs/cierre_sprint1.md` §3.2).
       *Verificación:* test análogo a TASK-008 para `casos_epidemiologicos`.
+      *Verificado 2026-10-25:* **dengue** se ingiere como serie SEMANAL por municipio (`ingerir_dengue_semanal`, `fecha_reporte` = domingo de la semana ISO, `es_dato_imputado = false`); fuente: `data/processed/dengue_municipal_semanal.csv` (28 municipios × 13 semanas, verificada contra los totales del boletín). Solo los municipios del catálogo (zona piloto, 4) se insertan. **Malaria** sigue como acumulado SE1-13: no existe serie semanal en ninguna fuente (solo bloques reconstruidos por diferencia de boletines, pendiente de decidir cómo guardarlos). 12 tests en `tests/etl/test_epidemiologia.py`.
 
-- [ ] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
+- [x] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
       imputación (`app/etl/limpieza.py`) siguiendo `docs/reglas_calidad_datos.md`:
       interpolación temporal para climáticos faltantes, marcado de
       `es_dato_imputado`, y cálculo del porcentaje de datos faltantes por
@@ -95,6 +99,7 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       *Verificación:* test unitario con dataset que tiene 20% de valores
       faltantes; el resultado no contiene NaN y se marca el flag de
       confianza baja cuando corresponde (ver TASK-014).
+      *Verificado 2026-10-25:* `tests/etl/test_limpieza.py` (4 tests) pasa, incluido el de 20 % de faltantes sin NaN y con confianza baja.
 
 ---
 
