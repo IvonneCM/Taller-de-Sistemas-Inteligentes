@@ -68,7 +68,7 @@ Debe firmarse después de resolver (o aceptar por escrito) los hallazgos de la s
 
 | Integrante | Revisó | Fecha | Firma |
 |---|---|---|---|
-| Ignacio Retamozo Torrez | | | |
+| Ignacio Retamozo Torrez | Despliegue: HTTPS, cabeceras de seguridad y documentación de la API oculta en Render; configuración de Docker, nginx, workflows y ausencia de secretos en el repositorio. No verifiqué el panel de Render/Neon ni los secretos de GitHub Actions | 2026-10-26 | Ignacio Retamozo Torrez |
 | Tania Pérez | Datos sin información de pacientes (REQ-020: solo conteos por municipio y semana; `validar_sin_pii` en los conectores), procedencia y licencias de las fuentes (Ministerio de Salud, SENAMHI, NASA POWER, OpenStreetMap ODbL) y la carga de boletines en PDF (solo epidemiólogo y admin, máximo 20 MB, verificación de que sea un PDF, rechazo completo si la tabla no cuadra); `pip-audit` sin vulnerabilidades tras agregar `pdfplumber` | 2026-10-26 | Tania Pérez |
 | Ivonne Colque | autenticación JWT, dependencias RBAC, hash de contraseñas con bcrypt, validación del modelo baseline | 2026-10-26 | Ivonne Colque |
 | Adriana Rocha Vedia | Revisión documental de privacidad, HTTPS, alertas y riesgos de seguridad aceptados | 26/10/2026 | Adriana Rocha Vedia |
