@@ -9,8 +9,8 @@
 > 010), el baseline (012), el motor de predicción, las alertas y la autenticación
 > (014, 015, 017, 018), toda la API (019 a 025, 047), las pruebas y la cobertura
 > (032), el manejo de errores (040), la vista de campañas (031) y casi toda la
-> Fase 7. **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta
-> decidir proveedor) y una fuente de brotes confirmados. Faltan además la tarea
+> Fase 7. **Bloquea la defensa:** una fuente de brotes confirmados (el despliegue
+> en la nube, TASK-004, ya está resuelto en Render + Neon). Faltan además la tarea
 > semanal (016), `/modelo/desempeno` (026), la prueba de carga (033), la
 > validación retrospectiva (034), la revisión de seguridad (035), las
 > limitaciones del informe (036), el tag (041) y el ensayo con el Plan B (045).
@@ -24,8 +24,8 @@ checkbox, para que sea verificable de forma automática.
 
 ## Fase 1 — Infraestructura base
 
-*Meta de la fase: tener el proyecto ejecutable localmente y en Railway, con
-base de datos PostGIS lista.*
+*Meta de la fase: tener el proyecto ejecutable localmente y en la nube
+(Render + Neon), con base de datos PostGIS lista.*
 
 - [x] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
       de carpetas definida en `design.md` §9, configurar entorno virtual y
@@ -46,14 +46,16 @@ base de datos PostGIS lista.*
       *Verificación:* revisión manual — ningún secreto en el código fuente.
       *Verificado 2026-10-25:* `app/core/config.py` (pydantic-settings) lee las 6 variables del entorno o de `.env`; `DATABASE_URL` y `SECRET_KEY` no tienen valor por defecto y, con `ENVIRONMENT=production`, se rechaza una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `app/core/database.py` y `alembic/env.py` leen de `get_settings()` (antes `os.environ`). `tests/test_config.py` (3 tests); suite completa: 27 tests en verde. Ningún secreto en el código de `app/` ni `alembic/`.
 
-- [ ] **TASK-004** [NFR-008] Conectar el proyecto a Railway (servicio
-      PostgreSQL + servicio FastAPI) y confirmar despliegue de un endpoint
-      `/health` de prueba.
-      *Verificación:* `curl https://<app>.up.railway.app/health` responde 200.
-      **PENDIENTE (decisión 2026-10-25):** el despliegue en la nube queda para
-      más adelante; el equipo debe decidir proveedor (Railway con crédito de
-      prueba o plan Hobby de $5/mes, u otra opción con base de datos PostGIS
-      gratuita; ver `CONTEXT.md` §9). *Hecho y verificado en local:*
+- [x] **TASK-004** [NFR-008] Conectar el proyecto a un proveedor de nube
+      (servicio PostgreSQL + servicio FastAPI) y confirmar despliegue de un
+      endpoint `/health` de prueba. *Proveedor: Render + Neon, no Railway (ADR-006).*
+      *Verificación:* `curl https://<app>/health` responde 200.
+      *Verificado 2026-10-26:* `curl https://taller-de-sistemas-inteligentes.onrender.com/health`
+      → 200 `{"status":"ok"}` con certificado TLS válido; `http://` redirige con 301 a
+      `https://`; `POST /auth/login` con credenciales falsas → 401 en ~2 s, lo que
+      confirma que la API consulta la base de Neon (PostgreSQL 16, PostGIS 3.3.10,
+      4 migraciones aplicadas, tablas vacías). `/docs` y `/openapi.json` responden.
+      *Antes (historial):* el despliegue estuvo pendiente de decisión del 2026-10-25. *Hecho y verificado en local:*
       `Dockerfile` con dos targets (`api` 323 MB, `ml` 2,3 GB; Python 3.12
       fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore` y
       `docker compose up --build api web` →
@@ -65,12 +67,14 @@ base de datos PostGIS lista.*
       también contra PostgreSQL 16 + PostGIS 3.4, la misma versión que usa el CI.
       Esa prueba encontró que la API importaba `pandas` (ausente en la imagen
       `api`); corregido y vigilado por `tests/test_api_ligera.py`.
-      Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
-      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública. El
-      `railway.toml` se eliminó el 2026-10-26 (queda en el historial de Git);
-      `alembic upgrade head` se probó en local contra una base vacía, pero ya no
-      corre automáticamente en ningún proveedor. Ruta elegida: Render + Neon + GitHub Actions, en
-      `../docs/guia_despliegue_render_neon.md`.
+      El `railway.toml` se eliminó el 2026-10-26 (queda en el historial de Git).
+      Las migraciones se aplican al arrancar con `RUN_MIGRATIONS=1` (`CMD` del
+      `Dockerfile`; el campo Docker Command de Render debe quedar vacío). Pasos y
+      problemas encontrados en `../docs/guia_despliegue_render_neon.md`.
+      *Limitaciones conocidas:* la API gratuita se duerme tras 15 min sin tráfico
+      (la primera petición tarda cerca de 1 min); Neon gratuito es de ~0,5 GB y
+      suspende el cómputo sin uso; la contraseña de Neon se compartió por chat y
+      debe rotarse.
 
 ---
 

@@ -454,7 +454,18 @@ TASK-023 queda sin marcar (ver pendientes).
 - Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
   conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
 
-**Pendiente**
+**TASK-004 verificada (2026-10-26)**
+- `https://taller-de-sistemas-inteligentes.onrender.com/health` responde 200 con
+  TLS válido; `http://` redirige con 301; `POST /auth/login` con credenciales
+  falsas devuelve 401 (la API consulta Neon). Se marcó `[x]`, se creó ADR-006
+  (Render + Neon, reemplaza a ADR-003) y se actualizaron `design.md` §1/§6/§8/§10,
+  `tasks.md` y `controles_seguridad.md`.
+- Incidente: `.env` local apuntaba a Neon y un `alembic upgrade head` más la suite
+  de tests se ejecutaron contra Neon por error; solo creó las tablas (vacías).
+- Pendiente: rotar la contraseña de Neon (se compartió por chat) y cargar el
+  catálogo y los datos en Neon.
+
+**Pendiente (historial, ya resuelto arriba)**
 - **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
   elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
   debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas
