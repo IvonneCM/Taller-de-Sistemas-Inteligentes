@@ -14,7 +14,7 @@ export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria
 cd dengue-malaria-prediccion
 .venv/bin/alembic upgrade head
 .venv/bin/python -m app.etl.seed_catalogo            # departamentos, enfermedades, 4 municipios piloto
-.venv/bin/python -m pytest tests -q                   # 23 tests
+.venv/bin/python -m pytest tests -q                   # 24 tests
 ```
 
 Las credenciales son solo para desarrollo local (las mismas de `.env.example`); nunca se suben credenciales reales.
@@ -85,6 +85,11 @@ Sin ningún campo de datos personales de pacientes (REQ-020). Solo existe el **h
 |---|---|---|---|---|
 | **Dengue** | **Serie semanal** por municipio (SE1-13 de 2026) | **Domingo** de la semana ISO | `Min. Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13 (serie semanal)` | `casos_confirmados` = casos de **esa semana** |
 | **Malaria** | Solo **acumulado** SE1-13 por municipio | Domingo de la SE13 (cierre del periodo) | `Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13` | `casos_confirmados` = acumulado SE1-13, **no** un conteo semanal |
+
+**Decisión sobre malaria ([ADR-005](./adr/ADR-005-malaria-acumulado-en-bd.md)):** en la base se guarda solo el acumulado SE1-13, porque no existe serie semanal de malaria en ninguna fuente. En la zona piloto son **3 filas** (Guayaramerín 293, Ixiamas 156, San Buenaventura 1; Palos Blancos no figura en la tabla de malaria). Consecuencias:
+- No hay rezagos semanales de malaria desde la BD: **TASK-011 (rezagos), TASK-034 (validación retrospectiva) y las vistas de historial solo cubren dengue.**
+- El **modelo de malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`** (22 municipios, bloques de semanas), no con esta tabla.
+- Si SEDES/SNIS entrega casos semanales, se ingieren como filas semanales (igual que dengue) sin cambiar el esquema.
 
 Reglas para quien consuma la tabla (features, API):
 - **Nunca sumar filas acumuladas y semanales de la misma enfermedad:** duplicaría los casos. Filtrar por `fuente`.

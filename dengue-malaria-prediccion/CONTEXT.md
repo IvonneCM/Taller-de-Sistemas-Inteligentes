@@ -257,10 +257,10 @@ backlog de la sección 5.
 `VARCHAR(100)`). Corregido y cubierto por un test que no necesita BD.
 
 **Pendiente / decisiones abiertas**
-1. **Malaria:** no existe serie semanal. Decidir si guardar solo el acumulado
-   SE1-13 (como hoy) o repartir los bloques reconstruidos por diferencia de
-   boletines marcando `es_dato_imputado = true` (hay bloques que no dividen en
-   enteros, p. ej. 111 casos en 4 semanas).
+1. ~~**Malaria:** decidir cómo guardarla.~~ **Resuelto (ADR-005):** acumulado
+   SE1-13 en la BD (3 filas piloto, sin semanas inventadas); el modelo de
+   malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. Se
+   reabre si SEDES/SNIS entrega casos semanales.
 2. **Tabla `roles` vacía:** el seed no carga los roles de `design.md` (la
    necesita TASK-017/018, Ivonne).
 3. **`municipios.nombre` no es UNIQUE:** ambiguo al ampliar el catálogo más

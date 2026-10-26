@@ -85,7 +85,7 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       esa granularidad mejora antes de dar por cerrada esta tarea (ver
       `docs/cierre_sprint1.md` §3.2).
       *Verificación:* test análogo a TASK-008 para `casos_epidemiologicos`.
-      *Verificado 2026-10-25:* **dengue** se ingiere como serie SEMANAL por municipio (`ingerir_dengue_semanal`, `fecha_reporte` = domingo de la semana ISO, `es_dato_imputado = false`); fuente: `data/processed/dengue_municipal_semanal.csv` (28 municipios × 13 semanas, verificada contra los totales del boletín). Solo los municipios del catálogo (zona piloto, 4) se insertan. **Malaria** sigue como acumulado SE1-13: no existe serie semanal en ninguna fuente (solo bloques reconstruidos por diferencia de boletines, pendiente de decidir cómo guardarlos). 12 tests en `tests/etl/test_epidemiologia.py`.
+      *Verificado 2026-10-25:* **dengue** se ingiere como serie SEMANAL por municipio (`ingerir_dengue_semanal`, `fecha_reporte` = domingo de la semana ISO, `es_dato_imputado = false`); fuente: `data/processed/dengue_municipal_semanal.csv` (28 municipios × 13 semanas, verificada contra los totales del boletín). Solo los municipios del catálogo (zona piloto, 4) se insertan. **Malaria** se guarda como acumulado SE1-13 (3 filas en la zona piloto): no existe serie semanal en ninguna fuente. Decisión registrada en `docs/adr/ADR-005-malaria-acumulado-en-bd.md`; el modelo de malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. 13 tests en `tests/etl/test_epidemiologia.py`.
 
 - [x] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
       imputación (`app/etl/limpieza.py`) siguiendo `docs/reglas_calidad_datos.md`:

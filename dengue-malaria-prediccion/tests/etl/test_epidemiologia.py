@@ -189,3 +189,29 @@ def test_textos_de_fuente_caben_en_la_columna_varchar_100():
     assert len(FUENTE_MINSALUD) <= 100
     assert len(FUENTE_MINSALUD_SEMANAL) <= 100
     assert FUENTE_MINSALUD_SEMANAL != FUENTE_MINSALUD  # distintas: evita doble conteo
+
+
+# ---------------------------------------------------------------------------
+# Malaria: SOLO acumulado SE1-13 (ADR-005). No hay serie semanal en la fuente.
+# ---------------------------------------------------------------------------
+
+CSV_MALARIA_REAL = Path(__file__).resolve().parents[3] / "data" / "processed" / "malaria_municipal_validado.csv"
+
+
+@pytest.mark.skipif(not CSV_MALARIA_REAL.exists(), reason="malaria validada real no disponible")
+def test_malaria_real_se_guarda_como_acumulado_sin_inventar_semanas(db_session):
+    df = leer_epidemiologia_municipal_csv(str(CSV_MALARIA_REAL), "malaria")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # malaria no debe disparar la advertencia de dengue
+        resultado = ingerir_epidemiologia_acumulada(db_session, df, "malaria")
+
+    # Zona piloto: Guayaramerin, Ixiamas y San Buenaventura (Palos Blancos no
+    # figura en la tabla de malaria del boletin).
+    assert resultado["insertados"] == 3
+    filas = db_session.query(CasoEpidemiologico).all()
+    casos = {f.municipio.nombre: f.casos_confirmados for f in filas}
+    assert casos == {"GUAYARAMERIN": 293, "IXIAMAS": 156, "SAN BUENAVENTURA": 1}
+    # Una sola fecha por municipio (cierre SE13): nunca una serie semanal inventada.
+    assert {f.fecha_reporte for f in filas} == {fecha_cierre_periodo(2026, 13)}
+    assert all(f.es_dato_imputado is False for f in filas)

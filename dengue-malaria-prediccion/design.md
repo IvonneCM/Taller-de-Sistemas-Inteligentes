@@ -344,6 +344,8 @@ dengue-malaria-prediccion/
   existe en ninguna fuente disponible: solo acumulados SE1-k por boletín;
   restando boletines consecutivos se reconstruyen bloques de varias semanas
   (`data/processed/malaria_municipal_bloques.csv`), nunca semanas inventadas.
+  **Decisión (2026-10-25, ADR-005):** en la base de datos malaria se guarda como
+  acumulado SE1-13; el modelo de malaria entrena con el panel de bloques en CSV.
   Los datos recientes se corrigen en boletines posteriores (la última semana
   de un boletín muestra ~39 % de sus casos finales); ver
   `data/processed/dengue_revisiones_resumen.csv`.
