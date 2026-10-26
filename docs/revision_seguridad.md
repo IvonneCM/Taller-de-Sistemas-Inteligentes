@@ -72,4 +72,4 @@ Debe firmarse después de resolver (o aceptar por escrito) los hallazgos de la s
 | Tania Pérez | | | |
 | Ivonne Colque | | | |
 | Adriana Rocha Vedia | | | |
-| Dilan Mamani Pamuri | | | |
+| Dilan Mamani Pamuri | Controles automáticos, hallazgos H-1 a H-9 (resueltos o aceptados) y verificación en Render | 2026-10-26 | Dilan Mamani Pamuri |
