@@ -3,8 +3,9 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ▶️ **Estado (2026-10-25):** la Fase 2 (capa de datos, TASK-005 a TASK-010)
-> está implementada y verificada contra PostgreSQL 16 + PostGIS 3.4 reales
+> ▶️ **Estado (2026-10-25):** la Fase 1 está cerrada salvo el despliegue en
+> la nube (TASK-004, pendiente: falta decidir proveedor; ver su nota). La
+> Fase 2 (capa de datos, TASK-005 a TASK-010) está implementada y verificada contra PostgreSQL 16 + PostGIS 3.4 reales
 > (23 tests en verde, migración aplicada con `alembic upgrade head`). El resto
 > de las tareas sigue pendiente. TASK-009 se implementó con serie SEMANAL de
 > dengue (decisión 2 del reparto "Listo para Empezar"); ver su nota abajo.
@@ -19,25 +20,39 @@ checkbox, para que sea verificable de forma automática.
 *Meta de la fase: tener el proyecto ejecutable localmente y en Railway, con
 base de datos PostGIS lista.*
 
-- [ ] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
+- [x] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
       de carpetas definida en `design.md` §9, configurar entorno virtual y
       `requirements.txt` (fastapi, sqlalchemy, alembic, psycopg2, pydantic,
       python-jose, passlib[bcrypt], scikit-learn, shap, xgboost, pandas).
       *Verificación:* `pip install -r requirements.txt` corre sin errores.
+      *Verificado 2026-10-25:* en un venv nuevo, `pip install -r requirements.txt` termina con exit 0 y `pip check` no reporta conflictos. `requirements.txt` ya traía todas las dependencias; no se modificó. Todas tienen wheel para Linux/Python 3.12 (la versión fijada en el `Dockerfile`).
 
-- [ ] **TASK-002** [NFR-008] Configurar PostgreSQL local con extensión
+- [x] **TASK-002** [NFR-008] Configurar PostgreSQL local con extensión
       PostGIS habilitada (`CREATE EXTENSION postgis;`).
       *Verificación:* `SELECT PostGIS_Version();` devuelve una versión válida.
+      *Verificado 2026-10-25:* `docker compose up -d db` (`docker-compose.yml`, imagen `postgis/postgis:16-3.4`, que habilita PostGIS al crear la base) y `SELECT PostGIS_Version();` devuelve `3.4 USE_GEOS=1 USE_PROJ=1 USE_STATS=1`. Antes de esta fecha el repositorio no tenía ningún `docker-compose.yml`.
 
-- [ ] **TASK-003** [NFR-005] Configurar `app/core/config.py` para leer
+- [x] **TASK-003** [NFR-005] Configurar `app/core/config.py` para leer
       variables de entorno (`DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`,
-      `ACCESS_TOKEN_EXPIRE_MINUTES`) sin credenciales hardcodeadas.
+      `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
+      `ENVIRONMENT`) sin credenciales hardcodeadas.
       *Verificación:* revisión manual — ningún secreto en el código fuente.
+      *Verificado 2026-10-25:* `app/core/config.py` (pydantic-settings) lee las 6 variables del entorno o de `.env`; `DATABASE_URL` y `SECRET_KEY` no tienen valor por defecto y, con `ENVIRONMENT=production`, se rechaza una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `app/core/database.py` y `alembic/env.py` leen de `get_settings()` (antes `os.environ`). `tests/test_config.py` (3 tests); suite completa: 27 tests en verde. Ningún secreto en el código de `app/` ni `alembic/`.
 
 - [ ] **TASK-004** [NFR-008] Conectar el proyecto a Railway (servicio
       PostgreSQL + servicio FastAPI) y confirmar despliegue de un endpoint
       `/health` de prueba.
       *Verificación:* `curl https://<app>.up.railway.app/health` responde 200.
+      **PENDIENTE (decisión 2026-10-25):** el despliegue en la nube queda para
+      más adelante; el equipo debe decidir proveedor (Railway con crédito de
+      prueba o plan Hobby de $5/mes, u otra opción con base de datos PostGIS
+      gratuita; ver `CONTEXT.md` §9). *Hecho y verificado en local:*
+      `Dockerfile` con dos targets (`api` 323 MB, `ml` 1,1 GB; Python 3.12
+      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore`,
+      `railway.toml` y `docker compose up --build api web` →
+      `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
+      Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
+      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública.
 
 ---
 

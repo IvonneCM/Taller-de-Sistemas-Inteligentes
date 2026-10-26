@@ -272,3 +272,54 @@ backlog de la sección 5.
    `tania/task-005-010-capa-datos`: los cambios del backend (conector y
    tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
    `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
+
+### 2026-10-25 (2) — Fase 1: TASK-001 a TASK-003 implementadas, TASK-004 a medias
+
+> TASK-001 a TASK-003 cerradas `[x]` (el usuario pidió cerrarlas tras la
+> verificación; no hay divergencia con `design.md`). TASK-004 queda abierta: el
+> despliegue en la nube se pospone.
+
+**Hecho**
+- TASK-001: `requirements.txt` ya traía todo; `pip install -r` en un venv limpio
+  termina con exit 0 y `pip check` sin conflictos. Todas las dependencias
+  tienen wheel para Linux/Python 3.12.
+- TASK-002: `docker-compose.yml` nuevo (servicio `db`, `postgis/postgis:16-3.4`,
+  puerto del host 5433 por defecto y configurable). `SELECT PostGIS_Version();`
+  devuelve 3.4. No existía ningún Dockerfile ni compose antes.
+- TASK-003: `app/core/config.py` (pydantic-settings) con las 6 variables.
+  `DATABASE_URL` y `SECRET_KEY` son obligatorias; en `production` se rechaza
+  una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `database.py` y
+  `alembic/env.py` ahora leen de ahí (antes `os.environ`). `tests/test_config.py`
+  (3 tests). 27 tests en verde con la BD de compose.
+- TASK-004 (parcial): `Dockerfile` (Python **3.12** fijado, usuario no root,
+  escucha en `$PORT`), `.dockerignore`, `railway.toml` (healthcheck `/health`).
+  En local, `docker compose up --build` responde 200 en `/health`.
+
+**Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
+- La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
+  `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
+  (1,1 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
+  27 tests). `xgboost` pasó a `xgboost-cpu==2.1.1` (misma versión y mismo
+  `import xgboost`). `api` es la última etapa a propósito: un `docker build .`
+  sin target (Railway) construye la API.
+- Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
+  mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
+  API). **No implementa TASK-027 a 031.**
+- En `docker-compose.yml` las variables van explícitas en `environment`: con
+  `env_file` + `docker compose run`, el contenedor `ml` solo recibía
+  `DATABASE_URL` y faltaba `SECRET_KEY`.
+- El job de predicción correrá con la imagen `ml`, no dentro de FastAPI. Sigue
+  sin decidir cómo llega el modelo entrenado en Colab al job.
+- Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
+  reinstalar.
+
+**Pendiente**
+- **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
+  elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
+  debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas
+  gratuitas con PostGIS: API en Render o Northflank + base en Neon (la API de
+  Render se duerme tras 15 min; el job semanal TASK-016 tendría que dispararse
+  desde un cron externo). Render Postgres gratis caduca a los 30 días: no sirve.
+  Si se cambia de proveedor, actualizar ADR-003 y `design.md` §1 y §10.
+- Ahora hace falta un `.env` local con `SECRET_KEY` (antes bastaba `DATABASE_URL`).

@@ -10,6 +10,7 @@ from alembic import context
 # Permite `import app...` al correr alembic desde la raiz del backend.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.core.config import get_settings  # noqa: E402
 from app.core.database import Base  # noqa: E402
 from app import models  # noqa: E402,F401  (registra todos los modelos en Base)
 
@@ -17,10 +18,9 @@ from app import models  # noqa: E402,F401  (registra todos los modelos en Base)
 # access to the values within the .ini file in use.
 config = context.config
 
-# DATABASE_URL viene de la variable de entorno (NFR-005: nunca hardcodear
-# credenciales en alembic.ini).
-if os.environ.get("DATABASE_URL"):
-    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# DATABASE_URL viene de app.core.config (entorno o .env; NFR-005: nunca
+# hardcodear credenciales en alembic.ini).
+config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -22,7 +22,8 @@
 | Orquestación de tareas | APScheduler o Celery + Redis (según carga) | Ejecutar el pipeline de predicción semanalmente |
 | Frontend / Dashboard | React + librería de mapas (ej. Leaflet o Mapbox GL) | Mapas de calor interactivos y vistas por rol |
 | Autenticación | JWT (OAuth2 password flow de FastAPI) | Estándar, simple de integrar con RBAC |
-| Despliegue | Railway (API + PostgreSQL/PostGIS) | Ver justificación acordada con el usuario |
+| Despliegue | Railway (API + PostgreSQL/PostGIS) — **pendiente de confirmar** | Ver justificación acordada con el usuario. El despliegue (TASK-004) está en espera y el proveedor puede cambiar; ver §10 |
+| Contenedores | Docker: tres imágenes — `api` (323 MB), `ml` (1,1 GB, ETL y predicción semanal) y `web` (74 MB, nginx); Python 3.12 fijado | La API solo lee resultados, así que no carga pandas/xgboost/shap; el job de predicción corre fuera de FastAPI con la imagen `ml`. La BD local usa `postgis/postgis:16-3.4` |
 | Entrenamiento de modelo (offline) | Google Colab o servidor de la universidad | Evita cargar cómputo pesado en el entorno de producción liviano |
 
 > Nota: los nombres de librerías específicas (ej. XGBoost vs. Prophet vs.
@@ -323,7 +324,14 @@ dengue-malaria-prediccion/
 │       └── explicabilidad.py
 ├── tests/
 ├── alembic/                      # migraciones de base de datos
-├── requirements.txt
+├── Dockerfile                    # targets: api (ligera) y ml (pandas, xgboost, shap); Python 3.12
+├── docker-compose.yml            # db PostGIS + api + web (+ ml, profile "jobs")
+├── railway.toml                  # solo si se despliega en Railway
+├── frontend/                     # React + Vite + Leaflet; Dockerfile propio (nginx)
+├── requirements.txt              # entorno local completo (incluye los tres de abajo)
+├── requirements-api.txt          # imagen api
+├── requirements-ml.txt           # imagen ml (xgboost-cpu)
+├── requirements-dev.txt          # pytest, black, ruff (solo local)
 ├── requirements.md
 ├── design.md
 ├── tasks.md
@@ -357,6 +365,11 @@ dengue-malaria-prediccion/
   cubre 28 municipios con clima de reanálisis NASA POWER porque 4 son muy
   pocos para entrenar; ampliar el catálogo de la BD requiere polígonos
   municipales oficiales (hoy son cuadrados referenciales de ~5 km).
+- **Proveedor de despliegue (abierta, 2026-10-25):** Railway no es gratuito de
+  forma sostenida (crédito de prueba de $5 o plan Hobby de $5/mes). Alternativas
+  gratuitas con PostGIS: API en Render o Northflank y base en Neon. Si la API
+  corre en un servicio que se duerme sin tráfico, el job semanal (TASK-016)
+  debe dispararse desde un cron externo. Decisión del equipo pendiente.
 - ¿Se requiere notificación por correo electrónico para las alertas en esta
   primera versión, o basta con la vista en el dashboard?
 - ¿El modelo se re-entrenará periódicamente (ej. mensual) o solo una vez

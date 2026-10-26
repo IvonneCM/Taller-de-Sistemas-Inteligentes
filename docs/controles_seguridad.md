@@ -23,13 +23,14 @@ como presentes en el repositorio.
 | Control | Estado actual | Evidencia |
 |---|---|---|
 | Exclusión de `.env`, llaves y datos crudos | Presente | `.gitignore` excluye `.env`, `*.pem`, `*.key` y `data/raw/`. |
-| Plantilla de configuración sin secretos reales | Presente | `.env.example` usa credenciales locales de ejemplo y marcadores. |
+| Plantilla de configuración sin secretos reales | Presente | `.env.example` usa solo marcadores. |
+| Configuración por entorno sin secretos en código | Presente (TASK-003) | `app/core/config.py`: `DATABASE_URL` y `SECRET_KEY` obligatorias sin valor por defecto; en producción se rechaza una `SECRET_KEY` de ejemplo o menor a 32 caracteres. `tests/test_config.py`. |
 | Endpoint de salud sin datos sensibles | Presente | `app/main.py` devuelve únicamente `{"status": "ok"}`. |
 | Prohibición de datos personales de pacientes | Definido en requisitos y diseño | REQ-020 y modelo agregado por municipio y fecha. |
 | JWT y expiración de tokens | Diseñado, no implementado | TASK-017 pendiente. |
 | RBAC aplicado en backend | Diseñado, no implementado | TASK-018 pendiente. |
 | Hash de contraseñas | Diseñado, no implementado | TASK-007 y TASK-017 pendientes. |
-| HTTPS/TLS | Diseñado, no verificable sin despliegue | TASK-004 y TASK-035 pendientes. |
+| HTTPS/TLS | Diseñado, no verificable sin despliegue | TASK-004 (despliegue en la nube, en espera) y TASK-035 pendientes. |
 | Auditoría inmutable | Diseñado, no implementado | NFR-009 y migraciones pendientes. |
 
 Una decisión documentada no debe presentarse como control operativo hasta que

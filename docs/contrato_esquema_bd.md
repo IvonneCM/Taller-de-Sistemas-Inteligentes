@@ -8,16 +8,15 @@
 ## Cómo levantar la base y verificar
 
 ```bash
-docker run -d --name dengue-db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=dengue_malaria \
-  -p 127.0.0.1:5433:5432 postgis/postgis:16-3.4      # 5433 si el 5432 está ocupado
-export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria
 cd dengue-malaria-prediccion
+cp .env.example .env                                  # y completar las claves "cambiar-..."
+docker compose up -d db                               # PostGIS 16-3.4 en el puerto 5433 (POSTGRES_HOST_PORT)
 .venv/bin/alembic upgrade head
 .venv/bin/python -m app.etl.seed_catalogo            # departamentos, enfermedades, 4 municipios piloto
 .venv/bin/python -m pytest tests -q                   # 24 tests
 ```
 
-Las credenciales son solo para desarrollo local (las mismas de `.env.example`); nunca se suben credenciales reales.
+Las credenciales salen de tu `.env` local (ignorado por Git); `.env.example` solo trae marcadores. Nunca se suben credenciales reales.
 
 ## Tablas que existen hoy
 
