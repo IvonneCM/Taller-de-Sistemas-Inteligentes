@@ -1,6 +1,6 @@
 # ADR-003: Railway como plataforma de despliegue
 
-- **Estado:** Aceptado
+- **Estado:** Reemplazado por [ADR-006](./ADR-006-despliegue-render-neon.md) (2026-10-26)
 - **Fecha:** 2026-09-16
 - **Decisores:** Equipo SIPTB (sugerido y aceptado por el usuario)
 - **Relacionado:** `design.md` §1, `CONTEXT.md` (decisiones clave), ADR-001

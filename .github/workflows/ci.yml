@@ -1,0 +1,81 @@
+# Integración continua (TASK-046): pruebas del backend y de la interfaz en cada
+# PR. El backend corre contra un PostGIS real (el mismo que usa la demostración),
+# no contra un sustituto. Los secretos de este archivo son valores de prueba que
+# solo existen en el contenedor efímero del CI.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dilan]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (pytest + PostGIS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dengue-malaria-prediccion
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dengue_malaria
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dengue_malaria"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dengue_malaria
+      SECRET_KEY: ci-solo-para-pruebas-clave-de-mas-de-32-caracteres
+      ENVIRONMENT: development
+      # Las pruebas de integracion de TASK-024/025 y de alertas vigentes solo corren
+      # si esto esta definido y exigen esta base exclusiva (se crea en un paso aparte).
+      GATOBYTE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gatobyte_task024025_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: dengue-malaria-prediccion/requirements*.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Aplicar migraciones y comprobar que coinciden con los modelos
+        run: |
+          alembic upgrade head
+          alembic check
+      - name: Crear la base de pruebas exclusiva y migrarla
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "CREATE DATABASE gatobyte_task024025_test"
+          psql -h localhost -U postgres -d gatobyte_task024025_test -c "CREATE EXTENSION IF NOT EXISTS postgis"
+          DATABASE_URL="$GATOBYTE_TEST_DATABASE_URL" alembic upgrade head
+      - name: Pruebas con cobertura (mínimo 70 % en ingesta, limpieza y predicción)
+        run: pytest -q --cov=app/etl --cov=app/ml --cov-fail-under=70
+
+  frontend:
+    name: Interfaz (vitest + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dengue-malaria-prediccion/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dengue-malaria-prediccion/frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

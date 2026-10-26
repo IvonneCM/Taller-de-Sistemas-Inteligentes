@@ -14,8 +14,10 @@ justificación, además de consecuencias.
 |---|---|---|
 | [ADR-001](./ADR-001-postgresql-postgis.md) | PostgreSQL 16 + PostGIS como base de datos | Aceptado |
 | [ADR-002](./ADR-002-python-fastapi.md) | Python 3.12 + FastAPI para el backend | Aceptado |
-| [ADR-003](./ADR-003-despliegue-railway.md) | Railway como plataforma de despliegue | Aceptado |
+| [ADR-003](./ADR-003-despliegue-railway.md) | Railway como plataforma de despliegue | Reemplazado por ADR-006 |
 | [ADR-004](./ADR-004-linea-base-nacional-referencia-inicial.md) | Adoptar la línea base nacional como referencia inicial | Aceptado |
+| [ADR-005](./ADR-005-malaria-acumulado-en-bd.md) | Malaria se guarda como acumulado (sin serie semanal inventada) | Aceptado |
+| [ADR-006](./ADR-006-despliegue-render-neon.md) | Render + Neon como plataforma de despliegue | Aceptado |
 
 ## ADRs candidatos (pendientes)
 

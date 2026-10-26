@@ -1,0 +1,17 @@
+# Imagen "api" del Dockerfile: lo minimo para servir la API y las migraciones.
+# --- API / Backend ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+pydantic-settings==2.5.2
+
+# --- Base de datos ---
+sqlalchemy==2.0.35
+alembic==1.13.3
+psycopg2-binary==2.9.13
+geoalchemy2==0.15.2
+
+# --- Autenticación / Seguridad ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
