@@ -10,7 +10,7 @@ import json
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.etl.fuentes import FUENTE_MINSALUD_SEMANAL
+from app.etl.fuentes import es_fuente_semanal
 from app.models import CasoEpidemiologico, Departamento, Enfermedad, Municipio
 from app.services.predicciones import validar_enfermedad
 
@@ -45,7 +45,7 @@ def resumen_de_casos(db: Session, *, enfermedad_id: int | None = None) -> list[d
     elegidas: dict[tuple[int, int], dict] = {}
     for (mid, mnombre, did, dnombre, eid, enombre, fuente, total, desde, hasta,
          registros, geojson, lat, lon) in db.execute(stmt).all():
-        semanal = fuente == FUENTE_MINSALUD_SEMANAL
+        semanal = es_fuente_semanal(fuente)
         fila = {
             "municipio_id": mid, "municipio": mnombre,
             "departamento_id": did, "departamento": dnombre,

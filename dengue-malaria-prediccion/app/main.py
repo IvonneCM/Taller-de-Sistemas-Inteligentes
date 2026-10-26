@@ -5,7 +5,7 @@ Ver requirements.md y design.md antes de agregar endpoints.
 
 from fastapi import FastAPI
 
-from app.api.routes import admin, alertas, campanas, casos, health, modelo, municipios, zonas
+from app.api.routes import admin, alertas, boletines, campanas, casos, health, modelo, municipios, panel, zonas
 from app.api.routes.auth import router as auth_router
 from app.core import cabeceras_seguridad, observabilidad
 from app.core.config import get_settings
@@ -36,3 +36,5 @@ app.include_router(auth_router)
 app.include_router(campanas.router)
 app.include_router(municipios.router)
 app.include_router(modelo.router)
+app.include_router(panel.router)
+app.include_router(boletines.router)

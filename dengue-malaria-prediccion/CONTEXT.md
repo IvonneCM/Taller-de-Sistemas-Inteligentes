@@ -225,6 +225,43 @@ backlog de la sección 5.
 
 ## 9. Registro de sesiones
 
+### 2026-10-26 (tarde) — Revisión contra la Guía de Defensa, carga de boletines y todos los municipios (Tania)
+
+**Estado:** verificado en local: **455 tests del backend (0 fallan), 173 de la interfaz**,
+80,8 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio, `dvc status` al día,
+imagen `api` construida (417 MB). Recorrido en el navegador con base nueva.
+
+**Hecho**
+- **CI en rojo arreglado:** la vista `brotes_simulados` (TASK-034, Ivonne) no tenía
+  migración y usaba columnas inexistentes. Ahora es la migración `b8e4f2a6c913`,
+  `alembic/env.py` excluye las vistas de autogenerate y `desempeno.py` filtra por la
+  tabla correcta. La vista suma fuentes por día e ignora días sin casos.
+- **Carga de boletines en PDF** (REQ-013/014/015): `app/etl/boletin_pdf.py` (lee y
+  verifica contra los totales impresos, sin pandas), `app/services/boletines.py`
+  (vista previa y guardado; una serie por municipio, la del boletín más reciente),
+  `POST /admin/boletines[/vista-previa]` (epidemiólogo y admin), pestaña **Datos** y
+  aviso "Falta cargar boletines" en el Resumen. `pdfplumber` pasa a `requirements-api.txt`.
+  Acepta SE 3, 5, 7, 8, 9 y 13; rechaza SE 6 (tabla partida), SE 21 (sin tabla municipal)
+  y `SE14.pdf` (en realidad es el boletín SE 4, con totales incompletos).
+- `app/etl/fuentes.py`: `fuente_semanal(n)`; `casos.py` y `panel.py` reconocen la serie
+  semanal de cualquier boletín (con el N.º 13 el texto es idéntico al de antes).
+- **Todos los municipios en la demo:** `seed_demo --todos-los-municipios --fecha 2026-03-30`
+  (42 municipios; 28 con dengue/341 casos, 21 con malaria/1.615; 3 alertas con el umbral
+  de 70 %). `ampliar_catalogo` simplifica los polígonos de OSM (~110 m): el mapa pasa de
+  2,6 MB a 0,5 MB. Mi ADR del catálogo se renumeró a **ADR-007** (chocaba con el ADR-006
+  de Render).
+- Documentos al día: `arquitectura_actual.md`, README, guion de la demo, `contrato_api.md`,
+  riesgos M-05, M-06, M-10, M-18 y nuevos **M-19** (clima de Alto Beni con coordenadas de
+  La Paz) y **M-20** (el ranking por municipio no es creíble). Se quitó un PDF ajeno de
+  `data/boletines`.
+
+**Pendiente (del equipo)**
+- Aceptar ADR-007 (contradice la decisión 1 del reparto: zona piloto de 4).
+- Pasar la rama a `main` (Render despliega `main`), cargar la demo en Neon con el mismo
+  comando y crear un tag nuevo de defensa; `v0.2-mvp` es anterior a todo esto.
+- Regenerar el clima con `data/reference/municipios_ubicacion.csv` y reentrenar (M-19),
+  solo después de avisar a quien mantiene el modelo.
+
 ### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
 
 **Estado:** implementado y verificado en local: **389 tests del backend, 120 de la

@@ -160,3 +160,31 @@ def test_enfermedad_inexistente_responde_404(client):
 
 def test_nivel_minimo_invalido_responde_422(client):
     assert client.get(URL, params={"nivel_minimo": "extremo"}, headers=cabeceras()).status_code == 422
+
+
+def test_brotes_simulados_de_la_vista(db_session, dengue, malaria, modelo, guayaramerin):
+    """TASK-034: la vista brotes_simulados suma las fuentes de un mismo dia, ignora
+    los dias sin casos y respeta el filtro por enfermedad."""
+    from app.models import CasoEpidemiologico
+    from app.services.desempeno import calcular_desempeno
+
+    def caso(enfermedad, fecha, n, fuente):
+        db_session.add(CasoEpidemiologico(municipio_id=guayaramerin.id, enfermedad_id=enfermedad.id,
+                                          fecha_reporte=fecha, casos_confirmados=n, fuente=fuente))
+
+    caso(dengue, date(2026, 3, 9), 2, "boletin A")
+    caso(dengue, date(2026, 3, 9), 1, "boletin B")      # mismo dia, otra fuente: un solo brote
+    caso(dengue, date(2026, 3, 16), 0, "boletin A")     # sin casos: no cuenta
+    caso(malaria, date(2026, 3, 9), 5, "boletin A")     # otra enfermedad: filtrada
+    db_session.flush()
+    crear_prediccion(db_session, municipio=guayaramerin, enfermedad=dengue, modelo=modelo,
+                     nivel="alto", generada=GEN_1)
+
+    r = calcular_desempeno(db_session, enfermedad_id=dengue.id, desde=date(2026, 3, 1),
+                           usar_brotes_simulados=True)
+
+    assert r["brotes_confirmados"] == 1
+    assert r["brotes_detectados"] == 1
+    assert r["aciertos"] == 1
+    # Por defecto sigue usando brotes_confirmados (vacia en esta prueba).
+    assert calcular_desempeno(db_session, enfermedad_id=dengue.id)["brotes_confirmados"] == 0

@@ -1,0 +1,160 @@
+/* Capa visual de 2026-10-26: identidad en rojo, resumen con indicadores, alertas
+   legibles y mapa con leyenda. Solo usa los tokens de tokens.css (los pares de
+   texto/fondo estan cubiertos por src/test/contraste.test.js). */
+
+/* ---------- Encabezado en degradado ---------- */
+
+.barra {
+  background: linear-gradient(100deg, var(--hero-1), var(--hero-2));
+  color: var(--sobre-hero); border-bottom: 0;
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--hero-1) 35%, transparent);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.barra .marca, .barra .usuario strong { color: var(--sobre-hero); }
+.barra .marca svg { color: var(--sobre-hero); }
+.barra .segmentado { background: rgba(255, 255, 255, 0.18); }
+.barra .segmentado button { color: rgba(255, 255, 255, 0.92); }
+.barra .segmentado button[aria-checked="true"] { background: var(--superficie-solida); color: var(--texto); }
+.barra .boton-suave { background: rgba(255, 255, 255, 0.2); color: var(--sobre-hero); }
+.barra :focus-visible { outline-color: var(--sobre-hero); }
+
+/* Pestañas de vista: el activo en rojo de marca. */
+.vistas .segmentado { background: var(--superficie-solida); border: 1px solid var(--linea); box-shadow: var(--sombra); }
+.vistas .segmentado button[aria-selected="true"] { background: var(--acento); color: var(--sobre-acento); box-shadow: none; }
+
+/* ---------- Resumen ---------- */
+
+.resumen { display: grid; gap: var(--e-md); }
+.hero {
+  display: flex; flex-wrap: wrap; gap: var(--e-lg); align-items: center; justify-content: space-between;
+  padding: var(--e-xl) var(--e-lg); border-radius: var(--radio-tarjeta); color: var(--sobre-hero);
+  background:
+    radial-gradient(36rem 16rem at 100% 0%, rgba(255, 255, 255, 0.22), transparent 60%),
+    linear-gradient(110deg, var(--hero-1), var(--hero-2));
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--hero-1) 40%, transparent);
+}
+.hero h2 { font: var(--t-hero); letter-spacing: var(--tracking-hero); max-width: 28ch; }
+.hero p { max-width: 62ch; opacity: 0.95; }
+.hero .sobretitulo { color: var(--sobre-hero); opacity: 0.9; }
+.hero-acciones { display: flex; gap: var(--e-sm); flex-wrap: wrap; }
+.boton-claro { background: #ffffff; color: #8f0a1f; }
+.boton-fantasma { background: rgba(255, 255, 255, 0.18); color: var(--sobre-hero); }
+.hero :focus-visible { outline-color: var(--sobre-hero); }
+
+.kpis { display: grid; gap: var(--e-md); grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); }
+.kpi { position: relative; display: grid; gap: var(--e-xs); padding: var(--e-lg); overflow: hidden; align-content: start; }
+.kpi::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--kpi-color, var(--acento));
+}
+.kpi .valor { font: 700 clamp(2.25rem, 4vw, 3rem) / 1 var(--fuente); letter-spacing: var(--tracking-hero); font-variant-numeric: tabular-nums; }
+.kpi .titulo-kpi { font: var(--t-nota); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-2); }
+.kpi-alerta { --kpi-color: var(--riesgo-alto); background: var(--riesgo-alto-tinte); }
+.kpi-alerta .valor { color: var(--riesgo-alto-texto); }
+.kpi-medio { --kpi-color: var(--riesgo-medio); }
+.kpi-dengue { --kpi-color: var(--dengue); }
+.kpi-dengue .valor { color: var(--dengue-texto); }
+.kpi-malaria { --kpi-color: var(--malaria); }
+.kpi-malaria .valor { color: var(--malaria-texto); }
+
+.rejilla-2 { display: grid; gap: var(--e-md); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 64rem) { .rejilla-2 { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); } .rejilla-2.igual { grid-template-columns: 1fr 1fr; } }
+.tarjeta-titulo { display: grid; gap: var(--e-xs); padding: var(--e-lg) var(--e-lg) 0; }
+.tarjeta-titulo h3 { font: var(--t-subtitulo); }
+.tarjeta-cuerpo { padding: var(--e-md) var(--e-lg) var(--e-lg); display: grid; gap: var(--e-md); }
+
+/* Grafico de barras semanal */
+.grafico { width: 100%; height: auto; display: block; }
+.grafico .barra-g { fill: var(--dengue); transition: opacity var(--t-corto) var(--curva); }
+.grafico .barra-g.provisional { fill: url(#rayas); stroke: var(--dengue); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.grafico .barra-g:hover { opacity: 0.8; }
+.grafico text { fill: var(--texto-2); font: 12px var(--fuente); }
+.grafico .valor-g { fill: var(--texto); font-weight: 600; }
+.grafico .rejilla-g { stroke: var(--linea); stroke-width: 1; }
+.leyenda-grafico { display: flex; gap: var(--e-md); flex-wrap: wrap; font: var(--t-nota); color: var(--texto-2); }
+.muestra { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--dengue); }
+.muestra.prov { background: transparent; border: 1.5px dashed var(--dengue); }
+
+/* Distribucion del riesgo */
+.pila { display: flex; height: 18px; border-radius: var(--radio-pildora); overflow: hidden; background: var(--pista); }
+.pila > span { min-width: 4px; transition: flex-grow var(--t-medio) var(--curva); }
+.pila .alto { background: var(--riesgo-alto); } .pila .medio { background: var(--riesgo-medio); } .pila .bajo { background: var(--riesgo-bajo); }
+.conteos { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e-sm); text-align: center; }
+.conteos strong { display: block; font: 700 1.75rem / 1.1 var(--fuente); font-variant-numeric: tabular-nums; }
+.conteos .c-alto strong { color: var(--riesgo-alto-texto); } .conteos .c-medio strong { color: var(--riesgo-medio-texto); } .conteos .c-bajo strong { color: var(--riesgo-bajo-texto); }
+.destacado { padding: var(--e-md); border-radius: var(--radio-control); background: var(--riesgo-alto-tinte); color: var(--texto); display: grid; gap: 2px; }
+.destacado strong { color: var(--riesgo-alto-texto); }
+
+/* Ranking de municipios */
+.ranking-barras { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--e-md); }
+.ranking-barras li { display: grid; gap: 4px; }
+.ranking-barras .fila-r { display: flex; justify-content: space-between; gap: var(--e-md); font: var(--t-fila); }
+.ranking-barras .fila-r strong { font-variant-numeric: tabular-nums; }
+.ranking-barras .barra-valor > span { background: var(--barra-color, var(--dengue)); }
+.ranking-barras.malaria { --barra-color: var(--malaria); }
+
+.aviso-datos { display: flex; gap: var(--e-sm); align-items: start; }
+.aviso-datos::before { content: "ⓘ"; font-size: 1.25rem; line-height: 1.2; color: var(--enlace); }
+
+/* ---------- Alertas ---------- */
+
+.barra-herramientas { display: flex; flex-wrap: wrap; gap: var(--e-md); align-items: end; padding: var(--e-md) var(--e-lg); }
+.barra-herramientas .campo { min-width: 14rem; flex: 1 1 14rem; }
+.alertas-resumen { display: flex; gap: var(--e-md); flex-wrap: wrap; align-items: baseline; }
+.alertas-resumen .cifra-alerta { font: 700 2.5rem / 1 var(--fuente); color: var(--riesgo-alto-texto); font-variant-numeric: tabular-nums; }
+
+.alerta { position: relative; padding-top: var(--e-lg); box-shadow: inset 0 5px 0 var(--nivel-color, var(--linea-fuerte)), var(--sombra); }
+.alerta.nivel-alto { --nivel-color: var(--riesgo-alto); } .alerta.nivel-medio { --nivel-color: var(--riesgo-medio); } .alerta.nivel-bajo { --nivel-color: var(--riesgo-bajo); }
+.alerta-cabeza { display: grid; grid-template-columns: auto 1fr auto; gap: var(--e-md); align-items: center; }
+.anillo { width: 76px; height: 76px; position: relative; }
+.anillo svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.anillo .pista { fill: none; stroke: var(--pista); stroke-width: 9; }
+.anillo .valor-a { fill: none; stroke: var(--nivel-color, var(--acento)); stroke-width: 9; stroke-linecap: round; transition: stroke-dasharray var(--t-medio) var(--curva); }
+.anillo strong { position: absolute; inset: 0; display: grid; place-items: center; font: 700 1.2rem / 1 var(--fuente); font-variant-numeric: tabular-nums; }
+.alerta-meta { display: flex; gap: var(--e-sm); flex-wrap: wrap; font: var(--t-nota); color: var(--texto-2); }
+.alerta-meta span { padding: 2px 10px; border-radius: var(--radio-pildora); background: var(--pista); }
+.factores { display: grid; gap: var(--e-sm); }
+.factores h4 { margin: 0; font: var(--t-nota); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-2); }
+.factor .variable-cabecera { font: var(--t-fila); }
+
+/* ---------- Mapa: leyenda ---------- */
+
+/* En escritorio el contenedor es sticky (app.css) y ya ancla la leyenda; en movil hace falta position. */
+@media (max-width: 63.99rem) { .mapa-contenedor { position: relative; } }
+.leyenda-mapa {
+  position: absolute; z-index: 500; right: var(--e-md); top: var(--e-md); display: grid; gap: 6px;
+  padding: var(--e-sm) var(--e-md); border-radius: var(--radio-control); font: var(--t-nota);
+  background: var(--superficie-solida); border: 1px solid var(--linea); box-shadow: var(--sombra); color: var(--texto);
+}
+.leyenda-mapa .item { display: flex; align-items: center; gap: 8px; }
+.leyenda-mapa i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+
+.justificacion {
+  font: var(--t-fila); color: var(--texto-2); padding-left: var(--e-md);
+  border-left: 3px solid var(--nivel-color, var(--linea-fuerte));
+}
+.boton-pequeno { min-height: 36px; padding: 0.35rem 1rem; justify-self: start; font: var(--t-fila); }
+details.mas.aviso { padding: var(--e-sm) var(--e-lg); }
+details.mas.aviso[open] { padding-bottom: var(--e-md); }
+.ranking-barras.riesgo li { grid-template-columns: 1fr auto; align-items: center; }
+.ranking-barras.riesgo .fila-r, .ranking-barras.riesgo .barra-valor { grid-column: 1 / -1; }
+.ranking-barras.riesgo .insignia { grid-column: 1; justify-self: start; }
+
+/* Pestañas en pantallas angostas: se desplazan en vez de cortarse. */
+.vistas .segmentado { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.vistas .segmentado::-webkit-scrollbar { display: none; }
+.vistas .segmentado button { flex: 0 0 auto; }
+
+/* Carga de boletines (vista Datos). */
+.panel-boletin { display: grid; gap: var(--e-md); }
+.barra-herramientas .campo input[type="file"] { padding: var(--e-sm); }
+.resultado-boletin .tarjeta-cuerpo { display: grid; gap: var(--e-md); }
+.verificacion-ok { color: var(--riesgo-bajo-texto); font-weight: 600; }
+.verificacion-ok::before { content: "✓ "; }
+.cifras-boletin { list-style: none; display: flex; flex-wrap: wrap; gap: var(--e-lg); }
+.cifras-boletin li { display: grid; }
+.cifras-boletin strong { font-size: 1.75rem; line-height: 1.1; }
+.lista-simple { padding-left: var(--e-lg); color: var(--texto-2); }
+.aviso-exito { background: var(--riesgo-bajo-tinte); }
+.aviso-exito h3 { color: var(--riesgo-bajo-texto); }
+.aviso-atraso { background: var(--riesgo-medio-tinte); }
+.resultado-boletin tbody th { font: var(--t-fila); font-weight: 500; color: var(--texto); }

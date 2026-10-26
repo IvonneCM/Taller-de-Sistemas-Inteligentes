@@ -32,6 +32,7 @@ const PARES = [
   ["--texto", "--fondo"], ["--texto", "--fondo-2"],
   ["--texto-2", "--fondo"], ["--texto-2", "--fondo-2"], ["--texto-2", "--superficie-solida"], ["--texto-2", "--info-tinte"],
   ["--sobre-acento", "--acento"],
+  ["--sobre-hero", "--hero-1"], ["--sobre-hero", "--hero-2"],
   ["--enlace", "--fondo"], ["--enlace", "--fondo-2"], ["--enlace", "--info-tinte"], ["--enlace", "--superficie-solida"],
   ["--riesgo-bajo-texto", "--riesgo-bajo-tinte"],
   ["--riesgo-medio-texto", "--riesgo-medio-tinte"],

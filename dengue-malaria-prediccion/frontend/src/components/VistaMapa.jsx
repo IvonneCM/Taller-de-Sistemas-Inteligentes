@@ -24,6 +24,13 @@ export function VistaMapa({ enfermedad, riesgo, casos, usuario }) {
     return porDepartamento ? puntosDepartamentoDengue(riesgo.datos) : puntosDengue(riesgo.datos);
   }, [esMalaria, porDepartamento, casos.datos, riesgo.datos]);
 
+  const leyenda = esMalaria
+    ? [{ variable: "--malaria", etiqueta: "Casos acumulados de malaria (el tamaño crece con los casos)" }]
+    : [
+        { variable: "--riesgo-alto", etiqueta: "Riesgo alto" },
+        { variable: "--riesgo-medio", etiqueta: "Riesgo medio" },
+        { variable: "--riesgo-bajo", etiqueta: "Riesgo bajo" },
+      ];
   const unidad = porDepartamento ? "departamento" : "municipio";
   const descripcion = `Mapa de ${esMalaria ? "casos de malaria" : "riesgo de dengue"} por ${unidad}. La lista junto al mapa tiene la misma información.`;
 
@@ -33,7 +40,7 @@ export function VistaMapa({ enfermedad, riesgo, casos, usuario }) {
         <Segmentado etiqueta="Nivel de agregación" opciones={NIVELES} valor={nivel} alCambiar={setNivel} />
       </div>
       <div className="mapa-y-panel">
-        <MapaZonas puntos={puntos} seleccionado={seleccionado} alSeleccionar={setSeleccionado} descripcion={descripcion} />
+        <MapaZonas puntos={puntos} seleccionado={seleccionado} alSeleccionar={setSeleccionado} descripcion={descripcion} leyenda={leyenda} />
         {porDepartamento
           ? <PanelDepartamento tipo={esMalaria ? "malaria" : "dengue"} carga={esMalaria ? casos : riesgo} seleccionado={seleccionado} alSeleccionar={setSeleccionado} />
           : esMalaria

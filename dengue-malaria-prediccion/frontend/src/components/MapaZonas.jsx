@@ -27,7 +27,14 @@ function Encuadre({ puntos }) {
   useEffect(() => {
     if (!puntos.length) return;
     const limites = L.latLngBounds(puntos.map((p) => [p.centroide.lat, p.centroide.lon]));
-    mapa.fitBounds(limites.pad(0.35), { maxZoom: 9, animate: false });
+    for (const p of puntos) {
+      for (const g of p.geometrias ?? [p.geometria]) {
+        if (!g) continue;
+        const cuadro = L.geoJSON({ type: "Feature", geometry: g }).getBounds();
+        if (cuadro.isValid()) limites.extend(cuadro);
+      }
+    }
+    mapa.fitBounds(limites.pad(0.08), { maxZoom: 9, animate: false });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapa, clave]);
   return null;
@@ -38,7 +45,7 @@ function Encuadre({ puntos }) {
  * radio, etiqueta }. Las zonas piloto son cuadrados de ~5 km (referenciales), así
  * que el dato principal se dibuja como círculo en el centroide.
  */
-export function MapaZonas({ puntos, seleccionado, alSeleccionar, descripcion }) {
+export function MapaZonas({ puntos, seleccionado, alSeleccionar, descripcion, leyenda = [] }) {
   const tema = useTema();
   const reducirMovimiento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const colores = useMemo(
@@ -66,17 +73,22 @@ export function MapaZonas({ puntos, seleccionado, alSeleccionar, descripcion }) 
           return [
             ...geometrias.map((geometria, i) => (
               <GeoJSON
-                key={`g-${p.id}-${i}-${color}`}
+                key={`g-${p.id}-${i}-${color}-${activo}`}
                 data={{ type: "Feature", geometry: geometria }}
-                style={{ color, weight: 1.5, fillColor: color, fillOpacity: 0.3 }}
-                interactive={false}
-              />
+                style={{
+                  color: activo ? acento : color, weight: activo ? 4 : 2,
+                  fillColor: color, fillOpacity: activo ? 0.72 : 0.5,
+                }}
+                eventHandlers={{ click: () => alSeleccionar(p.id) }}
+              >
+                <Tooltip sticky>{p.nombre} · {p.etiqueta}</Tooltip>
+              </GeoJSON>
             )),
             <CircleMarker
               key={`c-${p.id}-${color}-${activo}`}
               center={[p.centroide.lat, p.centroide.lon]}
-              radius={p.radio + (activo ? 4 : 0)}
-              pathOptions={{ color: activo ? acento : color, weight: activo ? 3 : 1.5, fillColor: color, fillOpacity: 0.6 }}
+              radius={Math.max(5, p.radio * 0.6) + (activo ? 3 : 0)}
+              pathOptions={{ color: activo ? acento : "#ffffff", weight: activo ? 3 : 1.5, fillColor: color, fillOpacity: 0.9 }}
               eventHandlers={{ click: () => alSeleccionar(p.id) }}
             >
               <Tooltip>{p.nombre} · {p.etiqueta}</Tooltip>
@@ -84,6 +96,13 @@ export function MapaZonas({ puntos, seleccionado, alSeleccionar, descripcion }) 
           ];
         })}
       </MapContainer>
+      {leyenda.length > 0 && (
+        <div className="leyenda-mapa" aria-label="Leyenda del mapa">
+          {leyenda.map((l) => (
+            <span className="item" key={l.variable}><i style={{ background: leerColor(l.variable) }} />{l.etiqueta}</span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
