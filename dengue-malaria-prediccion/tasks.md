@@ -410,7 +410,7 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       backlog de estabilización y sus responsables.
       *Persona sugerida:* todo el equipo, al final. *Depende de:* TASK-004 y
       las demás de esta fase. *Verificación:* tag y PR visibles en GitHub.
-      *Estado 2026-10-26:* pendiente hasta cerrar la fase. PR #28 ya incorporó el primer merge de `dilan`; falta el tag y los issues del backlog de estabilización (no existe ningún issue en el repositorio).
+      *Estado 2026-10-26:* la guía de defensa pide «identificar commit/tag a defender» (versión congelada), PRs verificables y, para los riesgos, «risk register **o** issues etiquetados», con responsables para la estabilización. **PRs: hechos** (#28, #29, #30 mergeados; #32 abierto). **Riesgos: hecho** (`docs/risk_register.md`, M-01 a M-18, y `docs/limitaciones_informe_final.md`). **Falta:** (1) el tag `v0.2-mvp`, que debe ponerse **después de mergear el PR #32**, para que la versión defendida incluya las correcciones de seguridad; (2) los responsables de la estabilización: el risk register no tiene columna de responsable, así que se crean unos pocos issues etiquetados con dueño (opcional, pero es lo que cubre ese punto; hoy no existe ningún issue en el repositorio).
 
 - [x] **TASK-042** Arquitectura vigente: actualizar los diagramas C4,
       `design.md` y el README con lo realmente implementado (contenedores
@@ -433,11 +433,12 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       artefactos.
       *Verificado 2026-10-26:* `docs/resultados_experimentales.md`: tablas t+3 y t+4 contra la clase mayoritaria y la regla de casos recientes, experimentos A a D con el sobreajuste del C, y la razón de que malaria no tenga modelo.
 
-- [ ] **TASK-045** Guion de demostración y Plan B: pasos de la demo en vivo,
-      grabación real de una ejecución y base precargada de respaldo, sin
+- [ ] **TASK-045** Guion de demostración y Plan B: pasos de la demo en vivo y
+      respaldo (base precargada y resultados reales de las pruebas), sin
       maquillar resultados. *Persona sugerida:* todo el equipo.
-      *Depende de:* TASK-038/039. *Verificación:* ensayo completo cronometrado.
-      *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Falta el ensayo cronometrado del equipo, la grabación real de una ejecución y el respaldo de base** (se preparan con el sistema final).
+      *Depende de:* TASK-038/039. *Verificación:* ensayo del equipo.
+      *Corrección 2026-10-26:* la guía de defensa pide demostración en vivo y un Plan B que no maquille la realidad; **no pide grabación ni ensayo cronometrado**. La grabación y el cronómetro se agregaron de más y ya no son requisito (la grabación queda como extra opcional).
+      *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Respaldo de la base hecho:** `pg_dump` de la demo guardado fuera del repositorio y **restauración probada** en una base vacía (4 municipios, 55 casos, 4 predicciones, 5 usuarios). Resultado real de las pruebas: 456 de backend y 154 de frontend en verde. **Falta solo el ensayo del equipo** (que cada persona pueda explicar el sistema integrado, no solo su parte) y repetir el respaldo con el sistema final.
 
 - [x] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
       `pytest` (con PostGIS) en cada PR. *Persona sugerida:* Ignacio.
