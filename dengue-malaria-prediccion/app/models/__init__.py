@@ -9,6 +9,7 @@ from app.models.caso_epidemiologico import CasoEpidemiologico  # noqa: F401
 from app.models.dato_climatico import DatoClimatico  # noqa: F401
 from app.models.rol import Rol  # noqa: F401
 from app.models.usuario import Usuario  # noqa: F401
+from app.models.modelo import Modelo  # noqa: F401
 
 __all__ = [
     "Departamento",
@@ -18,4 +19,5 @@ __all__ = [
     "DatoClimatico",
     "Rol",
     "Usuario",
+    "Modelo",
 ]

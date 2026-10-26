@@ -109,7 +109,7 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       *Verificación:* test unitario valida que las columnas de lag se
       calculan correctamente sobre una serie de tiempo de ejemplo.
 
-- [ ] **TASK-012** [NFR-001, NFR-002] Entrenar modelo baseline (offline, en
+- [x] **TASK-012** [NFR-001, NFR-002] Entrenar modelo baseline (offline, en
       notebook/Colab) usando XGBoost u otro clasificador, con datos
       disponibles o sintéticos representativos; documentar métricas
       obtenidas (aclarando que son estimadas hasta validarse con datos

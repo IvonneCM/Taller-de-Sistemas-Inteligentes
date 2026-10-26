@@ -220,3 +220,62 @@ Si el pedido inmediato de Tania es "sube esto al repo", el trabajo es
 `git add / commit / push` sobre lo ya generado (§4) — no generar contenido
 nuevo. Si pide continuar con tareas pendientes del equipo, seguir el
 backlog de la sección 5.
+
+---
+
+## 9. Registro de sesiones
+
+### 2026-10-25 — TASK-012 baseline XGBoost de dengue
+
+**Estado:** implementación terminada, verificada y `TASK-012` marcada como
+`[x]` en `tasks.md`. Solo falta que Ivonne revise y haga el commit.
+
+**Implementado**
+- `app/ml/entrenamiento.py`: etiqueta `casos_dengue_t_mas_{3,4} > 0`,
+  walk-forward cronológico, XGBoost, métricas, baselines, artefactos JSON y
+  registro opcional en BD.
+- `tests/ml/test_entrenamiento.py`: 11 pruebas; suite `tests/ml` completa
+  ejecutada con **33 OK, 1 omitida** (pandas 2.2.3 ausente).
+- `app/ml/artifacts/`: boosters y metadata de t+3 y t+4, versión `v1`.
+- `app/models/modelo.py` + `app/models/__init__.py`: ORM de `modelos`.
+- `alembic/versions/4079b097a5a2_task_012_modelos.py`: crea solo `modelos`.
+- `alembic/env.py`: exclusión dinámica de tablas/índices de extensiones
+  PostGIS en autogenerate. La consulta cierra su transacción implícita con
+  `rollback()` antes de iniciar la migración; sin eso, el DDL se revertía.
+- `docs/task_012_baseline.md` y `docs/task_012_metricas.json`.
+- `scripts/graficos_task_012.py` y `scripts/task_012_output/`: 6 gráficos
+  (métricas, matrices de confusión, ROC/PR, por origen, distribución de
+  probabilidades e importancia de variables), predicciones walk-forward y
+  CSVs de métricas. El script verifica que el recálculo coincida con la
+  metadata de los artefactos.
+
+**Datos y protocolo**
+- Panel `data/processed/panel_semanal_dengue_clima.csv`: 364 filas,
+  28 municipios, 13 semanas de 2026, 24 features.
+- Orígenes t+3: 2026-02-09/16/23 y 03-02 (112 predicciones).
+- Orígenes t+4: 2026-02-16 y 02-23 (56 predicciones).
+- Filas del modelo final: 224 (t+3) y 196 (t+4).
+
+**Resultados (macro por origen)**
+- t+3: modelo F1 0.3322 / ROC-AUC 0.6588; regla `casos_recientes`
+  F1 0.4775 / ROC-AUC 0.6913. El modelo **no supera** la regla simple.
+- t+4: modelo F1 0.3785 / ROC-AUC 0.6268; regla `casos_recientes`
+  F1 0.3255 / ROC-AUC 0.6215. Mejora marginal, no concluyente.
+- Métricas exploratorias; no validan NFR-001/NFR-002. La etiqueta no es
+  definición de brote.
+
+**Verificación BD (PostGIS temporal en Docker)**
+- `alembic upgrade head` aplicado; `alembic check` sin operaciones nuevas.
+- Upgrade desde base vacía verificado (con `CREATE EXTENSION postgis`
+  previo; la migración base no crea la extensión).
+- Catálogo: 2 enfermedades, 4 municipios piloto.
+- Filas en `modelos`: id 1 (t+3), id 2 (t+4), `enfermedad_id=1`,
+  `metricas_entrenamiento` JSONB válido.
+
+**Pendientes**
+- Ivonne debe revisar y hacer el commit/push (instrucción explícita: el
+  agente no commitea).
+- La rama local `ivonne2` sigue detrás de `origin/ivonne2`; no se hizo
+  commit ni push.
+- `.gitignore` tiene un cambio previo no relacionado (ignora
+  `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
