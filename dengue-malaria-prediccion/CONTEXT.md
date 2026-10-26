@@ -314,6 +314,18 @@ backlog de la sección 5.
 - Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
   reinstalar.
 
+**Preparación para Railway (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_railway.md`: pasos completos, variables, verificación y
+  fallos comunes. `railway.toml` ahora ejecuta `preDeployCommand =
+  ["alembic upgrade head"]`; el `Dockerfile` arranca uvicorn con
+  `--proxy-headers`; `config.py` acepta `DATABASE_URL` con esquema `postgres://`
+  (+1 test, 28 en total). Probado en local con la imagen `api`, base vacía,
+  `ENVIRONMENT=production` y `PORT` distinto: migra y responde 200.
+- Hallazgo de la documentación de Railway: el archivo de configuración no sigue
+  al Root Directory; hay que poner Config File Path
+  `/dengue-malaria-prediccion/railway.toml` en el servicio.
+- No se tocó nada del job semanal (TASK-016).
+
 **Pendiente**
 - **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
   elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD

@@ -52,7 +52,10 @@ base de datos PostGIS lista.*
       `railway.toml` y `docker compose up --build api web` →
       `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
       Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
-      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública.
+      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública. Pasos
+      completos en `../docs/guia_despliegue_railway.md`; `railway.toml` ya corre
+      `alembic upgrade head` como pre-deploy (probado en local contra una base
+      vacía).
 
 ---
 

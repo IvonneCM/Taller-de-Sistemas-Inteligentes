@@ -39,4 +39,6 @@ USER appuser
 # Railway inyecta PORT; en local queda 8000. Sin secretos en la imagen:
 # DATABASE_URL, SECRET_KEY, etc. se pasan como variables de entorno.
 EXPOSE 8000
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# --proxy-headers: detras del proxy HTTPS de Railway, las URLs generadas por la
+# API conservan https.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

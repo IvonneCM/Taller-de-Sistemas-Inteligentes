@@ -8,7 +8,7 @@ faltan, la aplicacion falla al arrancar en vez de usar un secreto inventado.
 
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Valor de ejemplo de .env.example; nunca debe llegar a produccion.
@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ENVIRONMENT: str = "development"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def _normalizar_esquema(cls, v: str) -> str:
+        # Algunos proveedores entregan "postgres://", que SQLAlchemy 2 no acepta.
+        if v.startswith("postgres://"):
+            return "postgresql://" + v[len("postgres://"):]
+        return v
 
     @model_validator(mode="after")
     def _rechazar_secreto_debil_en_produccion(self) -> "Settings":
