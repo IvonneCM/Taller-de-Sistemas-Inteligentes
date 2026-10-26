@@ -331,3 +331,69 @@ backlog de la sección 5.
   commit ni push.
 - `.gitignore` tiene un cambio previo no relacionado (ignora
   `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
+
+### 2026-10-25 — TASK-017/018 autenticación JWT y RBAC
+
+**Estado:** implementación terminada, tests verdes y `TASK-017`/`TASK-018`
+marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25). Falta
+solo que Ivonne revise y haga el commit.
+
+**Implementado**
+- `app/core/security.py`: bcrypt (costo 12) y JWT HS256 con access de 30
+  min y refresh de 7 días; claims `sub`, `rol`, `tipo`, `jti`, `iat`,
+  `exp`, `iss`. El algoritmo está restringido a HS256.
+- `app/models/refresh_token.py` + migración `aa12e214cb8d`: tabla
+  `refresh_tokens` (`jti` único, usuario, expiración, revocación,
+  creación). `RefreshToken` se registró en `app/models/__init__.py` y se
+  agregó la relación en `Usuario`.
+- `app/api/routes/auth.py`: `POST /auth/login` (OAuth2 password flow),
+  `POST /auth/refresh` con rotación y `POST /auth/logout` idempotente.
+- `app/api/deps.py`: `get_current_user` carga usuario y rol desde la BD en
+  cada request; `require_role(...)` aplica RBAC sin bypass implícito de
+  admin.
+- `app/schemas/auth.py`: `TokenPair` y `RefreshTokenRequest`.
+- `app/main.py`: incluye el router de auth.
+- `app/etl/seed_usuarios.py`: seed idempotente de roles y 5 usuarios
+  ficticios `@demo.local`; la contraseña sale de `SEED_DEMO_PASSWORD` o se
+  pide por consola. Incluye `--delete` y `--reset-passwords`; rechaza
+  `ENVIRONMENT=production`.
+- `.env.example`: agrega `JWT_ISSUER` y `SEED_DEMO_PASSWORD=` (vacío).
+- `README.md`: instrucciones reproducibles de PostGIS local, migraciones,
+  seed, limpieza y tests.
+- `design.md` §4: documenta `/auth/refresh` y `/auth/logout` además de
+  `/auth/login`, para que el contrato de API coincida con la implementación.
+- `tests/api/`: 19 pruebas de login, refresh, expiración, token sin
+  `exp`, rotación, logout, tipo de token y RBAC 401/403.
+
+**Decisiones**
+- El refresh token es revocable mediante `refresh_tokens` (SEG-01). En
+  `/auth/refresh` se revoca el token usado y se emite uno nuevo.
+- El access token no se persiste; su expiración corta limita el riesgo.
+- Se usa `bcrypt` directo, no `passlib`, porque el entorno tiene bcrypt
+  5.0 y passlib 1.7.4 no está instalado.
+- `decodificar_token` exige `exp` con `options={"require_exp": True}`: un
+  token firmado sin expiración ya no se acepta.
+- Los usuarios demo no se versionan: solo se versiona el script. Cada
+  desarrollador define su propia contraseña local.
+- No hay bypass automático de `admin`; cada endpoint declara sus roles.
+- El alcance por municipio (`municipio_asignado_id`) es una validación de
+  servicio posterior, no parte de `require_role`.
+
+**Verificación**
+- `pytest tests/api -q`: **19 passed**.
+- `ruff check` sobre los archivos nuevos: **All checks passed**.
+- `python -m compileall -q app tests`: OK.
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Smoke test del seed: login con `epidemiologo@demo.local` devuelve 200
+  con access y refresh; luego `--delete` elimina los 5 usuarios demo.
+- PostGIS temporal: contenedor `dengue-postgis-local`, puerto `55432`,
+  base `dengue_malaria`. Queda levantado para pruebas manuales.
+
+**Pendientes**
+- Ivonne debe revisar y commitear; el agente no commitea.
+- Se mantiene la extensión aprobada por Ivonne: `/auth/refresh` y
+  `/auth/logout` además de `/auth/login`, documentada en `design.md` §4.
+- Rate limiting de login (SEG-10) y HTTPS de despliegue siguen fuera de
+  alcance de estas dos tareas.
+- El access token no es revocable; si se requiere, evaluar una lista de
+  revocación o expiración aún más corta.

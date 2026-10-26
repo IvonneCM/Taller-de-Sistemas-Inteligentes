@@ -158,12 +158,12 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
 *Meta de la fase: exponer toda la funcionalidad vía API REST segura y con
 control de acceso por rol.*
 
-- [ ] **TASK-017** [REQ-019] Implementar `/auth/login` con JWT (access +
+- [x] **TASK-017** [REQ-019] Implementar `/auth/login` con JWT (access +
       refresh token) y hashing de contraseñas con bcrypt.
       *Verificación:* test de integración: login con credenciales válidas
       devuelve token; con credenciales inválidas devuelve 401.
 
-- [ ] **TASK-018** [REQ-007, REQ-019] Implementar dependencias de RBAC en
+- [x] **TASK-018** [REQ-007, REQ-019] Implementar dependencias de RBAC en
       `app/api/deps.py` (`require_role(...)`) para restringir endpoints
       según rol.
       *Verificación:* test que un usuario con rol "autoridad" recibe 403 al

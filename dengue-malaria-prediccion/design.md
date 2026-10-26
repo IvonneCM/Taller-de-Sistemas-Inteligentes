@@ -199,6 +199,8 @@
 | Método | Ruta | REQ relacionado | Rol requerido |
 |---|---|---|---|
 | POST | `/auth/login` | REQ-019 | público |
+| POST | `/auth/refresh` | REQ-019, SEG-01 | refresh token válido y no revocado |
+| POST | `/auth/logout` | REQ-019, SEG-01 | refresh token válido |
 | GET | `/zonas/riesgo` | REQ-001, REQ-006 | todos los roles autenticados |
 | GET | `/zonas/{id}/prediccion` | REQ-002, REQ-003, REQ-004 | todos (detalle limitado según rol, REQ-007) |
 | GET | `/zonas/{id}/historial` | REQ-008 | epidemiólogo, admin |
@@ -212,10 +214,13 @@
 | GET | `/departamentos` | REQ-017 | todos |
 | GET | `/enfermedades` | REQ-018 | todos |
 
-Todas las rutas (excepto `/auth/login`) requieren JWT válido; el control de
-qué campos se devuelven según el rol se implementa en la capa de servicio,
-no en el frontend (para no exponer datos vía API directa) — refuerza
-REQ-007, REQ-019 y REQ-020.
+Todas las rutas (excepto `/auth/login` y `/auth/refresh`, que validan
+credenciales o un refresh token) requieren JWT válido; el control de qué
+campos se devuelven según el rol se implementa en la capa de servicio, no
+en el frontend (para no exponer datos vía API directa) — refuerza REQ-007,
+REQ-019 y REQ-020. `/auth/logout` revoca el refresh token recibido; no
+requiere un access token adicional porque el propio refresh token es la
+credencial a invalidar.
 
 ## 5. Pipeline de predicción (motor ML)
 
@@ -249,9 +254,9 @@ complejidad de infraestructura para un proyecto universitario.
 
 La matriz completa, el estado de implementación y los criterios de evidencia
 se documentan en
-[`../docs/controles_seguridad.md`](../docs/controles_seguridad.md). En la fase
-actual, JWT, RBAC, hashing y HTTPS son controles diseñados pero todavía no
-implementados ni verificados en un despliegue.
+[`../docs/controles_seguridad.md`](../docs/controles_seguridad.md). JWT,
+RBAC y hashing ya están implementados y probados localmente; HTTPS sigue
+pendiente de verificación en un despliegue real.
 
 - Autenticación JWT (OAuth2 password flow), expiración corta de access token
   + refresh token.
