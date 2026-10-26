@@ -27,9 +27,9 @@ como presentes en el repositorio.
 | Configuración por entorno sin secretos en código | Presente (TASK-003) | `app/core/config.py`: `DATABASE_URL` y `SECRET_KEY` obligatorias sin valor por defecto; en producción se rechaza una `SECRET_KEY` de ejemplo o menor a 32 caracteres. `tests/test_config.py`. |
 | Endpoint de salud sin datos sensibles | Presente | `app/main.py` devuelve únicamente `{"status": "ok"}`. |
 | Prohibición de datos personales de pacientes | Definido en requisitos y diseño | REQ-020 y modelo agregado por municipio y fecha. |
-| JWT y expiración de tokens | Diseñado, no implementado | TASK-017 pendiente. |
-| RBAC aplicado en backend | Diseñado, no implementado | TASK-018 pendiente. |
-| Hash de contraseñas | Diseñado, no implementado | TASK-007 y TASK-017 pendientes. |
+| JWT y expiración de tokens | Implementado y probado localmente | `app/core/security.py`, `app/api/routes/auth.py`; login, refresh, access/refresh expirados, token sin `exp`, rotación y logout en `tests/api/`. |
+| RBAC aplicado en backend | Dependencia implementada y probada; endpoints de negocio aún pendientes | `app/api/deps.py`; 401 sin token, 403 por rol y access expirado en `tests/api/test_rbac.py`. La matriz de endpoints se completará con TASK-019 en adelante. |
+| Hash de contraseñas | Implementado y probado localmente | `bcrypt` en `app/core/security.py`; el modelo exige hash con prefijo `$2`. |
 | HTTPS/TLS | Diseñado, no verificable sin despliegue | TASK-004 (despliegue en la nube, en espera) y TASK-035 pendientes. |
 | Auditoría inmutable | Diseñado, no implementado | NFR-009 y migraciones pendientes. |
 
@@ -53,7 +53,8 @@ existan código, prueba y evidencia de despliegue.
 
 ## 4. Autenticación y sesiones
 
-La implementación de TASK-017 deberá cumplir estas reglas:
+La implementación de TASK-017 (`app/core/security.py` y
+`app/api/routes/auth.py`) cumple estas reglas:
 
 1. El access token tendrá expiración corta configurable; el valor inicial de
    diseño es 30 minutos.

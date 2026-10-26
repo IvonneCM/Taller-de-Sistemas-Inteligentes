@@ -1,14 +1,12 @@
 # Sistema de Predicción Temprana de Brotes de Dengue/Malaria
 
-> ⏸️ **Desarrollo del backend en pausa.** Esta carpeta contiene la
-> especificación y el esqueleto inicial del backend (Fase 1 de `tasks.md`),
-> generados con Spec Driven Development antes de esta primera evaluación.
-> El trabajo real de esta evaluación (EDA, calidad de datos, pipeline,
-> arquitectura, riesgos, línea base) vive en `../docs/`, `../scripts/` y
-> `../data/`, en la raíz del repositorio — no aquí. Estos documentos se
-> mantienen como referencia y como punto de partida para cuando el equipo
-> retome el desarrollo del backend (ver "Cuándo se retoma" más abajo), no
-> porque haya trabajo activo de código sucediendo en ellos ahora mismo.
+> **Backend en desarrollo incremental.** Esta carpeta contiene la
+> especificación, el diseño y la implementación del backend (FastAPI +
+> PostgreSQL/PostGIS). Ya están cerrados el baseline XGBoost con SHAP
+> (TASK-012/013) y la autenticación JWT con RBAC (TASK-017/018). El
+> trabajo de datos (EDA, calidad, pipeline, línea base) vive en
+> `../docs/`, `../scripts/` y `../data/`, en la raíz del repositorio.
+> Ver `tasks.md` y `CONTEXT.md` para el estado exacto.
 
 Proyecto universitario orientado a apoyar a SEDES, autoridades de salud y
 coordinadores municipales en la identificación de zonas con riesgo de brotes
@@ -26,9 +24,11 @@ Incluye especificación funcional y no funcional, diseño de arquitectura,
 modelo de datos y API propuesta, backlog técnico dividido por fases,
 estructura inicial del backend con FastAPI y el endpoint local `GET
 /health`. Ya existen la conexión a PostgreSQL/PostGIS, las migraciones
-Alembic, los conectores ETL (`app/etl/`) y la configuración por entorno.
-Todavía no están implementados el motor de predicción, la autenticación ni el
-dashboard (ver `CONTEXT.md` §9 para el estado al día).
+Alembic, los conectores ETL formales (`app/etl/`), el baseline XGBoost con
+explicabilidad SHAP, la autenticación JWT con RBAC y la configuración por
+entorno. Todavía faltan los endpoints de datos, el pipeline de predicción
+completo y el dashboard. Ver `CONTEXT.md` (§9) para el estado exacto y las
+decisiones pendientes.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -88,6 +88,8 @@ Lectura recomendada:
 
 El endpoint `/health` no necesita base de datos, pero `pytest`, `alembic` y los
 conectores ETL sí.
+PostgreSQL 16 con PostGIS es necesario para autenticación, migraciones y
+las pruebas de API. Para desarrollo local se puede levantar con Docker.
 
 ### Instalación
 
@@ -133,6 +135,9 @@ El `frontend/` es solo un esqueleto (mapa base y comprobación de `/health`); no
 implementa las vistas de TASK-027 a 031. La imagen `ml` pesa más porque
 `xgboost` incluye librerías de GPU de NVIDIA (unos 470 MB) que no se usan en CPU;
 la imagen `api` no las lleva.
+El archivo `.env.example` documenta las variables necesarias. Copiarlo como
+`.env` y completar `DATABASE_URL`, `SECRET_KEY` y `SEED_DEMO_PASSWORD`. El
+archivo `.env` está ignorado por Git y nunca debe commitearse.
 
 ### Ejecución
 
@@ -155,15 +160,67 @@ Respuesta esperada:
 La documentación interactiva generada por FastAPI queda disponible en
 `http://127.0.0.1:8000/docs`.
 
+### Base de datos local y usuarios demo
+
+Levantar PostGIS en Docker (puerto local `55432` para no chocar con un
+PostgreSQL ya instalado):
+
+```powershell
+docker run --name dengue-postgis-local `
+  -e POSTGRES_PASSWORD=test `
+  -e POSTGRES_DB=dengue_malaria `
+  -p 55432:5432 `
+  -d postgis/postgis:16-3.4
+
+docker exec dengue-postgis-local psql -U postgres -d dengue_malaria `
+  -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+```
+
+Definir las variables y aplicar migraciones:
+
+```powershell
+$env:DATABASE_URL="postgresql://postgres:test@localhost:55432/dengue_malaria"
+$env:SECRET_KEY="cambiar-por-una-clave-larga-y-aleatoria"
+$env:ENVIRONMENT="development"
+$env:SEED_DEMO_PASSWORD="elegir-una-clave-local-de-al-menos-8-caracteres"
+
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m app.etl.seed_catalogo
+.\.venv\Scripts\python.exe -m app.etl.seed_usuarios
+```
+
+El seed crea estos usuarios ficticios (`@demo.local`), todos con la
+contraseña de `SEED_DEMO_PASSWORD`:
+
+| Email | Rol |
+|---|---|
+| `autoridad@demo.local` | `autoridad` |
+| `sedes@demo.local` | `sedes` |
+| `epidemiologo@demo.local` | `epidemiologo` |
+| `coordinador@demo.local` | `coordinador_municipal` |
+| `admin@demo.local` | `admin` |
+
+No se commitea ninguna contraseña. Para borrar únicamente esos usuarios y
+sus refresh tokens:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.etl.seed_usuarios --delete
+```
+
 ### Verificaciones disponibles
 
 ```bash
 python -m compileall -q app tests
-pytest
+pytest tests/api -q
+pytest tests/ml -q
+alembic check
 ```
 
 `pytest` necesita la base de datos del paso "Configuración" y un `.env` con
 `SECRET_KEY`. Estado verificado el 2026-10-25: 27 tests en verde.
+Los tests de API necesitan `DATABASE_URL` apuntando a una base con las
+migraciones aplicadas. Los fixtures crean sus usuarios dentro de una
+transacción y revierten los cambios al terminar.
 
 ## Estructura actual
 
@@ -226,15 +283,15 @@ Taller-de-Sistemas-Inteligentes/
   municipios con cruce de datos real (Guayaramerín, Ixiamas, Palos Blancos,
   San Buenaventura) son la referencia usada hasta ahora (ver `design.md` §10).
 
-## Cuándo se retoma el desarrollo del backend
+## Estado del desarrollo del backend
 
-Recién **después** de esta primera evaluación (defensa de decisiones
-iniciales), siguiendo `tasks.md` desde TASK-001 con `FIRST_PROMPT.md`. Antes
-de retomarlo, TASK-008/009/010 (conectores de ingesta y limpieza) deben
-reutilizar la lógica ya construida y verificada en `../scripts/` y
-`../docs/pipeline_datos.md`, no rediseñarla desde cero — ver la nota en cada
-tarea de `tasks.md`. Ver `../docs/cierre_sprint1.md` para el backlog
-completo pendiente antes de ese momento.
+El backend ya está en desarrollo activo. El orden de trabajo y las tareas
+pendientes están en `tasks.md`; el estado de la última sesión, las
+decisiones tomadas y los bloqueos están en `CONTEXT.md`. Los conectores de
+ingesta y limpieza (TASK-008/009/010) deben reutilizar la lógica ya
+construida y verificada en `../scripts/` y `../docs/pipeline_datos.md`, no
+rediseñarla desde cero. Ver `../docs/cierre_sprint1.md` para el backlog de
+datos.
 
 ## Flujo de trabajo
 

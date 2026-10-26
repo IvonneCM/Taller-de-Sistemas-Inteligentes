@@ -28,6 +28,12 @@ class Usuario(Base):
 
     rol = relationship("Rol", back_populates="usuarios")
     municipio_asignado = relationship("Municipio")
+    refresh_tokens = relationship(
+        "RefreshToken",
+        back_populates="usuario",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     @validates("password_hash")
     def _validar_no_texto_plano(self, key, value):
