@@ -5,12 +5,12 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 43 de 48: toda la capa de datos,
+> web) y la CI de GitHub está en verde. Hechas 44 de 48: toda la capa de datos,
 > el motor de predicción, las alertas, la autenticación, toda la API (019 a 026,
 > 047), la tarea semanal (016), las vistas (027 a 031), las pruebas y la cobertura
 > (032), el manejo de errores (040) y casi toda la Fase 7. **Bloquea la defensa:**
 > una fuente de brotes confirmados (034). Faltan además la revisión de seguridad
-> firmada (035), las limitaciones pegadas en el informe (036), el tag (041), el
+> firmada (035), las limitaciones pegadas en el informe (036), el
 > ensayo con el Plan B (045).
 > Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
 > porque no existe serie semanal (ADR-005).
@@ -350,7 +350,7 @@ considerarse listo para el piloto.*
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
-      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Falta:** que el equipo firme la sección 5 del documento (cada persona), y comprobar HSTS en Render tras redesplegar (`python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`).
+      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Falta solo** que el equipo firme la sección 5 del documento (cada persona; issue #34).
 
 - [ ] **TASK-036** _(Resp.: Adriana)_ Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,
@@ -405,12 +405,12 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       entrada inválida; los logs muestran el error sin datos sensibles.
       *Verificado 2026-10-26:* `tests/test_observabilidad.py` (12 tests): `/health/ready` responde 503 con la base caída, una consulta lenta se corta y responde 503, el error no previsto responde 500 genérico con la traza solo en el log, el 422 no devuelve lo enviado, y los logs no contienen contraseñas ni correos. Comprobado también en vivo con una API apuntando a un puerto vacío.
 
-- [ ] **TASK-041** Congelar la versión de defensa y la trazabilidad: tag
+- [x] **TASK-041** Congelar la versión de defensa y la trazabilidad: tag
       `v0.2-mvp`, PR con títulos descriptivos, issues etiquetados con el
       backlog de estabilización y sus responsables.
       *Persona sugerida:* todo el equipo, al final. *Depende de:* TASK-004 y
       las demás de esta fase. *Verificación:* tag y PR visibles en GitHub.
-      *Estado 2026-10-26:* la guía de defensa pide «identificar commit/tag a defender» (versión congelada), PRs verificables y, para los riesgos, «risk register **o** issues etiquetados», con responsables para la estabilización. **PRs: hechos** (#28, #29, #30 mergeados; #32 abierto). **Riesgos: hecho** (`docs/risk_register.md`, M-01 a M-18, y `docs/limitaciones_informe_final.md`). **Falta:** (1) el tag `v0.2-mvp`, que debe ponerse **después de mergear el PR #32**, para que la versión defendida incluya las correcciones de seguridad; (2) los responsables de la estabilización: el risk register no tiene columna de responsable, así que se crean unos pocos issues etiquetados con dueño (opcional, pero es lo que cubre ese punto; hoy no existe ningún issue en el repositorio).
+      *Verificado 2026-10-26:* la guía de defensa pide «identificar commit/tag a defender», PRs verificables y «risk register o issues etiquetados» con responsables. **Tag `v0.2-mvp`** sobre `main` (visible en GitHub). **PRs** con títulos descriptivos: #28, #29, #30 y #32, todos mergeados con el CI en verde. **Riesgos:** `docs/risk_register.md` (M-01 a M-18) y `docs/limitaciones_informe_final.md`. **Backlog de estabilización:** 9 issues etiquetados (`estabilizacion`, `bloquea-defensa`, `resp-<persona>`) con su responsable, #33 a #41.
 
 - [x] **TASK-042** Arquitectura vigente: actualizar los diagramas C4,
       `design.md` y el README con lo realmente implementado (contenedores

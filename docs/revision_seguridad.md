@@ -16,7 +16,7 @@ cd frontend && npm audit                                           # dependencia
 | Pedido | Estado | Evidencia |
 |---|---|---|
 | Ausencia de datos personales de pacientes (REQ-020) | **OK** | Control automático: 69 columnas de la base revisadas, solo `usuarios.email` (personal que opera el sistema). Los conectores rechazan columnas con datos personales (`app/etl/conectores/epidemiologia.py`) y toda la información es un conteo agregado por municipio. |
-| HTTPS en el despliegue (NFR-005) | **AVISO** (verificado el 2026-10-26 en Render; la corrección de HSTS ya está en código, falta redesplegar) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
+| HTTPS en el despliegue (NFR-005) | **OK** (verificado el 2026-10-26 en Render, ya con la corrección: HTTPS con certificado válido y `Strict-Transport-Security`) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
 | Ninguna alerta sin justificación en la base (REQ-005) | **OK** | Control automático sobre el sistema en Docker: 2 alertas, las dos con justificación y variables explicativas. Triple barrera: restricción `CHECK` en la base, `evaluacion_alertas` y filtro de `GET /alertas`. |
 | Checklist firmado por el equipo | **Pendiente** | Ver la sección 5. |
 
@@ -49,7 +49,7 @@ Todos los hallazgos con solución técnica se corrigieron el 2026-10-26 (rama `d
 | H-6 | Predicciones y alertas no son inmutables en la base, solo en el código. | Baja | **Aceptado** | NFR-009 pide inmutabilidad de aplicación. Un trigger que bloquee `UPDATE` y `DELETE` impediría también la limpieza de las pruebas y de la carga de demostración; el control automático verifica que ningún código las modifique. |
 | H-7 | Imágenes de Docker sin escanear. | Baja | **Resuelto** | Se escanearon con Trivy (graves y críticas con corrección disponible). `api` y `ml`: 0. `web` (nginx 1.27): 60 (58 graves, 2 críticas) en paquetes del sistema; se pasó a `nginx:1.30-alpine` con `apk upgrade` y quedó en 0. Las 3 imágenes: **0 graves o críticas**. Repetir con `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --ignore-unfixed <imagen>`. |
 | H-8 | `--forwarded-allow-ips='*'` en el `CMD`. | Baja | **Aceptado** | Render no publica un rango fijo de IP de su proxy. Consecuencia: quien alcance la API directamente podría falsear `X-Forwarded-For` y evadir el límite **por IP**; el límite **por correo** no depende de eso y sigue frenando la adivinación de una cuenta. |
-| H-9 | Sin `Strict-Transport-Security`. | Baja | **Resuelto en código; falta comprobarlo en Render** | La API la envía con `ENVIRONMENT=production` (también `Content-Security-Policy` cerrada). Tras el redespliegue: `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com` debe dejar de avisar. |
+| H-9 | Sin `Strict-Transport-Security`. | Baja | **Resuelto y verificado en Render** | La API la envía con `ENVIRONMENT=production` (también `Content-Security-Policy` cerrada). Verificado el 2026-10-26 tras el redespliegue: `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com` → **7 controles OK, 0 avisos**; el sexto intento fallido de login responde 429; `/docs` responde 404. |
 
 **Hallazgo corregido durante esta revisión:** el límite de tiempo por consulta (TASK-040) se pasaba como parámetro de arranque de la conexión y el pooler de Neon lo rechaza ("unsupported startup parameter"), por lo que la API desplegada devolvía 503 en `/health/ready` y no podía consultar la base. Ahora se aplica con `SET LOCAL` por transacción; verificado contra Neon y en el despliegue (`scripts/smoke_test.py`: 8 de 8).
 
@@ -60,7 +60,7 @@ Todos los hallazgos con solución técnica se corrigieron el 2026-10-26 (rama `d
 - La búsqueda de secretos es heurística: no reemplaza a una herramienta dedicada ni revisa el historial de git.
 - No se hicieron pruebas de penetración ni de carga.
 - El Dockerfile corre como usuario sin privilegios (`appuser`), pero no se revisó el resto de la configuración del contenedor.
-- Las correcciones se verificaron **en local y en Docker**. Contra el despliegue real solo se corrió la prueba de humo (antes de estas correcciones); falta repetirla y el control `--url` tras redesplegar.
+- Las correcciones se verificaron en local, en Docker y **en el despliegue de Render** (control `--url`, prueba de humo, límite de login y documentación oculta, el 2026-10-26).
 
 ## 5. Firma del equipo
 
