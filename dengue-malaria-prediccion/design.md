@@ -22,8 +22,8 @@
 | Orquestación de tareas | APScheduler o Celery + Redis (según carga) | Ejecutar el pipeline de predicción semanalmente |
 | Frontend / Dashboard | React + librería de mapas (ej. Leaflet o Mapbox GL) | Mapas de calor interactivos y vistas por rol |
 | Autenticación | JWT (OAuth2 password flow de FastAPI) | Estándar, simple de integrar con RBAC |
-| Despliegue | Railway (API + PostgreSQL/PostGIS) — **pendiente de confirmar** | Ver justificación acordada con el usuario. El despliegue (TASK-004) está en espera y el proveedor puede cambiar; ver §10 |
-| Contenedores | Docker: tres imágenes — `api` (323 MB), `ml` (1,1 GB, ETL y predicción semanal) y `web` (74 MB, nginx); Python 3.12 fijado | La API solo lee resultados, así que no carga pandas/xgboost/shap; el job de predicción corre fuera de FastAPI con la imagen `ml`. La BD local usa `postgis/postgis:16-3.4` |
+| Despliegue | Render (API, plan gratuito) + Neon (PostgreSQL 16 + PostGIS) | Decisión 2026-10-26 (ADR-006), reemplaza a Railway (ADR-003): no es gratuito de forma sostenida. Desplegado y verificado en `https://taller-de-sistemas-inteligentes.onrender.com`. La API gratuita se duerme tras 15 min sin tráfico; ver §10 |
+| Contenedores | Docker: tres imágenes — `api` (323 MB), `ml` (2,3 GB, ETL y predicción semanal) y `web` (74 MB, nginx); Python 3.12 fijado | La API solo lee resultados, así que no carga pandas/xgboost/shap; el job de predicción corre fuera de FastAPI con la imagen `ml`. La BD local usa `postgis/postgis:16-3.4` |
 | Entrenamiento de modelo (offline) | Google Colab o servidor de la universidad | Evita cargar cómputo pesado en el entorno de producción liviano |
 
 > Nota: los nombres de librerías específicas (ej. XGBoost vs. Prophet vs.
@@ -220,6 +220,8 @@
 | POST | `/datos/clima` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | POST | `/datos/casos` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | GET | `/modelo/desempeno` | REQ-016 | epidemiólogo, admin |
+| GET | `/casos/resumen` | REQ-008, REQ-014 | todos los roles autenticados (casos observados por zona; TASK-047) |
+| GET | `/health` · `/health/ready` | NFR-003 | público (disponibilidad y base de datos; TASK-040) |
 | GET | `/departamentos` | REQ-017 | todos |
 | GET | `/enfermedades` | REQ-018 | todos |
 
@@ -277,8 +279,8 @@ pendiente de verificación en un despliegue real.
   + refresh token.
 - RBAC aplicado en la capa de servicio de FastAPI (dependencias de rol).
 - Contraseñas con `bcrypt`.
-- HTTPS obligatorio en despliegue (Railway lo provee por defecto en su
-  dominio).
+- HTTPS obligatorio en despliegue (Render lo provee por defecto en su
+  dominio y redirige HTTP a HTTPS).
 - Variables sensibles (credenciales de BD, claves de API climáticas) en
   variables de entorno, nunca en el repositorio.
 - No se almacenan datos personales de pacientes (REQ-020): todo dato
@@ -305,7 +307,7 @@ pendiente de verificación en un despliegue real.
   lógica de predicción de una enfermedad específica; se requeriría entrenar
   un modelo adicional referenciado en `modelos.enfermedad_id`.
 - Separación de entrenamiento (offline, Colab/servidor universidad) y
-  servicio de inferencia (API en Railway) permite escalar cómputo de
+  servicio de inferencia (API en Render) permite escalar cómputo de
   entrenamiento sin afectar el servicio en producción.
 
 ## 9. Estructura de archivos (backend)
@@ -345,11 +347,10 @@ dengue-malaria-prediccion/
 ├── alembic/                      # migraciones de base de datos
 ├── Dockerfile                    # targets: api (ligera) y ml (pandas, xgboost, shap); Python 3.12
 ├── docker-compose.yml            # db PostGIS + api + web (+ ml, profile "jobs")
-├── railway.toml                  # solo si se despliega en Railway
 ├── frontend/                     # React + Vite + Leaflet; Dockerfile propio (nginx)
 ├── requirements.txt              # entorno local completo (incluye los tres de abajo)
 ├── requirements-api.txt          # imagen api
-├── requirements-ml.txt           # imagen ml (xgboost-cpu)
+├── requirements-ml.txt           # imagen ml (xgboost, pandas, shap)
 ├── requirements-dev.txt          # pytest, black, ruff (solo local)
 ├── requirements.md
 ├── design.md
@@ -384,11 +385,11 @@ dengue-malaria-prediccion/
   cubre 28 municipios con clima de reanálisis NASA POWER porque 4 son muy
   pocos para entrenar; ampliar el catálogo de la BD requiere polígonos
   municipales oficiales (hoy son cuadrados referenciales de ~5 km).
-- **Proveedor de despliegue (abierta, 2026-10-25):** Railway no es gratuito de
-  forma sostenida (crédito de prueba de $5 o plan Hobby de $5/mes). Alternativas
-  gratuitas con PostGIS: API en Render o Northflank y base en Neon. Si la API
-  corre en un servicio que se duerme sin tráfico, el job semanal (TASK-016)
-  debe dispararse desde un cron externo. Decisión del equipo pendiente.
+- ~~Proveedor de despliegue.~~ **Resuelto (2026-10-26, ADR-006):** API en
+  Render (plan gratuito) y base en Neon. Consecuencia abierta: como la API
+  gratuita se duerme sin tráfico, el job semanal (TASK-016) no puede vivir
+  dentro de ella y debe dispararse desde un cron externo (GitHub Actions,
+  ver `docs/guia_despliegue_render_neon.md` §6).
 - ¿Se requiere notificación por correo electrónico para las alertas en esta
   primera versión, o basta con la vista en el dashboard?
 - ¿El modelo se re-entrenará periódicamente (ej. mensual) o solo una vez
