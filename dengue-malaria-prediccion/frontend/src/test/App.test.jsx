@@ -67,10 +67,41 @@ const RECURSOS = {
   nota: "Los umbrales de riesgo y las recomendaciones son decisiones provisionales del MVP.",
 };
 
+const PANEL = {
+  generado: "2026-10-26T12:00:00Z",
+  alertas: { emitidas: 3, vigentes: 2 },
+  dengue: {
+    municipios_con_casos: 28, total_casos: 341,
+    serie_semanal: [
+      { fecha: "2026-03-08", semana: 10, casos: 44 }, { fecha: "2026-03-15", semana: 11, casos: 25 },
+      { fecha: "2026-03-22", semana: 12, casos: 34 }, { fecha: "2026-03-29", semana: 13, casos: 5 },
+    ],
+    ultima_semana: { fecha: "2026-03-29", semana: 13, casos: 5 },
+    semana_previa: { fecha: "2026-03-22", semana: 12, casos: 34 },
+    top_municipios: [{ municipio_id: 4, municipio: "SAN BORJA", departamento: "Beni", casos: 140 }],
+    riesgo: { alto: 3, medio: 8, bajo: 17, total: 28 },
+    mayor_riesgo: { municipio_id: 19, municipio: "SANTA CRUZ DE LA SIERRA", departamento: "Santa Cruz", nivel_riesgo: "alto", probabilidad_pct: 83.67, fecha_estimada_riesgo: "2026-11-16" },
+    mayores_riesgos: [
+      { municipio_id: 19, municipio: "SANTA CRUZ DE LA SIERRA", departamento: "Santa Cruz", nivel_riesgo: "alto", probabilidad_pct: 83.67, fecha_estimada_riesgo: "2026-11-16" },
+      { municipio_id: 7, municipio: "LA ASUNTA", departamento: "La Paz", nivel_riesgo: "alto", probabilidad_pct: 79.53, fecha_estimada_riesgo: "2026-11-16" },
+    ],
+    fecha_prediccion: "2026-10-26T12:00:00Z",
+  },
+  malaria: { municipios_con_casos: 21, total_casos: 1615, fecha_corte: "2026-03-29", top_municipios: [{ municipio_id: 5, municipio: "RIBERALTA", departamento: "Beni", casos: 682 }] },
+  nota: "Los casos son observados; la ultima semana es provisional.",
+};
+
+/** Abre la app y pasa de Resumen (pantalla de entrada) a la pestaña Mapa. */
+async function montarEnMapa() {
+  render(<App />);
+  await userEvent.click(await screen.findByRole("tab", { name: "Mapa" }));
+}
+
 function simular({ rol = "epidemiologo", alertas = [], fallo = null, ranking = RANKING, riesgo = RIESGO } = {}) {
   restaurarSesion.mockResolvedValue({ id: 1, rol });
   pedir.mockImplementation(async (ruta) => {
     if (fallo && ruta === fallo.ruta) throw fallo.error;
+    if (ruta === "/panel/resumen") return PANEL;
     if (ruta === "/casos/resumen") return CASOS;
     if (ruta === "/zonas/riesgo") return riesgo;
     if (ruta === "/alertas") return alertas;
@@ -87,10 +118,64 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 
-describe("vista de malaria (la de entrada)", () => {
-  it("abre en malaria con los casos observados y sin inventar predicciones", async () => {
+describe("resumen (pantalla de entrada)", () => {
+  it("abre en el resumen con alertas vigentes, indicadores y gráfico semanal", async () => {
     simular();
     render(<App />);
+
+    expect(await screen.findByRole("heading", { name: "2 alertas vigentes de dengue" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Resumen" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByText("341")).toBeInTheDocument();      // casos de dengue
+    expect(screen.getByText("1.615")).toBeInTheDocument();    // malaria acumulada
+    expect(screen.getByText("3 de 28")).toBeInTheDocument();  // zonas en riesgo alto
+    expect(screen.getAllByText(/Santa Cruz de la Sierra/)[0]).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Zonas con mayor probabilidad de brote" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Casos semanales de dengue.*SE 13: 5.*provisional/ })).toBeInTheDocument();
+  });
+
+  it("marca la última semana como provisional y no la presenta como una caída", async () => {
+    simular();
+    render(<App />);
+    await screen.findByRole("heading", { name: "2 alertas vigentes de dengue" });
+    expect(screen.getByText(/Provisional: suele corregirse al alza/)).toBeInTheDocument();
+  });
+
+  it("no muestra el selector de enfermedad: el resumen incluye las dos", async () => {
+    simular();
+    render(<App />);
+    await screen.findByRole("heading", { name: "2 alertas vigentes de dengue" });
+    expect(screen.queryByRole("radio", { name: "Dengue" })).not.toBeInTheDocument();
+  });
+
+  it("los botones llevan a las alertas y al mapa", async () => {
+    simular();
+    render(<App />);
+    await userEvent.click(await screen.findByRole("button", { name: "Ver alertas" }));
+    expect(screen.getByRole("tab", { name: "Alertas" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("si el resumen falla lo dice y el resto de la app sigue disponible", async () => {
+    const error = Object.assign(new Error("El servicio de datos no está disponible."), { estado: 503, requestId: "r1" });
+    simular({ fallo: { ruta: "/panel/resumen", error } });
+    render(<App />);
+    expect(await screen.findByText("No se pudo cargar el resumen")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("tab", { name: "Mapa" }));
+    expect(await screen.findByText("450")).toBeInTheDocument();
+  });
+
+  it("una respuesta incompleta no rompe la pantalla", async () => {
+    simular();
+    const base = pedir.getMockImplementation();
+    pedir.mockImplementation(async (ruta, ...resto) => (ruta === "/panel/resumen" ? { generado: "x" } : base(ruta, ...resto)));
+    render(<App />);
+    expect(await screen.findByText("El resumen no está disponible")).toBeInTheDocument();
+  });
+});
+
+describe("vista de malaria", () => {
+  it("abre en malaria con los casos observados y sin inventar predicciones", async () => {
+    simular();
+    await montarEnMapa();
 
     expect(await screen.findByText("450")).toBeInTheDocument(); // 293 + 156 + 1
     expect(screen.getByRole("radio", { name: "Malaria" })).toHaveAttribute("aria-checked", "true");
@@ -102,7 +187,7 @@ describe("vista de malaria (la de entrada)", () => {
 
   it("al elegir una zona muestra su detalle y su porcentaje de la zona piloto", async () => {
     simular();
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("button", { name: /^Guayaramerín/ }));
 
     const detalle = (await screen.findByRole("heading", { name: "Guayaramerín" })).closest(".detalle");
@@ -113,7 +198,7 @@ describe("vista de malaria (la de entrada)", () => {
   it("sin casos de malaria dice que todavía no hay, sin cifras", async () => {
     simular();
     pedir.mockImplementation(async (ruta) => (ruta === "/casos/resumen" ? [] : ruta === "/zonas/riesgo" ? [] : []));
-    render(<App />);
+    await montarEnMapa();
     expect(await screen.findByText("Todavía no hay casos de malaria")).toBeInTheDocument();
   });
 });
@@ -121,7 +206,7 @@ describe("vista de malaria (la de entrada)", () => {
 describe("vista de dengue", () => {
   it("al cambiar de enfermedad muestra el riesgo y lo recuerda", async () => {
     simular();
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
 
     expect((await screen.findAllByText("44 %")).length).toBeGreaterThanOrEqual(1); // cifra principal y fila
@@ -133,13 +218,13 @@ describe("vista de dengue", () => {
   it("recuerda dengue en la siguiente visita", async () => {
     window.localStorage.setItem("siptb.enfermedad", "dengue");
     simular();
-    render(<App />);
+    await montarEnMapa();
     expect(await screen.findByText(/predicción a 3 semanas/i)).toBeInTheDocument();
   });
 
   it("el epidemiólogo ve las variables que influyeron, en lenguaje claro", async () => {
     simular({ rol: "epidemiologo" });
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
     await userEvent.click(await screen.findByRole("button", { name: /^Guayaramerín/ }));
 
@@ -151,7 +236,7 @@ describe("vista de dengue", () => {
 
   it("la autoridad ve el resumen y la invitación a pedir el detalle técnico", async () => {
     simular({ rol: "autoridad" });
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
     await userEvent.click(await screen.findByRole("button", { name: /^Guayaramerín/ }));
 
@@ -198,10 +283,22 @@ describe("vistas y permisos", () => {
   });
 
   it("las alertas vacías explican cuándo se emite una", async () => {
+    window.localStorage.setItem("siptb.enfermedad", "dengue");
     simular();
     render(<App />);
     await userEvent.click(await screen.findByRole("tab", { name: "Alertas" }));
     expect(await screen.findByText("No hay alertas emitidas")).toBeInTheDocument();
+  });
+
+  it("en malaria las alertas explican que no hay modelo y ofrecen ir a dengue", async () => {
+    simular(); // malaria es la enfermedad por defecto
+    render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Alertas" }));
+    expect(await screen.findByText("La malaria todavía no tiene alertas")).toBeInTheDocument();
+    expect(screen.getByText(/no hay modelo: solo existen casos acumulados/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Ver alertas de dengue" }));
+    expect(await screen.findByRole("radio", { name: "Dengue" })).toHaveAttribute("aria-checked", "true");
+    expect(window.localStorage.getItem("siptb.enfermedad")).toBe("dengue");
   });
 
   it("cada alerta muestra su justificación y variables (nunca una alerta vacía)", async () => {
@@ -235,14 +332,14 @@ describe("nivel de agregación (TASK-027)", () => {
 
   it("por defecto muestra municipios y ofrece Departamento", async () => {
     simular();
-    render(<App />);
+    await montarEnMapa();
     expect(await screen.findByRole("radio", { name: "Municipio" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Departamento" })).toHaveAttribute("aria-checked", "false");
   });
 
   it("malaria por departamento suma los casos de sus municipios", async () => {
     simular();
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
 
     const filas = within(await screen.findByRole("region", { name: "Departamentos" })).getAllByRole("button");
@@ -259,7 +356,7 @@ describe("nivel de agregación (TASK-027)", () => {
 
   it("dengue por departamento muestra el mayor riesgo entre sus municipios", async () => {
     simular({ riesgo: RIESGO_DEPTOS });
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
     await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
 
@@ -275,7 +372,7 @@ describe("nivel de agregación (TASK-027)", () => {
 
   it("al elegir un departamento lista sus municipios con su propio riesgo", async () => {
     simular({ riesgo: RIESGO_DEPTOS });
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
     await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
     await userEvent.click(within(await screen.findByRole("region", { name: "Departamentos" })).getAllByRole("button")[0]);
@@ -291,7 +388,7 @@ describe("nivel de agregación (TASK-027)", () => {
 
   it("volver a Municipio restablece la lista y la selección", async () => {
     simular({ riesgo: RIESGO_DEPTOS });
-    render(<App />);
+    await montarEnMapa();
     await userEvent.click(await screen.findByRole("radio", { name: "Dengue" }));
     await userEvent.click(await screen.findByRole("radio", { name: "Departamento" }));
     await userEvent.click(await screen.findByRole("radio", { name: "Municipio" }));
@@ -352,7 +449,7 @@ describe("errores y sesión", () => {
   it("si el servicio no está disponible lo dice, da el código de soporte y permite reintentar", async () => {
     const error = Object.assign(new Error("El servicio de datos no está disponible. Intenta de nuevo en unos segundos."), { estado: 503, requestId: "abc123" });
     simular({ fallo: { ruta: "/casos/resumen", error } });
-    render(<App />);
+    await montarEnMapa();
 
     const alerta = await screen.findByRole("alert");
     expect(alerta).toHaveTextContent("El servicio de datos no está disponible");

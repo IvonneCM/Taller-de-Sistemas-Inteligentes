@@ -11,7 +11,9 @@ const NOMBRES = {
 export function nombreZona(nombre) {
   if (!nombre) return "";
   if (NOMBRES[nombre]) return NOMBRES[nombre];
-  return nombre.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  const MINUSCULAS = new Set(["de", "del", "la", "las", "los", "y"]);
+  return nombre.toLowerCase().replace(/(^|\s)(\S+)/g, (_, espacio, palabra, indice) =>
+    `${espacio}${indice > 0 && MINUSCULAS.has(palabra) ? palabra : palabra[0].toUpperCase() + palabra.slice(1)}`);
 }
 
 export const ROLES = {
