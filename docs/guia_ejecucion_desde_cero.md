@@ -2,7 +2,7 @@
 
 Pasos para una laptop **sin nada instalado del proyecto** (por ejemplo la segunda laptop del Plan B). Cada comando se probó el 2026-10-26 sobre un clon limpio de `main`, con un entorno de Python y una base de datos nuevos: **500 pruebas de backend, 173 de frontend, cobertura de 79,87 % y la prueba de humo, todo en verde.**
 
-Todo se ejecuta en la terminal (Mac o Linux). Las contraseñas y claves de abajo son ejemplos: elige las tuyas, y el archivo `.env` nunca se sube a git.
+Todo se ejecuta en la terminal (Mac o Linux). Las contraseñas y claves de abajo son ejemplos (empiezan con «cambiar»): reemplázalas por las tuyas, y el archivo `.env` nunca se sube a git.
 
 ## 0. Requisitos (una sola vez)
 
@@ -36,10 +36,10 @@ cp .env.example .env
 Abre `.env` y cambia **solo estas líneas** (usa tus propios valores; la clave de la base debe ser la misma en `DATABASE_URL` y en `POSTGRES_PASSWORD`):
 
 ```
-DATABASE_URL=postgresql://postgres:MI-CLAVE-DB@localhost:5433/dengue_malaria
-POSTGRES_PASSWORD=MI-CLAVE-DB
-SECRET_KEY=una-clave-larga-y-aleatoria-de-mas-de-32-caracteres
-SEED_DEMO_PASSWORD=MI-CLAVE-DE-DEMO
+DATABASE_URL=postgresql://postgres:cambiar-clave-db@localhost:5433/dengue_malaria
+POSTGRES_PASSWORD=cambiar-clave-db
+SECRET_KEY=cambiar-por-una-clave-larga-y-aleatoria-de-mas-de-32-caracteres
+SEED_DEMO_PASSWORD=cambiar-clave-de-demo
 ```
 
 Si el puerto 5433 está ocupado, cambia `5433` por otro en `DATABASE_URL` y en `POSTGRES_HOST_PORT`.
@@ -96,7 +96,7 @@ Sin lo siguiente, en la prueba 2 aparecen unas 45 pruebas como `skipped` (las de
 ```bash
 docker compose exec -T db psql -U postgres -c "CREATE DATABASE gatobyte_task024025_test"
 docker compose exec -T db psql -U postgres -d gatobyte_task024025_test -c "CREATE EXTENSION IF NOT EXISTS postgis"
-export GATOBYTE_TEST_DATABASE_URL="postgresql://postgres:MI-CLAVE-DB@localhost:5433/gatobyte_task024025_test"
+export GATOBYTE_TEST_DATABASE_URL="postgresql://postgres:cambiar-clave-db@localhost:5433/gatobyte_task024025_test"
 DATABASE_URL=$GATOBYTE_TEST_DATABASE_URL alembic upgrade head
 python -m pytest -q -p no:warnings
 ```
