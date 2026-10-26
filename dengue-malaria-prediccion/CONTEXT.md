@@ -545,3 +545,24 @@ TASK-023 queda sin marcar (ver pendientes).
    3.14). No crear el venv dentro de una carpeta sincronizada con iCloud
    (`Documents`): los imports se cuelgan. Se usó `~/.venvs/dengue-malaria` y
    el repo en `~/Pictures/machine/`. Suite completa: ~11 s.
+
+### 2026-10-26 — TASK-024/025: campañas y recomendaciones municipales
+
+**Implementación:** routers `campanas.py` y `municipios.py`, schemas
+`prevencion.py` y servicios compartidos `prevencion.py`/`reglas_prevencion.py`.
+`app/main.py` registra ambos routers. Se reutilizan JWT/RBAC, catálogos y
+predicciones almacenadas; no se modifican modelos, migraciones, ML ni los
+endpoints de TASK-019 a 023.
+
+**Reglas:** dengue t+3 verificable por metadatos del modelo, enfermedad y
+diferencia de 21 días UTC; fecha objetivo no vencida. Se filtra antes de
+elegir la última fila por municipio (fecha e ID). Campañas ordena por riesgo,
+fecha, probabilidad e ID municipal. Recursos devuelve recomendaciones
+orientativas del MVP, sin inventarios. Coordinadores limitados al municipio
+asignado; 403 sin asignación. Administrador solo en recursos, no campañas.
+
+**Evidencia y límites:** `docs/task_024_025_api.md` y
+`docs/decisiones_task_024_025.md`. Pruebas locales: 19 aprobadas y 27 de
+integración omitidas por dependencias ausentes y falta de BD exclusiva de
+pruebas. No se instaló nada ni se escribió en PostgreSQL. TASK-024/025 no
+se marcan completas hasta verificar integración HTTP/PostgreSQL/JWT.
