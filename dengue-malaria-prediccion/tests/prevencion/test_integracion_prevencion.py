@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
-DEPENDENCIAS = ("fastapi", "sqlalchemy", "geoalchemy2", "psycopg2", "httpx", "bcrypt", "jose")
+DEPENDENCIAS = ("fastapi", "sqlalchemy", "geoalchemy2", "psycopg2", "httpx", "bcrypt", "jwt")
 FALTANTES = [p for p in DEPENDENCIAS if importlib.util.find_spec(p) is None]
 URL_PRUEBAS = os.getenv("GATOBYTE_TEST_DATABASE_URL")
 MOTIVO = ("Dependencias ausentes: " + ", ".join(FALTANTES)) if FALTANTES else (

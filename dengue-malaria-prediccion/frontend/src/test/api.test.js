@@ -55,6 +55,17 @@ describe("entrar", () => {
     expect(window.sessionStorage.getItem("siptb.refresh")).toBeNull();
   });
 
+  it("demasiados intentos: dice cuánto esperar, en minutos, y no deja sesión", async () => {
+    fetchSimulado.mockReturnValueOnce(responder(429, { detail: "Demasiados intentos fallidos." }, { "retry-after": "840" }));
+    await expect(entrar("a@demo.local", "mala")).rejects.toThrow("Vuelve a intentarlo en 14 minutos.");
+    expect(haySesion()).toBe(false);
+  });
+
+  it("demasiados intentos sin Retry-After usa un mensaje general", async () => {
+    fetchSimulado.mockReturnValueOnce(responder(429, { detail: "x" }));
+    await expect(entrar("a@demo.local", "mala")).rejects.toThrow("Vuelve a intentarlo más tarde.");
+  });
+
   it("sin conexión lo dice, sin mostrar detalles técnicos", async () => {
     fetchSimulado.mockRejectedValueOnce(new TypeError("Failed to fetch"));
     const error = await entrar("a@demo.local", "x").catch((e) => e);
