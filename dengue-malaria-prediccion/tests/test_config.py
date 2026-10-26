@@ -33,6 +33,12 @@ def test_lee_variables_de_entorno(monkeypatch):
     assert s.ENVIRONMENT == "development"
 
 
+def test_acepta_esquema_postgres_antiguo(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgres://u:p@h:5432/db")
+    monkeypatch.setenv("SECRET_KEY", "x")
+    assert _settings().DATABASE_URL == "postgresql://u:p@h:5432/db"
+
+
 def test_produccion_rechaza_secreto_debil(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", URL)
     monkeypatch.setenv("ENVIRONMENT", "production")

@@ -137,13 +137,25 @@ Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend)
 |---|---|---|---|
 | `api` | target `api` | 323 MB | `docker compose up --build api` |
 | `web` | `frontend/Dockerfile` (nginx) | 74 MB | `docker compose up --build api web` → http://localhost:8080 |
-| `ml` | target `ml` (pandas, xgboost-cpu, shap) | 1,1 GB | `docker compose run --rm ml python -m <modulo>` |
+| `ml` | target `ml` (pandas, xgboost, shap) | 2,3 GB | `docker compose run --rm ml python -m <modulo>` |
+
+**Interfaz completa con Docker, desde un clon limpio** (`.env` ya copiado de
+`.env.example`):
+
+```bash
+docker compose up -d --build api web     # la API crea las tablas sola (RUN_MIGRATIONS=1)
+docker compose run --rm -e SEED_DEMO_PASSWORD='<clave-de-demo>' ml python -m app.etl.seed_demo
+# abrir http://localhost:8080 y entrar con epidemiologo@demo.local (o autoridad@, sedes@, coordinador@, admin@)
+```
+
+Sin el segundo comando la interfaz carga, pero la base está vacía y no hay
+usuarios para entrar. El servicio `ml` monta `../data` en `/data` (solo lectura)
+porque los CSV procesados no van dentro de la imagen.
 
 El `frontend/` es solo un esqueleto (mapa base y comprobación de `/health`); no
-implementa las vistas de TASK-027 a 031. Si ya tenías el entorno virtual con
-`xgboost` instalado, ejecuta `pip uninstall xgboost` antes de
-`pip install -r requirements.txt`: ahora se usa `xgboost-cpu`, que instala el
-mismo módulo `xgboost` sin las librerías de GPU.
+implementa las vistas de TASK-027 a 031. La imagen `ml` pesa más porque
+`xgboost` incluye librerías de GPU de NVIDIA (unos 470 MB) que no se usan en CPU;
+la imagen `api` no las lleva.
 El archivo `.env.example` documenta las variables necesarias. Copiarlo como
 `.env` y completar `DATABASE_URL`, `SECRET_KEY` y `SEED_DEMO_PASSWORD`. El
 archivo `.env` está ignorado por Git y nunca debe commitearse.
@@ -239,10 +251,21 @@ sirve también contra un despliegue (`SMOKE_URL=https://…`).
 ```bash
 cd frontend
 npm ci
-npm run dev      # http://localhost:5173 (reenvía /api al backend en el puerto 8000)
-npm test         # pruebas de la interfaz
+npm run dev          # http://localhost:5173, reenvía /api a la API local (puerto 8000)
+npm run dev:render   # igual, pero reenvía /api a la URL de API_TARGET en frontend/.env.render
+npm test             # pruebas de la interfaz
 npm run build
 ```
+
+La primera vez, `cp frontend/.env.example frontend/.env.render` y se completa la URL
+de la API desplegada (el archivo está en `.gitignore`; sin él, `dev:render` falla
+con un mensaje claro). Para otra URL puntual: `API_TARGET=https://otra-api.example npm run dev`. El
+cambio de destino ocurre en el servidor de desarrollo de Vite (proxy), así que no
+hace falta CORS. Con `dev:render` la primera petición tarda cerca de un minuto si
+la API gratuita estaba dormida, y la interfaz corta a los 15 s: conviene
+despertarla antes con `curl https://taller-de-sistemas-inteligentes.onrender.com/health`.
+Para una compilación de producción servida desde otro origen se usa
+`VITE_API_URL` (se fija al compilar) y la API necesitaría CORS, que aún no existe.
 
 La interfaz abre en **malaria** y permite cambiar a dengue. Sigue el sistema de
 diseño de `frontend/src/styles/tokens.css` (fuente del sistema, modo claro y

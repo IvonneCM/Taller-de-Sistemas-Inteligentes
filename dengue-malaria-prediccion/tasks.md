@@ -5,13 +5,13 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 36 de 48: la capa de datos (005 a
+> web) y la CI de GitHub está en verde. Hechas 37 de 48 (con la 033): la capa de datos (005 a
 > 010), el baseline (012), el motor de predicción, las alertas y la autenticación
 > (014, 015, 017, 018), toda la API (019 a 025, 047), las pruebas y la cobertura
 > (032), el manejo de errores (040), la vista de campañas (031) y casi toda la
-> Fase 7. **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta
-> decidir proveedor) y una fuente de brotes confirmados. Faltan además la tarea
-> semanal (016), `/modelo/desempeno` (026), la prueba de carga (033), la
+> Fase 7. **Bloquea la defensa:** una fuente de brotes confirmados (el despliegue
+> en la nube, TASK-004, ya está resuelto en Render + Neon). Faltan además la tarea
+> semanal (016), `/modelo/desempeno` (026), la
 > validación retrospectiva (034), la revisión de seguridad (035), las
 > limitaciones del informe (036), el tag (041) y el ensayo con el Plan B (045).
 > Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
@@ -24,8 +24,8 @@ checkbox, para que sea verificable de forma automática.
 
 ## Fase 1 — Infraestructura base
 
-*Meta de la fase: tener el proyecto ejecutable localmente y en Railway, con
-base de datos PostGIS lista.*
+*Meta de la fase: tener el proyecto ejecutable localmente y en la nube
+(Render + Neon), con base de datos PostGIS lista.*
 
 - [x] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
       de carpetas definida en `design.md` §9, configurar entorno virtual y
@@ -46,17 +46,19 @@ base de datos PostGIS lista.*
       *Verificación:* revisión manual — ningún secreto en el código fuente.
       *Verificado 2026-10-25:* `app/core/config.py` (pydantic-settings) lee las 6 variables del entorno o de `.env`; `DATABASE_URL` y `SECRET_KEY` no tienen valor por defecto y, con `ENVIRONMENT=production`, se rechaza una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `app/core/database.py` y `alembic/env.py` leen de `get_settings()` (antes `os.environ`). `tests/test_config.py` (3 tests); suite completa: 27 tests en verde. Ningún secreto en el código de `app/` ni `alembic/`.
 
-- [ ] **TASK-004** [NFR-008] Conectar el proyecto a Railway (servicio
-      PostgreSQL + servicio FastAPI) y confirmar despliegue de un endpoint
-      `/health` de prueba.
-      *Verificación:* `curl https://<app>.up.railway.app/health` responde 200.
-      **PENDIENTE (decisión 2026-10-25):** el despliegue en la nube queda para
-      más adelante; el equipo debe decidir proveedor (Railway con crédito de
-      prueba o plan Hobby de $5/mes, u otra opción con base de datos PostGIS
-      gratuita; ver `CONTEXT.md` §9). *Hecho y verificado en local:*
-      `Dockerfile` con dos targets (`api` 323 MB, `ml` 1,1 GB; Python 3.12
-      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore`,
-      `railway.toml` y `docker compose up --build api web` →
+- [x] **TASK-004** [NFR-008] Conectar el proyecto a un proveedor de nube
+      (servicio PostgreSQL + servicio FastAPI) y confirmar despliegue de un
+      endpoint `/health` de prueba. *Proveedor: Render + Neon, no Railway (ADR-006).*
+      *Verificación:* `curl https://<app>/health` responde 200.
+      *Verificado 2026-10-26:* `curl https://taller-de-sistemas-inteligentes.onrender.com/health`
+      → 200 `{"status":"ok"}` con certificado TLS válido; `http://` redirige con 301 a
+      `https://`; `POST /auth/login` con credenciales falsas → 401 en ~2 s, lo que
+      confirma que la API consulta la base de Neon (PostgreSQL 16, PostGIS 3.3.10,
+      4 migraciones aplicadas, tablas vacías). `/docs` y `/openapi.json` responden.
+      *Antes (historial):* el despliegue estuvo pendiente de decisión del 2026-10-25. *Hecho y verificado en local:*
+      `Dockerfile` con dos targets (`api` 323 MB, `ml` 2,3 GB; Python 3.12
+      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore` y
+      `docker compose up --build api web` →
       `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
       *Re-verificado 2026-10-26 en un Mac con Apple Silicon (Colima):* las tres
       imágenes (`api` 355 MB, `ml` 1,16 GB, `web` 76 MB) se construyen; con
@@ -65,8 +67,14 @@ base de datos PostGIS lista.*
       también contra PostgreSQL 16 + PostGIS 3.4, la misma versión que usa el CI.
       Esa prueba encontró que la API importaba `pandas` (ausente en la imagen
       `api`); corregido y vigilado por `tests/test_api_ligera.py`.
-      Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
-      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública.
+      El `railway.toml` se eliminó el 2026-10-26 (queda en el historial de Git).
+      Las migraciones se aplican al arrancar con `RUN_MIGRATIONS=1` (`CMD` del
+      `Dockerfile`; el campo Docker Command de Render debe quedar vacío). Pasos y
+      problemas encontrados en `../docs/guia_despliegue_render_neon.md`.
+      *Limitaciones conocidas:* la API gratuita se duerme tras 15 min sin tráfico
+      (la primera petición tarda cerca de 1 min); Neon gratuito es de ~0,5 GB y
+      suspende el cómputo sin uso; la contraseña de Neon se compartió por chat y
+      debe rotarse.
 
 ---
 
@@ -203,7 +211,7 @@ control de acceso por rol.*
       (listado de zonas con nivel de riesgo actual, para mapa de calor).
       *Verificación:* test de integración devuelve lista con `nivel_riesgo`
       y coordenadas/geometría para cada municipio.
-      *Verificado 2026-10-26:* `tests/api/test_zonas_riesgo.py` (10 tests) pasa contra PostGIS real: cada zona trae `nivel_riesgo`, geometría GeoJSON y centroide; usa la última predicción por zona y enfermedad. Con 350 municipios la consulta respondió con p95 de 22 ms en un chequeo local puntual (no sustituye a TASK-033).
+      *Verificado 2026-10-26:* `tests/api/test_zonas_riesgo.py` (10 tests) pasa contra PostGIS real: cada zona trae `nivel_riesgo`, geometría GeoJSON y centroide; usa la última predicción por zona y enfermedad. Con 350 municipios la consulta respondió con p95 de 22 ms en un chequeo local puntual, sin HTTP ni polígonos realistas (no sustituye a TASK-033, que midió 423 ms con 1 usuario).
 
 - [x] **TASK-020** [REQ-002, REQ-003, REQ-004, REQ-007] Implementar
       `GET /zonas/{id}/prediccion`, devolviendo campos completos para roles
@@ -300,9 +308,29 @@ considerarse listo para el piloto.*
       *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
       *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (389 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
 
-- [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
+- [x] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.
       *Verificación:* p95 de latencia < 2 segundos en el entorno de prueba.
+      *Verificado 2026-10-26 (aceptado con 1 a 5 usuarios simultáneos):*
+      `scripts/prueba_carga_zonas_riesgo.py` crea una base temporal local (se
+      borra al terminar; se niega a correr contra hosts no locales), carga 350
+      municipios simulados con polígonos de ~300 vértices y 8 semanas de
+      predicciones (700 filas vigentes) y mide con un solo worker de uvicorn.
+      Resultados (p95, 0 errores): 1 usuario **423 ms**; 5 concurrentes
+      **1 775 ms** (cumple, < 2 s); 10 concurrentes **4 229 ms** y 25
+      concurrentes **11 627 ms** (no cumplen).
+      **LIMITACIÓN ACEPTADA (decisión del usuario, 2026-10-26):** el criterio se
+      da por cumplido para 1 a 5 usuarios simultáneos, que es la carga prevista
+      de un dashboard institucional pequeño; con 10 o más usuarios al mismo
+      tiempo el p95 supera los 2 s. Causas observadas: la respuesta pesa 5,1 MB
+      (cada zona lleva su polígono completo) y el servidor atiende unas 3
+      peticiones por segundo sin importar la concurrencia (límite de CPU,
+      inferido, no perfilado). **Los datos son simulados y la medición es de la
+      máquina local, no de Render** (plan gratuito de 0,1 CPU y Neon con
+      arranque en frío: se espera peor). La cifra de 22 ms de TASK-019 fue un
+      chequeo puntual sin HTTP ni polígonos realistas y no es comparable.
+      *Si hiciera falta más:* simplificar los polígonos, devolver la geometría
+      aparte o comprimir la respuesta; cambiaría el contrato de la API.
 
 - [ ] **TASK-034** [NFR-001, NFR-002] Ejecutar validación retrospectiva del
       modelo contra `brotes_confirmados` de la zona piloto (histórico

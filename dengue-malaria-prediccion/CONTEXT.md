@@ -400,10 +400,10 @@ TASK-023 queda sin marcar (ver pendientes).
 **Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
 - La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
   `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
-  (1,1 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  (2,3 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
   sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
-  27 tests). `xgboost` pasó a `xgboost-cpu==2.1.1` (misma versión y mismo
-  `import xgboost`). `api` es la última etapa a propósito: un `docker build .`
+  27 tests). Se probó `xgboost-cpu` (la `ml` bajaba a 1,1 GB) pero por decisión
+  del usuario se volvió a `xgboost==2.1.1` normal. `api` es la última etapa a propósito: un `docker build .`
   sin target (Railway) construye la API.
 - Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
   mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
@@ -416,7 +416,75 @@ TASK-023 queda sin marcar (ver pendientes).
 - Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
   reinstalar.
 
-**Pendiente**
+**Preparación para Railway (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_railway.md`: pasos completos, variables, verificación y
+  fallos comunes. `railway.toml` ahora ejecuta `preDeployCommand =
+  ["alembic upgrade head"]`; el `Dockerfile` arranca uvicorn con
+  `--proxy-headers`; `config.py` acepta `DATABASE_URL` con esquema `postgres://`
+  (+1 test, 28 en total). Probado en local con la imagen `api`, base vacía,
+  `ENVIRONMENT=production` y `PORT` distinto: migra y responde 200.
+- Hallazgo de la documentación de Railway: el archivo de configuración no sigue
+  al Root Directory; hay que poner Config File Path
+  `/dengue-malaria-prediccion/railway.toml` en el servicio.
+- No se tocó nada del job semanal (TASK-016).
+
+**Archivos de Railway eliminados (2026-10-26)**
+- Se borró `railway.toml` por decisión del usuario (sigue en el historial de Git).
+  Se conserva `docs/guia_despliegue_railway.md` como referencia, con un aviso al
+  inicio. El `Dockerfile` y `config.py` no cambian y sirven con cualquier
+  proveedor. Se perdió la migración automática en cada despliegue
+  (`alembic upgrade head`), que cada alternativa debe resolver por su cuenta.
+
+**Ruta elegida para el despliegue: Render + Neon + GitHub Actions (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_render_neon.md`: API en Render (gratis, se duerme), base
+  PostGIS en Neon, job semanal como workflow programado de GitHub Actions
+  (solo diseño: no se agrega el archivo hasta que exista `app/ml/prediccion.py`).
+- Las migraciones se aplican con el Docker Command de Render
+  (`alembic upgrade head && uvicorn ...`); se probó en local con la imagen `api`
+  contra una base vacía y `PORT=10000`: migra y responde 200.
+- Primer despliegue en Render (2026-10-26): el build funcionó, pero el Docker
+  Command `sh -c "alembic upgrade head && uvicorn ..."` falló con `sh: 1: ...: not
+  found` (exit 127): Render no lo interpreta como Docker. Solución: la lógica pasó
+  al `CMD` del `Dockerfile` con `RUN_MIGRATIONS=1`, y el campo queda vacío.
+  Probado en local: migra y responde 200; sin la variable no migra; con una
+  migración que falla el contenedor sale con código 1.
+- Corrección (el usuario vio el panel de Render): Dockerfile Path es relativo a la
+  raíz del repo (`./dengue-malaria-prediccion/Dockerfile`) y Health Check Path /
+  Auto-Deploy no están en el formulario de creación.
+- Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
+  conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
+
+**Docker: la interfaz no era usable desde un clon limpio (2026-10-26)**
+- Síntoma reproducido: `docker compose up api web` servía la UI en :8080, pero la
+  base no tenía tablas y el login daba 500 (`relation "usuarios" does not exist`).
+- Arreglo: `RUN_MIGRATIONS` (por defecto 1) en `docker-compose.yml` para que la API
+  migre al arrancar, y el servicio `ml` monta `../data:/data:ro` para poder correr
+  `seed_demo` dentro de Docker. Probado en un proyecto limpio: login 401 sin datos,
+  tras el seed login 200 y `/api/zonas/riesgo` devuelve las 4 zonas piloto.
+
+**TASK-033 cerrada con limitación (2026-10-26)**
+- `scripts/prueba_carga_zonas_riesgo.py` (base temporal local, datos simulados,
+  se borra sola; se niega a correr contra hosts no locales). p95 con 350
+  municipios: 423 ms (1 usuario), 1 775 ms (5), 4 229 ms (10), 11 627 ms (25).
+  Respuesta de 5,1 MB. El usuario aceptó el resultado con 1 a 5 usuarios
+  simultáneos y la tarea quedó `[x]`; con 10 o más el p95 supera los 2 s
+  (límite documentado en `tasks.md` y en `docs/risk_register.md` M-18).
+- TASK-028 ya estaba hecha: el frontend es real (`frontend/src`, vistas por rol).
+  Los tests de vitest no corren en esta máquina (Node 22.14; jsdom 30 pide
+  >= 22.22), pero la CI sí los ejecuta.
+
+**TASK-004 verificada (2026-10-26)**
+- `https://taller-de-sistemas-inteligentes.onrender.com/health` responde 200 con
+  TLS válido; `http://` redirige con 301; `POST /auth/login` con credenciales
+  falsas devuelve 401 (la API consulta Neon). Se marcó `[x]`, se creó ADR-006
+  (Render + Neon, reemplaza a ADR-003) y se actualizaron `design.md` §1/§6/§8/§10,
+  `tasks.md` y `controles_seguridad.md`.
+- Incidente: `.env` local apuntaba a Neon y un `alembic upgrade head` más la suite
+  de tests se ejecutaron contra Neon por error; solo creó las tablas (vacías).
+- Pendiente: rotar la contraseña de Neon (se compartió por chat) y cargar el
+  catálogo y los datos en Neon.
+
+**Pendiente (historial, ya resuelto arriba)**
 - **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
   elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
   debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas

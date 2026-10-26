@@ -30,7 +30,7 @@ como presentes en el repositorio.
 | JWT y expiración de tokens | Implementado y probado localmente | `app/core/security.py`, `app/api/routes/auth.py`; login, refresh, access/refresh expirados, token sin `exp`, rotación y logout en `tests/api/`. |
 | RBAC aplicado en backend | Dependencia implementada y probada; endpoints de negocio aún pendientes | `app/api/deps.py`; 401 sin token, 403 por rol y access expirado en `tests/api/test_rbac.py`. La matriz de endpoints se completará con TASK-019 en adelante. |
 | Hash de contraseñas | Implementado y probado localmente | `bcrypt` en `app/core/security.py`; el modelo exige hash con prefijo `$2`. |
-| HTTPS/TLS | Diseñado, no verificable sin despliegue | TASK-004 (despliegue en la nube, en espera) y TASK-035 pendientes. |
+| HTTPS/TLS | Verificado en el despliegue (2026-10-26) | `https://taller-de-sistemas-inteligentes.onrender.com/health` responde 200 con certificado válido y `http://` redirige con 301 a `https://`. Queda la revisión final de TASK-035. |
 | Auditoría inmutable | Diseñado, no implementado | NFR-009 y migraciones pendientes. |
 
 Una decisión documentada no debe presentarse como control operativo hasta que
@@ -123,7 +123,7 @@ controlar acceso, especialmente en municipios o periodos con conteos bajos.
 - `.env` continuará excluido de Git.
 - `.env.example` documentará nombres y valores ficticios, nunca credenciales
   activas.
-- Railway o el entorno elegido almacenará los secretos fuera del código.
+- Render y Neon (variables de entorno del servicio) almacenarán los secretos fuera del código.
 - Toda credencial expuesta se revocará y rotará; eliminarla de un commit no
   basta para considerarla segura.
 - El equipo ejecutará una búsqueda de secretos antes de cada integración y
