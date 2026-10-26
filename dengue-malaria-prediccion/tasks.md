@@ -3,12 +3,12 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ⏸️ **Estado:** ninguna tarea de este plan ha comenzado. Es el plan de
-> desarrollo del backend, **posterior** a esta primera evaluación — no
-> retomar antes de cerrarla (ver `README.md` → "Cuándo se retoma"). Cuando
-> se retome, empezar por TASK-001 con `FIRST_PROMPT.md`. TASK-008, TASK-009
-> y TASK-010 ya tienen notas agregadas sobre trabajo previo reutilizable en
-> `../scripts/` y `../docs/`.
+> ▶️ **Estado (2026-10-25):** la Fase 1 está cerrada salvo el despliegue en
+> la nube (TASK-004, pendiente: falta decidir proveedor; ver su nota). La
+> Fase 2 (capa de datos, TASK-005 a TASK-010) está implementada y verificada contra PostgreSQL 16 + PostGIS 3.4 reales
+> (23 tests en verde, migración aplicada con `alembic upgrade head`). El resto
+> de las tareas sigue pendiente. TASK-009 se implementó con serie SEMANAL de
+> dengue (decisión 2 del reparto "Listo para Empezar"); ver su nota abajo.
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -20,25 +20,39 @@ checkbox, para que sea verificable de forma automática.
 *Meta de la fase: tener el proyecto ejecutable localmente y en Railway, con
 base de datos PostGIS lista.*
 
-- [ ] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
+- [x] **TASK-001** [NFR-005, NFR-008] Inicializar repositorio con estructura
       de carpetas definida en `design.md` §9, configurar entorno virtual y
       `requirements.txt` (fastapi, sqlalchemy, alembic, psycopg2, pydantic,
       python-jose, passlib[bcrypt], scikit-learn, shap, xgboost, pandas).
       *Verificación:* `pip install -r requirements.txt` corre sin errores.
+      *Verificado 2026-10-25:* en un venv nuevo, `pip install -r requirements.txt` termina con exit 0 y `pip check` no reporta conflictos. `requirements.txt` ya traía todas las dependencias; no se modificó. Todas tienen wheel para Linux/Python 3.12 (la versión fijada en el `Dockerfile`).
 
-- [ ] **TASK-002** [NFR-008] Configurar PostgreSQL local con extensión
+- [x] **TASK-002** [NFR-008] Configurar PostgreSQL local con extensión
       PostGIS habilitada (`CREATE EXTENSION postgis;`).
       *Verificación:* `SELECT PostGIS_Version();` devuelve una versión válida.
+      *Verificado 2026-10-25:* `docker compose up -d db` (`docker-compose.yml`, imagen `postgis/postgis:16-3.4`, que habilita PostGIS al crear la base) y `SELECT PostGIS_Version();` devuelve `3.4 USE_GEOS=1 USE_PROJ=1 USE_STATS=1`. Antes de esta fecha el repositorio no tenía ningún `docker-compose.yml`.
 
-- [ ] **TASK-003** [NFR-005] Configurar `app/core/config.py` para leer
+- [x] **TASK-003** [NFR-005] Configurar `app/core/config.py` para leer
       variables de entorno (`DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`,
-      `ACCESS_TOKEN_EXPIRE_MINUTES`) sin credenciales hardcodeadas.
+      `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS`,
+      `ENVIRONMENT`) sin credenciales hardcodeadas.
       *Verificación:* revisión manual — ningún secreto en el código fuente.
+      *Verificado 2026-10-25:* `app/core/config.py` (pydantic-settings) lee las 6 variables del entorno o de `.env`; `DATABASE_URL` y `SECRET_KEY` no tienen valor por defecto y, con `ENVIRONMENT=production`, se rechaza una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `app/core/database.py` y `alembic/env.py` leen de `get_settings()` (antes `os.environ`). `tests/test_config.py` (3 tests); suite completa: 27 tests en verde. Ningún secreto en el código de `app/` ni `alembic/`.
 
 - [ ] **TASK-004** [NFR-008] Conectar el proyecto a Railway (servicio
       PostgreSQL + servicio FastAPI) y confirmar despliegue de un endpoint
       `/health` de prueba.
       *Verificación:* `curl https://<app>.up.railway.app/health` responde 200.
+      **PENDIENTE (decisión 2026-10-25):** el despliegue en la nube queda para
+      más adelante; el equipo debe decidir proveedor (Railway con crédito de
+      prueba o plan Hobby de $5/mes, u otra opción con base de datos PostGIS
+      gratuita; ver `CONTEXT.md` §9). *Hecho y verificado en local:*
+      `Dockerfile` con dos targets (`api` 323 MB, `ml` 1,1 GB; Python 3.12
+      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore`,
+      `railway.toml` y `docker compose up --build api web` →
+      `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
+      Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
+      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública.
 
 ---
 
@@ -47,25 +61,28 @@ base de datos PostGIS lista.*
 *Meta de la fase: modelo de datos completo, migraciones aplicadas, y
 pipeline de ingesta/limpieza funcionando con datos de prueba.*
 
-- [ ] **TASK-005** [REQ-017, REQ-018] Crear modelos ORM y migraciones Alembic
+- [x] **TASK-005** [REQ-017, REQ-018] Crear modelos ORM y migraciones Alembic
       para `departamentos`, `municipios` (con columna geometría PostGIS) y
       `enfermedades`.
       *Verificación:* `alembic upgrade head` crea las tablas; `\d municipios`
       muestra la columna `geometria` como tipo geometry.
+      *Verificado 2026-10-25:* `alembic upgrade head` en PostGIS 3.4 crea las 7 tablas; `\d municipios` muestra `geometria geometry(MultiPolygon,4326)` con índice GIST `idx_municipios_geometria`.
 
-- [ ] **TASK-006** [REQ-013, REQ-015] Crear modelos y migraciones para
+- [x] **TASK-006** [REQ-013, REQ-015] Crear modelos y migraciones para
       `casos_epidemiologicos` y `datos_climaticos`, incluyendo `fuente`,
       `fecha_ingesta` y `es_dato_imputado`.
       *Verificación:* inserción de prueba respeta constraints (`CHECK >= 0`,
       `UNIQUE(municipio_id, fecha)` en clima).
+      *Verificado 2026-10-25:* en PostgreSQL real, `casos_confirmados = -1` falla con `ck_casos_no_negativos` y un segundo clima con el mismo `(municipio_id, fecha)` falla con `uq_clima_municipio_fecha`. `fuente`, `fecha_ingesta` y `es_dato_imputado` son NOT NULL.
 
-- [ ] **TASK-007** [REQ-019, REQ-020] Crear modelos y migraciones para
+- [x] **TASK-007** [REQ-019, REQ-020] Crear modelos y migraciones para
       `usuarios` y `roles`, con `password_hash` y sin campos de datos
       personales de pacientes.
       *Verificación:* intento de insertar un usuario con contraseña en texto
       plano falla la revisión de código / test unitario de hashing.
+      *Verificado 2026-10-25:* `usuarios` tiene `email`, `password_hash` (NOT NULL), `rol_id` y `municipio_asignado_id`; ningún campo de pacientes. `tests/test_modelo_usuarios.py` fija el esquema. El hashing con bcrypt es TASK-017.
 
-- [ ] **TASK-008** [REQ-014] Implementar conector de ingesta para datos
+- [x] **TASK-008** [REQ-014] Implementar conector de ingesta para datos
       climáticos públicos. **Fuente ya confirmada:** SENAMHI Bolivia (WIS
       2.0) — ver `docs/eda_inicial.md` §2.2. Existe ya una descarga
       funcional fuera de `app/etl/conectores/` (`scripts/descargar_senamhi.py`);
@@ -73,8 +90,9 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       reemplazarla ni volver a diseñarla.
       *Verificación:* test que ingiere un CSV/JSON de muestra y valida que
       los registros aparecen en `datos_climaticos` con `fuente` poblada.
+      *Verificado 2026-10-25:* `tests/etl/test_senamhi.py` (5 tests) pasa contra PostGIS real.
 
-- [ ] **TASK-009** [REQ-014] Implementar conector de ingesta para datos
+- [x] **TASK-009** [REQ-014] Implementar conector de ingesta para datos
       epidemiológicos históricos. **Fuente ya confirmada:** Ministerio de
       Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13 — ver
       `docs/eda_inicial.md` §2.1. **Limitación conocida:** la fuente entrega
@@ -82,8 +100,9 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       esa granularidad mejora antes de dar por cerrada esta tarea (ver
       `docs/cierre_sprint1.md` §3.2).
       *Verificación:* test análogo a TASK-008 para `casos_epidemiologicos`.
+      *Verificado 2026-10-25:* **dengue** se ingiere como serie SEMANAL por municipio (`ingerir_dengue_semanal`, `fecha_reporte` = domingo de la semana ISO, `es_dato_imputado = false`); fuente: `data/processed/dengue_municipal_semanal.csv` (28 municipios × 13 semanas, verificada contra los totales del boletín). Solo los municipios del catálogo (zona piloto, 4) se insertan. **Malaria** se guarda como acumulado SE1-13 (3 filas en la zona piloto): no existe serie semanal en ninguna fuente. Decisión registrada en `docs/adr/ADR-005-malaria-acumulado-en-bd.md`; el modelo de malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. 13 tests en `tests/etl/test_epidemiologia.py`.
 
-- [ ] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
+- [x] **TASK-010** [REQ-013, NFR-007] Implementar módulo de limpieza e
       imputación (`app/etl/limpieza.py`) siguiendo `docs/reglas_calidad_datos.md`:
       interpolación temporal para climáticos faltantes, marcado de
       `es_dato_imputado`, y cálculo del porcentaje de datos faltantes por
@@ -95,6 +114,7 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
       *Verificación:* test unitario con dataset que tiene 20% de valores
       faltantes; el resultado no contiene NaN y se marca el flag de
       confianza baja cuando corresponde (ver TASK-014).
+      *Verificado 2026-10-25:* `tests/etl/test_limpieza.py` (4 tests) pasa, incluido el de 20 % de faltantes sin NaN y con confianza baja.
 
 ---
 

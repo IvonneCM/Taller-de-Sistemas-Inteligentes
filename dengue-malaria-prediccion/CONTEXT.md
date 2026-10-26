@@ -225,6 +225,105 @@ backlog de la sección 5.
 
 ## 9. Registro de sesiones
 
+### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
+
+> Nota: las secciones 4 a 7 de arriba describen el estado de la primera
+> evaluación (datos sintéticos, backend en pausa) y están desactualizadas.
+> Para el estado actual, ver esta entrada, `tasks.md` y `design.md`.
+
+**Hecho**
+- Se levantó PostgreSQL 16 + PostGIS 3.4 en Docker (`postgis/postgis:16-3.4`,
+  puerto 5433 porque el 5432 lo usa PostgreSQL de Homebrew) y se verificó:
+  `alembic upgrade head`, geometría `MultiPolygon,4326` con índice GIST,
+  `CHECK >= 0` y `UNIQUE(municipio_id, fecha)` rechazando datos inválidos,
+  y 23 tests en verde (`DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria`).
+- TASK-005 a TASK-010 marcadas `[x]` en `tasks.md`, con su verificación anotada.
+- TASK-009 corregida: ahora ingiere dengue como serie SEMANAL
+  (`ingerir_dengue_semanal`, decisión 2 del reparto). Antes solo ingería el
+  acumulado SE1-13 y decía que no había serie semanal.
+- Publicado `docs/contrato_esquema_bd.md` (esquema de BD para Ivonne y Dilan).
+- Pipeline de datos de un solo comando (`scripts/pipeline_completo.py`, 10
+  pasos) y paneles para el modelo (`data/processed/panel_semanal_dengue_clima.csv`,
+  `panel_bloques_malaria_clima.csv`); ver `docs/guia_entrega_fase2.md`.
+
+**Divergencias respecto a `design.md` (ya anotadas en `design.md` §3 y §10)**
+- `fecha_ingesta` es `timestamptz`; `es_dato_imputado` es NOT NULL; hay un
+  `UNIQUE` extra en `casos_epidemiologicos`.
+- `fecha_reporte` = domingo de la semana ISO en filas semanales (dengue) y
+  cierre del periodo en filas acumuladas (malaria).
+
+**Bug encontrado solo con PostgreSQL real:** un texto de `fuente` de más de
+100 caracteres falla con `StringDataRightTruncation` (la columna es
+`VARCHAR(100)`). Corregido y cubierto por un test que no necesita BD.
+
+**Pendiente / decisiones abiertas**
+1. ~~**Malaria:** decidir cómo guardarla.~~ **Resuelto (ADR-005):** acumulado
+   SE1-13 en la BD (3 filas piloto, sin semanas inventadas); el modelo de
+   malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. Se
+   reabre si SEDES/SNIS entrega casos semanales.
+2. **Tabla `roles` vacía:** el seed no carga los roles de `design.md` (la
+   necesita TASK-017/018, Ivonne).
+3. **`municipios.nombre` no es UNIQUE:** ambiguo al ampliar el catálogo más
+   allá de los 4 municipios piloto; ampliarlo exige polígonos oficiales.
+4. **TASK-027** (mapa de calor) no se puede empezar: depende de
+   `GET /zonas/riesgo` (Dilan, TASK-019) y no hay frontend en el repo.
+5. **Sin commit:** el pipeline de datos y sus CSV ya están versionados
+   (commit `89202f0`). Quedan sin versionar, en la rama
+   `tania/task-005-010-capa-datos`: los cambios del backend (conector y
+   tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
+   `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
+
+### 2026-10-25 (2) — Fase 1: TASK-001 a TASK-003 implementadas, TASK-004 a medias
+
+> TASK-001 a TASK-003 cerradas `[x]` (el usuario pidió cerrarlas tras la
+> verificación; no hay divergencia con `design.md`). TASK-004 queda abierta: el
+> despliegue en la nube se pospone.
+
+**Hecho**
+- TASK-001: `requirements.txt` ya traía todo; `pip install -r` en un venv limpio
+  termina con exit 0 y `pip check` sin conflictos. Todas las dependencias
+  tienen wheel para Linux/Python 3.12.
+- TASK-002: `docker-compose.yml` nuevo (servicio `db`, `postgis/postgis:16-3.4`,
+  puerto del host 5433 por defecto y configurable). `SELECT PostGIS_Version();`
+  devuelve 3.4. No existía ningún Dockerfile ni compose antes.
+- TASK-003: `app/core/config.py` (pydantic-settings) con las 6 variables.
+  `DATABASE_URL` y `SECRET_KEY` son obligatorias; en `production` se rechaza
+  una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `database.py` y
+  `alembic/env.py` ahora leen de ahí (antes `os.environ`). `tests/test_config.py`
+  (3 tests). 27 tests en verde con la BD de compose.
+- TASK-004 (parcial): `Dockerfile` (Python **3.12** fijado, usuario no root,
+  escucha en `$PORT`), `.dockerignore`, `railway.toml` (healthcheck `/health`).
+  En local, `docker compose up --build` responde 200 en `/health`.
+
+**Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
+- La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
+  `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
+  (1,1 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
+  27 tests). `xgboost` pasó a `xgboost-cpu==2.1.1` (misma versión y mismo
+  `import xgboost`). `api` es la última etapa a propósito: un `docker build .`
+  sin target (Railway) construye la API.
+- Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
+  mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
+  API). **No implementa TASK-027 a 031.**
+- En `docker-compose.yml` las variables van explícitas en `environment`: con
+  `env_file` + `docker compose run`, el contenedor `ml` solo recibía
+  `DATABASE_URL` y faltaba `SECRET_KEY`.
+- El job de predicción correrá con la imagen `ml`, no dentro de FastAPI. Sigue
+  sin decidir cómo llega el modelo entrenado en Colab al job.
+- Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
+  reinstalar.
+
+**Pendiente**
+- **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
+  elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
+  debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas
+  gratuitas con PostGIS: API en Render o Northflank + base en Neon (la API de
+  Render se duerme tras 15 min; el job semanal TASK-016 tendría que dispararse
+  desde un cron externo). Render Postgres gratis caduca a los 30 días: no sirve.
+  Si se cambia de proveedor, actualizar ADR-003 y `design.md` §1 y §10.
+- Ahora hace falta un `.env` local con `SECRET_KEY` (antes bastaba `DATABASE_URL`).
+
 ### 2026-10-25 — TASK-012 baseline XGBoost de dengue
 
 **Estado:** implementación terminada, verificada y `TASK-012` marcada como

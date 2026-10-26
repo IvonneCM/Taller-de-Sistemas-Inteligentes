@@ -21,6 +21,8 @@ python scripts/validar_contrato.py        # úsalo antes de entrenar y tras cual
 | **Dengue** | `data/processed/panel_semanal_dengue_clima.csv` | municipio × semana | 364 (252 utilizables para predecir a 3 semanas) |
 | **Malaria** | `data/processed/panel_bloques_malaria_clima.csv` | municipio × **bloque** de semanas | 103 (101 utilizables) |
 
+**Ambos modelos entrenan con estos CSV, no con la base de datos.** La BD guarda dengue semanal pero malaria solo como acumulado (3 filas en la zona piloto; ver [ADR-005](./adr/ADR-005-malaria-acumulado-en-bd.md) y [`contrato_esquema_bd.md`](./contrato_esquema_bd.md)).
+
 Son **dos modelos distintos** porque las fuentes tienen granularidad distinta:
 dengue es semanal; malaria solo existe en bloques (SE1-5, SE6-7, SE8, SE9, SE10-13),
 y un bloque nunca se reparte en semanas. En malaria se predice `casos_por_semana`, no `casos_total`.
@@ -94,7 +96,7 @@ Evidencia concreta de esta etapa, con archivo que la respalda:
 |---|---|
 | Muestra insuficiente (1 año, 13 semanas) | `panel_semanal_dengue_clima.csv`: 364 filas |
 | Dato provisional que se corrige | `dengue_revisiones_resumen.csv`: 35 % / 24 % / 16 % / 13 % del dato final faltaba en los boletines SE5 / 7 / 8 / 9 |
-| Sin serie semanal de malaria | `malaria_municipal_bloques.csv`: solo SE8 y SE9 son semanas |
+| Sin serie semanal de malaria | `malaria_municipal_bloques.csv`: solo SE8 y SE9 son semanas. Decisión de guardarla como acumulado en la BD: ADR-005 |
 | Error en la fuente oficial | Boletín SE5: San Buenaventura imprime 1 vivax y total 0 (`malaria_acumulado_por_boletin.csv`, `fila_inconsistente`) |
 | Clima modelado ≠ observado | Comparación NASA POWER vs SENAMHI (contrato §7bis) |
 | Fuente que bloquea descargas automáticas | El sitio del Ministerio rechazó 28 descargas; los boletines se bajaron a mano |
