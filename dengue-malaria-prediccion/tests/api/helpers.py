@@ -1,15 +1,16 @@
-"""Utilidades de las pruebas de API: tokens JWT firmados como los emitira
-/auth/login (TASK-017) y fabricas de datos de ejemplo.
+"""Utilidades de las pruebas de API: fabricas de usuarios con token de acceso
+(TASK-017) y de datos de ejemplo.
 
 Los datos son EJEMPLOS de prueba (no cifras epidemiologicas reales): los
 nombres de variables y los pesos solo ilustran el formato de REQ-004."""
 
-import os
 from datetime import date, datetime, timedelta, timezone
+from itertools import count
 
-from jose import jwt
+from sqlalchemy import select
 
-from app.models import Alerta, BroteConfirmado, Modelo, Prediccion
+from app.core.security import crear_access_token, hash_password
+from app.models import Alerta, BroteConfirmado, Modelo, Prediccion, Rol, Usuario
 
 VARIABLES_EJEMPLO = [
     {"variable": "casos_media_movil_4s", "peso": 0.42},
@@ -17,21 +18,34 @@ VARIABLES_EJEMPLO = [
     {"variable": "precipitacion_acum_lag_2", "peso": -0.08},
 ]
 
+# Sesion de BD de la prueba en curso; la fija el fixture autouse de
+# tests/api/conftest.py para que `cabeceras()` pueda crear usuarios sin pedir
+# la sesion en cada prueba.
+_SESION = None
+_contador = count(1)
 
-def crear_token(rol="epidemiologo", usuario_id=1, *, expira_en=timedelta(minutes=30), **extra):
-    payload = {
-        "sub": str(usuario_id),
-        "rol": rol,
-        "exp": datetime.now(timezone.utc) + expira_en,
-        **extra,
-    }
-    return jwt.encode(
-        payload, os.environ["SECRET_KEY"], algorithm=os.environ.get("ALGORITHM", "HS256")
+
+def crear_usuario_con_rol(db, rol_nombre):
+    rol = db.execute(select(Rol).where(Rol.nombre == rol_nombre)).scalar_one_or_none()
+    if rol is None:
+        rol = Rol(nombre=rol_nombre)
+        db.add(rol)
+        db.flush()
+    usuario = Usuario(
+        email=f"{rol_nombre}.{next(_contador)}@prueba.local",
+        password_hash=hash_password("ClaveSegura123!"),
+        rol_id=rol.id,
     )
+    db.add(usuario)
+    db.flush()
+    return usuario
 
 
-def cabeceras(rol="epidemiologo", **kwargs):
-    return {"Authorization": f"Bearer {crear_token(rol, **kwargs)}"}
+def cabeceras(rol="epidemiologo"):
+    """Cabecera Authorization con un access token real de un usuario nuevo
+    con ese rol (el rol se lee de la BD, como en produccion)."""
+    usuario = crear_usuario_con_rol(_SESION, rol)
+    return {"Authorization": f"Bearer {crear_access_token(usuario.id, rol)}"}
 
 
 def crear_modelo(db, enfermedad, version="v1"):

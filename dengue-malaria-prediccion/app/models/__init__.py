@@ -14,6 +14,7 @@ from app.models.prediccion import Prediccion  # noqa: F401
 from app.models.alerta import Alerta  # noqa: F401
 from app.models.umbral_configuracion import UmbralConfiguracion  # noqa: F401
 from app.models.brote_confirmado import BroteConfirmado  # noqa: F401
+from app.models.refresh_token import RefreshToken  # noqa: F401
 
 __all__ = [
     "Departamento",
@@ -28,4 +29,5 @@ __all__ = [
     "Alerta",
     "UmbralConfiguracion",
     "BroteConfirmado",
+    "RefreshToken",
 ]

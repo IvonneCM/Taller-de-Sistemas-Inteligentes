@@ -9,10 +9,10 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import (
-    ROL_ADMIN, ROL_EPIDEMIOLOGO, UsuarioActual, get_usuario_actual, require_role,
-)
+from app.api.deps import get_current_user, require_role
+from app.api.roles import ROL_ADMIN, ROL_EPIDEMIOLOGO, ROLES_DETALLE_COMPLETO
 from app.core.database import get_db
+from app.models import Usuario
 from app.schemas.zonas import (
     HistorialZona, ZonaPrediccionDetalle, ZonaPrediccionResumen, ZonaRiesgo,
 )
@@ -32,7 +32,7 @@ def zonas_riesgo(
     enfermedad_id: int | None = Query(
         None, description="Filtra por enfermedad; sin filtro devuelve todas."
     ),
-    _usuario: UsuarioActual = Depends(get_usuario_actual),
+    _usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """TASK-019 (REQ-001, REQ-006): riesgo vigente de cada zona con geometria,
@@ -52,7 +52,7 @@ def zonas_riesgo(
 def prediccion_de_zona(
     municipio_id: int,
     enfermedad_id: int | None = Query(None, description="Filtra por enfermedad."),
-    usuario: UsuarioActual = Depends(get_usuario_actual),
+    usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """TASK-020 (REQ-002, REQ-003, REQ-004, REQ-007): prediccion vigente de la
@@ -74,7 +74,7 @@ def prediccion_de_zona(
             status_code=404, detail="La zona aun no tiene predicciones vigentes."
         )
 
-    if usuario.ve_detalle_completo:
+    if usuario.rol.nombre in ROLES_DETALLE_COMPLETO:
         return ZonaPrediccionDetalle(**zona, predicciones=predicciones)
     return ZonaPrediccionResumen(
         **zona,
@@ -88,7 +88,7 @@ def historial_de_zona(
     enfermedad_id: int | None = Query(None, description="Filtra por enfermedad."),
     desde: date | None = Query(None, description="Fecha minima (YYYY-MM-DD)."),
     hasta: date | None = Query(None, description="Fecha maxima (YYYY-MM-DD)."),
-    _usuario: UsuarioActual = Depends(require_role(ROL_EPIDEMIOLOGO, ROL_ADMIN)),
+    _usuario: Usuario = Depends(require_role(ROL_EPIDEMIOLOGO, ROL_ADMIN)),
     db: Session = Depends(get_db),
 ):
     """TASK-021 (REQ-008): predicciones pasadas y brotes confirmados de la

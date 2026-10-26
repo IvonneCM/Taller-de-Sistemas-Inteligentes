@@ -3,8 +3,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from app.api.deps import ROL_ADMIN, UsuarioActual, require_role
+from app.api.deps import require_role
+from app.api.roles import ROL_ADMIN
 from app.core.database import get_db
+from app.models import Usuario
 from app.schemas.umbrales import UmbralIn, UmbralOut
 from app.services import umbrales as servicio_umbrales
 from app.services.errores import RecursoNoEncontrado
@@ -16,7 +18,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 def configurar_umbral(
     datos: UmbralIn,
     respuesta: Response,
-    _usuario: UsuarioActual = Depends(require_role(ROL_ADMIN)),
+    _usuario: Usuario = Depends(require_role(ROL_ADMIN)),
     db: Session = Depends(get_db),
 ):
     """Crea (201) o actualiza (200) el umbral de alerta de una enfermedad,

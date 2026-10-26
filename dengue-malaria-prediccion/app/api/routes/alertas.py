@@ -5,8 +5,9 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import UsuarioActual, get_usuario_actual
+from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.models import Usuario
 from app.schemas.alertas import AlertaOut
 from app.services import alertas as servicio_alertas
 
@@ -23,7 +24,7 @@ def listar_alertas(
         servicio_alertas.LIMITE_POR_DEFECTO, ge=1, le=servicio_alertas.LIMITE_MAXIMO
     ),
     desplazamiento: int = Query(0, ge=0),
-    _usuario: UsuarioActual = Depends(get_usuario_actual),
+    _usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Alertas emitidas, las mas recientes primero. Cada una incluye su

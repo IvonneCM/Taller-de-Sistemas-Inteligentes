@@ -271,6 +271,105 @@ TASK-023 queda sin marcar (ver pendientes).
    (`Documents`): los imports se cuelgan. Se usó `~/.venvs/dengue-malaria` y
    el repo en `~/Pictures/machine/`. Suite completa: ~11 s.
 
+### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
+
+> Nota: las secciones 4 a 7 de arriba describen el estado de la primera
+> evaluación (datos sintéticos, backend en pausa) y están desactualizadas.
+> Para el estado actual, ver esta entrada, `tasks.md` y `design.md`.
+
+**Hecho**
+- Se levantó PostgreSQL 16 + PostGIS 3.4 en Docker (`postgis/postgis:16-3.4`,
+  puerto 5433 porque el 5432 lo usa PostgreSQL de Homebrew) y se verificó:
+  `alembic upgrade head`, geometría `MultiPolygon,4326` con índice GIST,
+  `CHECK >= 0` y `UNIQUE(municipio_id, fecha)` rechazando datos inválidos,
+  y 23 tests en verde (`DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria`).
+- TASK-005 a TASK-010 marcadas `[x]` en `tasks.md`, con su verificación anotada.
+- TASK-009 corregida: ahora ingiere dengue como serie SEMANAL
+  (`ingerir_dengue_semanal`, decisión 2 del reparto). Antes solo ingería el
+  acumulado SE1-13 y decía que no había serie semanal.
+- Publicado `docs/contrato_esquema_bd.md` (esquema de BD para Ivonne y Dilan).
+- Pipeline de datos de un solo comando (`scripts/pipeline_completo.py`, 10
+  pasos) y paneles para el modelo (`data/processed/panel_semanal_dengue_clima.csv`,
+  `panel_bloques_malaria_clima.csv`); ver `docs/guia_entrega_fase2.md`.
+
+**Divergencias respecto a `design.md` (ya anotadas en `design.md` §3 y §10)**
+- `fecha_ingesta` es `timestamptz`; `es_dato_imputado` es NOT NULL; hay un
+  `UNIQUE` extra en `casos_epidemiologicos`.
+- `fecha_reporte` = domingo de la semana ISO en filas semanales (dengue) y
+  cierre del periodo en filas acumuladas (malaria).
+
+**Bug encontrado solo con PostgreSQL real:** un texto de `fuente` de más de
+100 caracteres falla con `StringDataRightTruncation` (la columna es
+`VARCHAR(100)`). Corregido y cubierto por un test que no necesita BD.
+
+**Pendiente / decisiones abiertas**
+1. ~~**Malaria:** decidir cómo guardarla.~~ **Resuelto (ADR-005):** acumulado
+   SE1-13 en la BD (3 filas piloto, sin semanas inventadas); el modelo de
+   malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. Se
+   reabre si SEDES/SNIS entrega casos semanales.
+2. **Tabla `roles` vacía:** el seed no carga los roles de `design.md` (la
+   necesita TASK-017/018, Ivonne).
+3. **`municipios.nombre` no es UNIQUE:** ambiguo al ampliar el catálogo más
+   allá de los 4 municipios piloto; ampliarlo exige polígonos oficiales.
+4. **TASK-027** (mapa de calor) no se puede empezar: depende de
+   `GET /zonas/riesgo` (Dilan, TASK-019) y no hay frontend en el repo.
+5. **Sin commit:** el pipeline de datos y sus CSV ya están versionados
+   (commit `89202f0`). Quedan sin versionar, en la rama
+   `tania/task-005-010-capa-datos`: los cambios del backend (conector y
+   tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
+   `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
+
+### 2026-10-25 (2) — Fase 1: TASK-001 a TASK-003 implementadas, TASK-004 a medias
+
+> TASK-001 a TASK-003 cerradas `[x]` (el usuario pidió cerrarlas tras la
+> verificación; no hay divergencia con `design.md`). TASK-004 queda abierta: el
+> despliegue en la nube se pospone.
+
+**Hecho**
+- TASK-001: `requirements.txt` ya traía todo; `pip install -r` en un venv limpio
+  termina con exit 0 y `pip check` sin conflictos. Todas las dependencias
+  tienen wheel para Linux/Python 3.12.
+- TASK-002: `docker-compose.yml` nuevo (servicio `db`, `postgis/postgis:16-3.4`,
+  puerto del host 5433 por defecto y configurable). `SELECT PostGIS_Version();`
+  devuelve 3.4. No existía ningún Dockerfile ni compose antes.
+- TASK-003: `app/core/config.py` (pydantic-settings) con las 6 variables.
+  `DATABASE_URL` y `SECRET_KEY` son obligatorias; en `production` se rechaza
+  una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `database.py` y
+  `alembic/env.py` ahora leen de ahí (antes `os.environ`). `tests/test_config.py`
+  (3 tests). 27 tests en verde con la BD de compose.
+- TASK-004 (parcial): `Dockerfile` (Python **3.12** fijado, usuario no root,
+  escucha en `$PORT`), `.dockerignore`, `railway.toml` (healthcheck `/health`).
+  En local, `docker compose up --build` responde 200 en `/health`.
+
+**Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
+- La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
+  `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
+  (1,1 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
+  27 tests). `xgboost` pasó a `xgboost-cpu==2.1.1` (misma versión y mismo
+  `import xgboost`). `api` es la última etapa a propósito: un `docker build .`
+  sin target (Railway) construye la API.
+- Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
+  mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
+  API). **No implementa TASK-027 a 031.**
+- En `docker-compose.yml` las variables van explícitas en `environment`: con
+  `env_file` + `docker compose run`, el contenedor `ml` solo recibía
+  `DATABASE_URL` y faltaba `SECRET_KEY`.
+- El job de predicción correrá con la imagen `ml`, no dentro de FastAPI. Sigue
+  sin decidir cómo llega el modelo entrenado en Colab al job.
+- Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
+  reinstalar.
+
+**Pendiente**
+- **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
+  elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
+  debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas
+  gratuitas con PostGIS: API en Render o Northflank + base en Neon (la API de
+  Render se duerme tras 15 min; el job semanal TASK-016 tendría que dispararse
+  desde un cron externo). Render Postgres gratis caduca a los 30 días: no sirve.
+  Si se cambia de proveedor, actualizar ADR-003 y `design.md` §1 y §10.
+- Ahora hace falta un `.env` local con `SECRET_KEY` (antes bastaba `DATABASE_URL`).
+
 ### 2026-10-25 — TASK-012 baseline XGBoost de dengue
 
 **Estado:** implementación terminada, verificada y `TASK-012` marcada como
@@ -319,57 +418,117 @@ TASK-023 queda sin marcar (ver pendientes).
   `metricas_entrenamiento` JSONB válido.
 
 **Pendientes**
-- Ivonne debe revisar y hacer el commit/push (instrucción explícita: el
-  agente no commitea).
-- La rama local `ivonne2` sigue detrás de `origin/ivonne2`; no se hizo
-  commit ni push.
 - `.gitignore` tiene un cambio previo no relacionado (ignora
   `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
 
-### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
+### 2026-10-25 — TASK-017/018 autenticación JWT y RBAC
 
-> Nota: las secciones 4 a 7 de arriba describen el estado de la primera
-> evaluación (datos sintéticos, backend en pausa) y están desactualizadas.
-> Para el estado actual, ver esta entrada, `tasks.md` y `design.md`.
+**Estado:** implementación terminada, tests verdes y `TASK-017`/`TASK-018`
+marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25)
 
-**Hecho**
-- Se levantó PostgreSQL 16 + PostGIS 3.4 en Docker (`postgis/postgis:16-3.4`,
-  puerto 5433 porque el 5432 lo usa PostgreSQL de Homebrew) y se verificó:
-  `alembic upgrade head`, geometría `MultiPolygon,4326` con índice GIST,
-  `CHECK >= 0` y `UNIQUE(municipio_id, fecha)` rechazando datos inválidos,
-  y 23 tests en verde (`DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria`).
-- TASK-005 a TASK-010 marcadas `[x]` en `tasks.md`, con su verificación anotada.
-- TASK-009 corregida: ahora ingiere dengue como serie SEMANAL
-  (`ingerir_dengue_semanal`, decisión 2 del reparto). Antes solo ingería el
-  acumulado SE1-13 y decía que no había serie semanal.
-- Publicado `docs/contrato_esquema_bd.md` (esquema de BD para Ivonne y Dilan).
-- Pipeline de datos de un solo comando (`scripts/pipeline_completo.py`, 10
-  pasos) y paneles para el modelo (`data/processed/panel_semanal_dengue_clima.csv`,
-  `panel_bloques_malaria_clima.csv`); ver `docs/guia_entrega_fase2.md`.
+**Implementado**
+- `app/core/security.py`: bcrypt (costo 12) y JWT HS256 con access de 30
+  min y refresh de 7 días; claims `sub`, `rol`, `tipo`, `jti`, `iat`,
+  `exp`, `iss`. El algoritmo está restringido a HS256.
+- `app/models/refresh_token.py` + migración `aa12e214cb8d`: tabla
+  `refresh_tokens` (`jti` único, usuario, expiración, revocación,
+  creación). `RefreshToken` se registró en `app/models/__init__.py` y se
+  agregó la relación en `Usuario`.
+- `app/api/routes/auth.py`: `POST /auth/login` (OAuth2 password flow),
+  `POST /auth/refresh` con rotación y `POST /auth/logout` idempotente.
+- `app/api/deps.py`: `get_current_user` carga usuario y rol desde la BD en
+  cada request; `require_role(...)` aplica RBAC sin bypass implícito de
+  admin.
+- `app/schemas/auth.py`: `TokenPair` y `RefreshTokenRequest`.
+- `app/main.py`: incluye el router de auth.
+- `app/etl/seed_usuarios.py`: seed idempotente de roles y 5 usuarios
+  ficticios `@demo.local`; la contraseña sale de `SEED_DEMO_PASSWORD` o se
+  pide por consola. Incluye `--delete` y `--reset-passwords`; rechaza
+  `ENVIRONMENT=production`.
+- `.env.example`: agrega `JWT_ISSUER` y `SEED_DEMO_PASSWORD=` (vacío).
+- `README.md`: instrucciones reproducibles de PostGIS local, migraciones,
+  seed, limpieza y tests.
+- `design.md` §4: documenta `/auth/refresh` y `/auth/logout` además de
+  `/auth/login`, para que el contrato de API coincida con la implementación.
+- `tests/api/`: 19 pruebas de login, refresh, expiración, token sin
+  `exp`, rotación, logout, tipo de token y RBAC 401/403.
 
-**Divergencias respecto a `design.md` (ya anotadas en `design.md` §3 y §10)**
-- `fecha_ingesta` es `timestamptz`; `es_dato_imputado` es NOT NULL; hay un
-  `UNIQUE` extra en `casos_epidemiologicos`.
-- `fecha_reporte` = domingo de la semana ISO en filas semanales (dengue) y
-  cierre del periodo en filas acumuladas (malaria).
+**Decisiones**
+- El refresh token es revocable mediante `refresh_tokens` (SEG-01). En
+  `/auth/refresh` se revoca el token usado y se emite uno nuevo.
+- El access token no se persiste; su expiración corta limita el riesgo.
+- Se usa `bcrypt` directo, no `passlib`, porque el entorno tiene bcrypt
+  5.0 y passlib 1.7.4 no está instalado.
+- `decodificar_token` exige `exp` con `options={"require_exp": True}`: un
+  token firmado sin expiración ya no se acepta.
+- Los usuarios demo no se versionan: solo se versiona el script. Cada
+  desarrollador define su propia contraseña local.
+- No hay bypass automático de `admin`; cada endpoint declara sus roles.
+- El alcance por municipio (`municipio_asignado_id`) es una validación de
+  servicio posterior, no parte de `require_role`.
 
-**Bug encontrado solo con PostgreSQL real:** un texto de `fuente` de más de
-100 caracteres falla con `StringDataRightTruncation` (la columna es
-`VARCHAR(100)`). Corregido y cubierto por un test que no necesita BD.
+**Verificación**
+- `pytest tests/api -q`: **19 passed**.
+- `ruff check` sobre los archivos nuevos: **All checks passed**.
+- `python -m compileall -q app tests`: OK.
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Smoke test del seed: login con `epidemiologo@demo.local` devuelve 200
+  con access y refresh; luego `--delete` elimina los 5 usuarios demo.
+- PostGIS temporal: contenedor `dengue-postgis-local`, puerto `55432`,
+  base `dengue_malaria`. Queda levantado para pruebas manuales.
 
-**Pendiente / decisiones abiertas**
-1. ~~**Malaria:** decidir cómo guardarla.~~ **Resuelto (ADR-005):** acumulado
-   SE1-13 en la BD (3 filas piloto, sin semanas inventadas); el modelo de
-   malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. Se
-   reabre si SEDES/SNIS entrega casos semanales.
-2. **Tabla `roles` vacía:** el seed no carga los roles de `design.md` (la
-   necesita TASK-017/018, Ivonne).
-3. **`municipios.nombre` no es UNIQUE:** ambiguo al ampliar el catálogo más
-   allá de los 4 municipios piloto; ampliarlo exige polígonos oficiales.
-4. **TASK-027** (mapa de calor) no se puede empezar: depende de
-   `GET /zonas/riesgo` (Dilan, TASK-019) y no hay frontend en el repo.
-5. **Sin commit:** el pipeline de datos y sus CSV ya están versionados
-   (commit `89202f0`). Quedan sin versionar, en la rama
-   `tania/task-005-010-capa-datos`: los cambios del backend (conector y
-   tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
-   `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
+**Pendientes**
+- Se mantiene la extensión aprobada por Ivonne: `/auth/refresh` y
+  `/auth/logout` además de `/auth/login`, documentada en `design.md` §4.
+- Rate limiting de login (SEG-10) y HTTPS de despliegue siguen fuera de
+  alcance de estas dos tareas.
+- El access token no es revocable; si se requiere, evaluar una lista de
+  revocación o expiración aún más corta.
+
+### 2026-10-26 — TASK-014 pipeline de predicción + SHAP + tabla predicciones
+
+**Estado:** implementación terminada, verificada y `TASK-014` marcada como
+`[x]` tras confirmación explícita de Ivonne (2026-10-26). 
+
+**Decisiones acordadas para esta sesión**
+- Horizonte operativo **t+3**; t+4 queda disponible por parámetro pero no se
+  publica en el lote semanal. Motivo: la validación t+4 solo tiene 2 orígenes
+  walk-forward y `predicciones` no tiene columna de horizonte; publicar ambos
+  crearía filas/alertas duplicadas indistinguibles.
+- Cortes provisionales de `nivel_riesgo`: `<33.33` bajo, `33.33-66.67`
+  medio, `>=66.67` alto. **No validados** ni equivalentes a brote.
+- `nivel_confianza` NFR-007 estricto con los umbrales de TASK-010:
+  `<=5 %` alto, `>5 % y <=20 %` bajo, `>20 %` no se publica; `medio` queda
+  reservado.
+- El modelo puntúa los 28 municipios del panel, pero solo se persisten los 4
+  del catálogo piloto. Ampliar el catálogo requiere geometrías oficiales y
+  pertenece a la capa de datos, no a TASK-014.
+
+**Implementado**
+- `app/ml/prediccion.py`: features → artefacto TASK-012 → SHAP TASK-013,
+  cálculo de riesgo/confianza/fecha, persistencia inmutable y CLI.
+- `app/models/prediccion.py` + migración `5f6a7b8c9d01`: tabla
+  `predicciones` con los CHECK de `design.md` §3, incluido el horizonte de
+  21-28 días.
+- `tests/ml/test_prediccion.py`: 18 pruebas (cortes, NFR-007, fechas, ORM,
+  persistencia simulada y pipeline real con SHAP).
+- `docs/task_014_prediccion.md`: decisiones, uso, verificación y limitaciones.
+
+**Verificación**
+- `python -B -m unittest discover -s tests/ml -p "test_prediccion.py" -v`:
+  **18 OK**.
+- Suite `tests/ml`: **66 OK, 3 omitidas** (omisiones previas de pandas 2.2.3;
+  SHAP ya quedó disponible en el intérprete global).
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Inserción real en transacción sobre PostgreSQL/PostGIS: 28 predicciones,
+  4 insertadas (piloto), 24 omitidas por catálogo; rollback posterior.
+- `ruff check` y `python -m compileall -q app tests`: OK.
+
+**Pendientes**
+- Si se quiere publicar t+4, agregar `horizonte_semanas` al esquema y definir
+  la regla de selección para `GET /zonas/riesgo` y alertas.
+- Integrar el porcentaje real de imputación de TASK-010; mientras el panel v2
+  no conserve `es_dato_imputado`, la confianza usa una estimación por
+  features climáticas ausentes.
+- TASK-015 debe partir de `predicciones.variables_explicativas` y no crear
+  alertas sin justificación.
