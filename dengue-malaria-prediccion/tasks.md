@@ -3,11 +3,14 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ▶️ **Estado (2026-10-25):** la Fase 2 (capa de datos, TASK-005 a TASK-010)
-> está implementada y verificada contra PostgreSQL 16 + PostGIS 3.4 reales
-> (23 tests en verde, migración aplicada con `alembic upgrade head`). El resto
-> de las tareas sigue pendiente. TASK-009 se implementó con serie SEMANAL de
-> dengue (decisión 2 del reparto "Listo para Empezar"); ver su nota abajo.
+> ▶️ **Estado (2026-10-26):** la Fase 2 (capa de datos, TASK-005 a TASK-010)
+> está implementada y verificada contra PostgreSQL + PostGIS reales
+> (`alembic upgrade head` aplicado). TASK-009 se implementó con serie SEMANAL
+> de dengue (decisión 2 del reparto "Listo para Empezar"); ver su nota abajo.
+> TASK-012 (baseline) y TASK-019 a 022 (API de zonas y alertas) están
+> hechas. TASK-011 y TASK-013 tienen código y tests en el repo (Adriana) pero
+> siguen sin marcar. TASK-023 está implementada y pendiente solo de que
+> TASK-015 use `obtener_umbral`. El resto sigue pendiente.
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -169,31 +172,36 @@ control de acceso por rol.*
       *Verificación:* test que un usuario con rol "autoridad" recibe 403 al
       llamar un endpoint restringido a "epidemiologo".
 
-- [ ] **TASK-019** [REQ-001, REQ-006] Implementar `GET /zonas/riesgo`
+- [x] **TASK-019** [REQ-001, REQ-006] Implementar `GET /zonas/riesgo`
       (listado de zonas con nivel de riesgo actual, para mapa de calor).
       *Verificación:* test de integración devuelve lista con `nivel_riesgo`
       y coordenadas/geometría para cada municipio.
+      *Verificado 2026-10-26:* `tests/api/test_zonas_riesgo.py` (10 tests) pasa contra PostGIS real: cada zona trae `nivel_riesgo`, geometría GeoJSON y centroide; usa la última predicción por zona y enfermedad. Con 350 municipios la consulta respondió con p95 de 22 ms en un chequeo local puntual (no sustituye a TASK-033).
 
-- [ ] **TASK-020** [REQ-002, REQ-003, REQ-004, REQ-007] Implementar
+- [x] **TASK-020** [REQ-002, REQ-003, REQ-004, REQ-007] Implementar
       `GET /zonas/{id}/prediccion`, devolviendo campos completos para roles
       técnicos y campos resumidos para roles de autoridad.
       *Verificación:* test compara la respuesta para dos roles distintos y
       confirma la diferencia de campos expuestos.
+      *Verificado 2026-10-26:* `tests/api/test_zona_prediccion.py` pasa: `epidemiologo`/`admin` reciben `vista: completa` con variables explicativas y modelo; el resto, `vista: resumida` sin esos campos (ni en null).
 
-- [ ] **TASK-021** [REQ-008] Implementar `GET /zonas/{id}/historial`
+- [x] **TASK-021** [REQ-008] Implementar `GET /zonas/{id}/historial`
       (predicciones pasadas + brotes confirmados de `brotes_confirmados`).
       *Verificación:* test de integración con datos de ejemplo devuelve
       ambos conjuntos correlacionados por fecha.
+      *Verificado 2026-10-26:* `tests/api/test_historial.py` pasa: predicciones (cronológicas) y brotes correlacionados con ventana de ±7 días y `anticipacion_dias`; solo `epidemiologo`/`admin`. La regla de correlación es referencial (ver `docs/contrato_api.md`).
 
-- [ ] **TASK-022** [REQ-009] Implementar `GET /alertas` con filtros por
+- [x] **TASK-022** [REQ-009] Implementar `GET /alertas` con filtros por
       zona/fecha/enfermedad.
       *Verificación:* test de integración filtra correctamente por
       parámetros de consulta.
+      *Verificado 2026-10-26:* `tests/api/test_alertas.py` pasa: filtros por zona, enfermedad y fechas, paginación; no publica alertas cuya predicción no tenga variables explicativas.
 
 - [ ] **TASK-023** [REQ-010] Implementar `POST /admin/umbrales` (solo rol
       admin) para configurar umbrales por enfermedad/departamento.
       *Verificación:* test confirma que el cambio se refleja en la siguiente
       llamada a `evaluacion_alertas` (TASK-015).
+      *Estado 2026-10-26 (sin marcar):* el endpoint y `app.services.umbrales.obtener_umbral` están implementados y probados (`tests/api/test_admin_umbrales.py`: un cambio se lee en la llamada siguiente, sin caché). Falta el criterio literal de esta tarea: que `evaluacion_alertas` (TASK-015, Ivonne) use `obtener_umbral`. Se marca `[x]` cuando exista.
 
 - [ ] **TASK-024** [REQ-011] Implementar `GET /campanas/priorizacion`
       (zonas ordenadas por riesgo y proximidad de fecha estimada).
@@ -254,6 +262,7 @@ considerarse listo para el piloto.*
       ingesta, limpieza y predicción, alcanzando cobertura mínima del 70%
       en esos módulos.
       *Verificación:* `pytest --cov=app/etl --cov=app/ml` reporta ≥ 70%.
+      *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
 
 - [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.

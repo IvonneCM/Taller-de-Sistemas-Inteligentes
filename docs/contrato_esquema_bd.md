@@ -105,6 +105,15 @@ Reglas para quien consuma la tabla (features, API):
 4. **Datos provisionales.** El boletín se corrige después: la última semana publicada muestra ~39 % de los casos que terminan reportándose (ver `data/processed/dengue_revisiones_resumen.csv`).
 5. **Un año, 13 semanas.** No hay historia de años anteriores en la base.
 
-## Tablas previstas en `design.md` §3 que todavía NO existen
+## Tablas agregadas por TASK-019 a 023 (Dilan)
 
-`modelos`, `predicciones`, `alertas`, `umbrales_configuracion`, `brotes_confirmados`. Las crean las tareas del motor de predicción y de alertas (Ola 1/2 de Ivonne y Dilan). Cuando se agreguen, este contrato se amplía en el mismo commit que la migración.
+Migración `7c1e5d9a3b42`. Reglas completas y divergencias en `design.md` §3.
+
+| Tabla | Para qué | Restricciones destacadas |
+|---|---|---|
+| `predicciones` | salida del motor (TASK-014); solo INSERT (NFR-009) | `CHECK` de 21 a 28 días entre `fecha_generacion` (fecha UTC) y `fecha_estimada_riesgo`; niveles en (`bajo`,`medio`,`alto`); probabilidad 0-100; `variables_explicativas` JSONB NOT NULL y debe ser una lista; índice `(municipio_id, enfermedad_id, fecha_generacion)` |
+| `alertas` | alertas emitidas (TASK-015); solo INSERT | `justificacion` NOT NULL y no vacía; `umbral_aplicado` 0-100; FK a `predicciones` |
+| `umbrales_configuracion` | umbrales editables (REQ-010) | `UNIQUE (enfermedad_id, departamento_id)` con `NULLS NOT DISTINCT`; 0-100 |
+| `brotes_confirmados` | comparación predicción vs. realidad (REQ-008) | todos los campos NOT NULL. **Nadie los carga todavía.** |
+
+`modelos` ya existía desde TASK-012. Quien inserte en `predicciones` (TASK-014) debe pasar `variables_explicativas` como lista; `None` falla (no se guarda como JSON `null`).
