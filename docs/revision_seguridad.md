@@ -16,7 +16,7 @@ cd frontend && npm audit                                           # dependencia
 | Pedido | Estado | Evidencia |
 |---|---|---|
 | Ausencia de datos personales de pacientes (REQ-020) | **OK** | Control automático: 69 columnas de la base revisadas, solo `usuarios.email` (personal que opera el sistema). Los conectores rechazan columnas con datos personales (`app/etl/conectores/epidemiologia.py`) y toda la información es un conteo agregado por municipio. |
-| HTTPS en el despliegue (NFR-005) | **OK** (verificado el 2026-10-26 en Render, ya con la corrección: HTTPS con certificado válido y `Strict-Transport-Security`) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
+| HTTPS en el despliegue (NFR-005) | **OK** (verificado el 2026-10-26 en Render, ya con la corrección: HTTPS con certificado válido y `Strict-Transport-Security`) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido y `Strict-Transport-Security` implementado, conforme al hallazgo H-9 y a la comprobación remota del 2026-10-26. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
 | Ninguna alerta sin justificación en la base (REQ-005) | **OK** | Control automático sobre el sistema en Docker: 2 alertas, las dos con justificación y variables explicativas. Triple barrera: restricción `CHECK` en la base, `evaluacion_alertas` y filtro de `GET /alertas`. |
 | Checklist firmado por el equipo | **Pendiente** | Ver la sección 5. |
 
@@ -71,5 +71,5 @@ Debe firmarse después de resolver (o aceptar por escrito) los hallazgos de la s
 | Ignacio Retamozo Torrez | | | |
 | Tania Pérez | | | |
 | Ivonne Colque | | | |
-| Adriana Rocha Vedia | | | |
+| Adriana Rocha Vedia | Revisión documental de privacidad, HTTPS, alertas y riesgos de seguridad aceptados | 26/10/2026 | Adriana Rocha Vedia |
 | Dilan Mamani Pamuri | Controles automáticos, hallazgos H-1 a H-9 (resueltos o aceptados) y verificación en Render | 2026-10-26 | Dilan Mamani Pamuri |
