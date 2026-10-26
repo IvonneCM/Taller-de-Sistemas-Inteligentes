@@ -215,6 +215,12 @@ details.mas p { color: var(--texto-2); margin-top: var(--e-sm); }
 .tabla-contenedor { overflow-x: auto; }
 .pagina-estrecha { width: min(100%, 52rem); margin-inline: auto; display: grid; gap: var(--e-md); }
 
+.filtros-periodo, .paginacion { display: flex; gap: var(--e-sm); flex-wrap: wrap; align-items: end; }
+.filtros-periodo [role="alert"] { flex-basis: 100%; }
+.panel-alertas { display: grid; gap: var(--e-md); }
+.paginacion { align-items: center; justify-content: center; }
+.tabla caption { text-align: left; padding: var(--e-md); font-weight: 600; }
+
 /* Controles de zoom de Leaflet: objetivo táctil mínimo de 44 px. */
 .leaflet-touch .leaflet-bar a, .leaflet-bar a {
   width: var(--objetivo-minimo); height: var(--objetivo-minimo); line-height: var(--objetivo-minimo);

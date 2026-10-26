@@ -1,7 +1,7 @@
 """Esquemas de TASK-022 (`GET /alertas`). REQ-005: cada alerta publicada
 lleva su justificacion y al menos una variable explicativa."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel
 
@@ -20,5 +20,6 @@ class AlertaOut(BaseModel):
     probabilidad_pct: float
     umbral_aplicado: float
     fecha_emision: datetime
+    fecha_estimada_riesgo: date
     justificacion: str
     variables_explicativas: list[VariableExplicativa]

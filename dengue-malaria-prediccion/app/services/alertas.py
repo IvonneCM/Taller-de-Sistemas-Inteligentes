@@ -6,12 +6,13 @@ sin justificacion; este filtro es una segunda barrera por si llegara una fila
 incompleta a la tabla (p. ej. una carga manual).
 """
 
-from datetime import date
+from datetime import date, datetime, timezone
 
 from sqlalchemy import Date, case, cast, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Alerta, Enfermedad, Municipio, Prediccion
+from app.services.predicciones import _vigentes
 
 LIMITE_POR_DEFECTO = 100
 LIMITE_MAXIMO = 500
@@ -26,6 +27,7 @@ def listar_alertas(
     hasta: date | None = None,
     limite: int = LIMITE_POR_DEFECTO,
     desplazamiento: int = 0,
+    solo_vigentes: bool = False,
 ) -> list[dict]:
     """Alertas mas recientes primero, filtradas por zona, enfermedad y fecha
     de emision (fecha UTC)."""
@@ -55,6 +57,23 @@ def listar_alertas(
         stmt = stmt.where(fecha_emision_utc >= desde)
     if hasta is not None:
         stmt = stmt.where(fecha_emision_utc <= hasta)
+    if solo_vigentes:
+        # La selección existente considera TODAS las predicciones, incluidas
+        # las que no generaron alerta. No filtrar primero por fecha o alerta.
+        vigente = _vigentes()
+        variables_validas = func.jsonb_path_query_array(
+            variables,
+            r'strict $[*] ? (@.type() == "object" && @.variable.type() == "string" '
+            r'&& @.variable like_regex "[^[:space:]]" && @.peso.type() == "number")',
+            "{}", True,
+        )
+        stmt = stmt.join(vigente, vigente.id == Prediccion.id).where(
+            Prediccion.fecha_estimada_riesgo >= datetime.now(timezone.utc).date(),
+            Alerta.justificacion.op("~")("[^[:space:]]"),
+            # Todas las variables deben conservar el contrato {variable,peso};
+            # lista vacía o elementos mal formados no justifican la alerta.
+            func.jsonb_array_length(variables_validas) == n_variables,
+        )
 
     return [
         {
@@ -69,6 +88,7 @@ def listar_alertas(
             "probabilidad_pct": p.probabilidad_pct,
             "umbral_aplicado": a.umbral_aplicado,
             "fecha_emision": a.fecha_emision,
+            "fecha_estimada_riesgo": p.fecha_estimada_riesgo,
             "justificacion": a.justificacion,
             "variables_explicativas": p.variables_explicativas,
         }

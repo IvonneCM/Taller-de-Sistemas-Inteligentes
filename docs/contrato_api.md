@@ -72,7 +72,11 @@ Cada predicción trae `brote_confirmado` (bool), `brote_confirmado_id`, `fecha_b
 
 ### `GET /alertas`
 
-Query opcional: `municipio_id`, `enfermedad_id`, `desde`, `hasta` (sobre la fecha de emisión, UTC), `limite` (1-500, por defecto 100) y `desplazamiento`. Las más recientes primero. Cada alerta trae `justificacion` y `variables_explicativas` (REQ-005); una alerta cuya predicción no tenga variables no se publica. No existe un campo "activa": el panel decide qué es reciente con `fecha_emision`.
+Query opcional: `municipio_id`, `enfermedad_id`, `desde`, `hasta` (sobre la fecha de emisión, UTC), `limite` (1-500, por defecto 100), `desplazamiento` y `solo_vigentes` (booleano, por defecto `false`). Las más recientes primero. Cada alerta trae `justificacion`, `variables_explicativas` (REQ-005) y `fecha_estimada_riesgo` (`YYYY-MM-DD`, fecha objetivo de la predicción). Una alerta cuya predicción no tenga variables no se publica.
+
+Con `solo_vigentes=false` u omitido se conserva la selección anterior. Con `true`, antes de paginar, se exige que la alerta corresponda a la última predicción del municipio y enfermedad entre **todas** las predicciones (generación descendente y desempate por ID descendente), que la fecha objetivo sea mayor o igual a hoy UTC, y que tenga justificación no vacía y explicaciones válidas. Cada explicación debe tener una variable de texto no vacía y un peso numérico; se admiten pesos negativos y cero. Una predicción nueva sin alerta también sustituye a la anterior. Los filtros de emisión no reactivan predicciones anteriores. No se restringe el horizonte.
+
+Esta es vigencia **para planificación**: no significa pendiente de atención ni no resuelta. No se agrega un estado de resolución ni se modifica TASK-015. Se conserva el acceso autenticado de todos los roles existentes.
 
 ### `POST /admin/umbrales`
 

@@ -24,6 +24,9 @@ def listar_alertas(
         servicio_alertas.LIMITE_POR_DEFECTO, ge=1, le=servicio_alertas.LIMITE_MAXIMO
     ),
     desplazamiento: int = Query(0, ge=0),
+    solo_vigentes: bool = Query(
+        False, description="Solo alertas de la última predicción municipal por enfermedad, con fecha objetivo no vencida (UTC). No indica atención o resolución."
+    ),
     _usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -39,4 +42,5 @@ def listar_alertas(
         hasta=hasta,
         limite=limite,
         desplazamiento=desplazamiento,
+        solo_vigentes=solo_vigentes,
     )
