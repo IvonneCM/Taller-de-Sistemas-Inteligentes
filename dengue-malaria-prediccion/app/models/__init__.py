@@ -11,6 +11,9 @@ from app.models.rol import Rol  # noqa: F401
 from app.models.usuario import Usuario  # noqa: F401
 from app.models.modelo import Modelo  # noqa: F401
 from app.models.prediccion import Prediccion  # noqa: F401
+from app.models.alerta import Alerta  # noqa: F401
+from app.models.umbral_configuracion import UmbralConfiguracion  # noqa: F401
+from app.models.brote_confirmado import BroteConfirmado  # noqa: F401
 from app.models.refresh_token import RefreshToken  # noqa: F401
 
 __all__ = [
@@ -23,5 +26,8 @@ __all__ = [
     "Usuario",
     "Modelo",
     "Prediccion",
+    "Alerta",
+    "UmbralConfiguracion",
+    "BroteConfirmado",
     "RefreshToken",
 ]

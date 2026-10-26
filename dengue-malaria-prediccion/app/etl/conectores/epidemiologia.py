@@ -40,9 +40,8 @@ from sqlalchemy.orm import Session
 
 from app.models import CasoEpidemiologico, Enfermedad, Municipio
 
-FUENTE_MINSALUD = "Ministerio de Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13"
-# `casos_epidemiologicos.fuente` es VARCHAR(100): este texto debe medir <= 100.
-FUENTE_MINSALUD_SEMANAL = "Min. Salud y Deportes de Bolivia, Boletín Epidemiológico N.º 13 (serie semanal)"
+# Los nombres de fuente viven en app/etl/fuentes.py (sin pandas, para la API).
+from app.etl.fuentes import FUENTE_MINSALUD, FUENTE_MINSALUD_SEMANAL  # noqa: E402,F401
 
 # Columnas que NUNCA deben aparecer en un dataset epidemiologico (REQ-020).
 # Defensa en profundidad: el pipeline de Linea Base (Paso 2) ya valida esto

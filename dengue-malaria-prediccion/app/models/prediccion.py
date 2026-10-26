@@ -11,6 +11,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -43,6 +44,15 @@ class Prediccion(Base):
             "((fecha_generacion AT TIME ZONE 'UTC')::date + 28)",
             name="ck_prediccion_horizonte_21_28_dias",
         ),
+        CheckConstraint(
+            "jsonb_typeof(variables_explicativas) = 'array'",
+            name="ck_prediccion_variables_es_lista",
+        ),
+        # Soporta "prediccion vigente por zona" (TASK-019/020).
+        Index(
+            "ix_predicciones_municipio_enfermedad_fecha",
+            "municipio_id", "enfermedad_id", "fecha_generacion",
+        ),
     )
 
     id = Column(Integer, primary_key=True)
@@ -60,7 +70,9 @@ class Prediccion(Base):
     nivel_riesgo = Column(String(10), nullable=False)
     probabilidad_pct = Column(Numeric(5, 2), nullable=False)
     nivel_confianza = Column(String(10), nullable=False)
-    variables_explicativas = Column(JSONB, nullable=False)
+    # Lista ordenada [{"variable", "peso"}] (REQ-004). none_as_null: None se
+    # guarda como NULL de SQL (falla el NOT NULL) y no como el JSON `null`.
+    variables_explicativas = Column(JSONB(none_as_null=True), nullable=False)
 
     municipio = relationship("Municipio")
     enfermedad = relationship("Enfermedad")

@@ -189,6 +189,14 @@
 | fecha_confirmacion | DATE | NOT NULL — soporta REQ-008 y NFR-002 |
 | fuente | VARCHAR(100) | NOT NULL |
 
+**Divergencias de las tablas `predicciones`, `alertas`, `umbrales_configuracion` y `brotes_confirmados` (implementadas en TASK-019 a 023, 2026-10-26):**
+- `predicciones.fecha_generacion` y `alertas.fecha_emision` son `TIMESTAMPTZ`, igual que `fecha_ingesta`. El `CHECK` de 21 a 28 días usa la fecha en UTC (`fecha_generacion AT TIME ZONE 'UTC'`) para no depender de la zona horaria de la sesión.
+- `predicciones.variables_explicativas` es NOT NULL y un `CHECK` exige que sea una lista JSON; `None` se guarda como NULL de SQL (no como JSON `null`) para que falle el NOT NULL. Una lista vacía se admite en la BD; la regla "sin variables no hay alerta" la aplica TASK-015 y `GET /alertas` filtra las filas incompletas.
+- `alertas.justificacion` no puede ser vacía ni de solo espacios; `umbral_aplicado` 0-100.
+- `umbrales_configuracion.enfermedad_id` es NOT NULL; hay `UNIQUE (enfermedad_id, departamento_id)` con `NULLS NOT DISTINCT` (PostgreSQL 15 o superior) y `CHECK` 0-100.
+- `brotes_confirmados.municipio_id` y `enfermedad_id` son NOT NULL.
+- Índice `ix_predicciones_municipio_enfermedad_fecha` para la consulta de "predicción vigente por zona".
+
 ### `usuarios` y `roles`
 | Tabla | Campos clave |
 |---|---|
@@ -212,8 +220,16 @@
 | POST | `/datos/clima` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | POST | `/datos/casos` (ingesta) | REQ-013, REQ-014, REQ-015 | admin / proceso ETL |
 | GET | `/modelo/desempeno` | REQ-016 | epidemiólogo, admin |
+| GET | `/casos/resumen` | REQ-008, REQ-014 | todos los roles autenticados (casos observados por zona; TASK-047) |
+| GET | `/health` · `/health/ready` | NFR-003 | público (disponibilidad y base de datos; TASK-040) |
 | GET | `/departamentos` | REQ-017 | todos |
 | GET | `/enfermedades` | REQ-018 | todos |
+
+**Implementación (TASK-019 a 023):** detalle de parámetros, respuestas y la regla de correlación del historial en [`../docs/contrato_api.md`](../docs/contrato_api.md). Decisiones que este diseño no fijaba:
+- `{id}` de `/zonas/{id}/...` es el id del municipio.
+- Vista completa de `/zonas/{id}/prediccion` (variables explicativas y modelo): `epidemiologo` y `admin`; el resto recibe la resumida, que mantiene probabilidad y confianza por REQ-003. El filtrado ocurre en el servidor.
+- Umbral de alerta por defecto: 70 % (referencial, ejemplo de REQ-009) cuando el admin no configuró ninguno; `POST /admin/umbrales` crea (201) o actualiza (200).
+- La autenticación y el RBAC son los de TASK-017/018 (`app/api/deps.py`: `get_current_user`, `require_role`); los endpoints de zonas, alertas y umbrales los reutilizan sin cambios.
 
 Todas las rutas (excepto `/auth/login` y `/auth/refresh`, que validan
 credenciales o un refresh token) requieren JWT válido; el control de qué
