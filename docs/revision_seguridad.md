@@ -16,7 +16,7 @@ cd frontend && npm audit                                           # dependencia
 | Pedido | Estado | Evidencia |
 |---|---|---|
 | Ausencia de datos personales de pacientes (REQ-020) | **OK** | Control automático: 69 columnas de la base revisadas, solo `usuarios.email` (personal que opera el sistema). Los conectores rechazan columnas con datos personales (`app/etl/conectores/epidemiologia.py`) y toda la información es un conteo agregado por municipio. |
-| HTTPS en el despliegue (NFR-005) | **AVISO** (verificado el 2026-10-26 en Render) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
+| HTTPS en el despliegue (NFR-005) | **AVISO** (verificado el 2026-10-26 en Render; la corrección de HSTS ya está en código, falta redesplegar) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
 | Ninguna alerta sin justificación en la base (REQ-005) | **OK** | Control automático sobre el sistema en Docker: 2 alertas, las dos con justificación y variables explicativas. Triple barrera: restricción `CHECK` en la base, `evaluacion_alertas` y filtro de `GET /alertas`. |
 | Checklist firmado por el equipo | **Pendiente** | Ver la sección 5. |
 
@@ -35,30 +35,32 @@ cd frontend && npm audit                                           # dependencia
 | CORS | OK | No está habilitado: la interfaz llama a `/api` en el mismo origen (nginx). |
 | Dependencias de la interfaz | OK | `npm audit`: 0 vulnerabilidades (producción y herramientas de prueba). |
 
-## 3. Hallazgos que requieren decisión
+## 3. Hallazgos y su resolución
 
-| # | Hallazgo | Gravedad | Qué hacer | Quién |
+Todos los hallazgos con solución técnica se corrigieron el 2026-10-26 (rama `dilan`). Los que quedan se **aceptan por escrito**, con su motivo. Las correcciones llegan a la API desplegada cuando Render redespliega desde `main`.
+
+| # | Hallazgo | Gravedad | Estado | Qué se hizo / por qué se acepta |
 |---|---|---|---|---|
-| H-1 | **`python-multipart 0.0.9`** tiene 10 avisos de seguridad (DoS al leer formularios, entre otros). Se usa en `POST /auth/login`, que es público. | Media | Subir a `0.0.31` en `requirements-api.txt`. **Probado:** con esa versión pasan las 144 pruebas de API y extremo a extremo (se revirtió después; no se cambió ningún archivo de requisitos). | Ignacio (requirements) |
-| H-2 | **`python-jose 3.3.0`** tiene 4 avisos distintos; dos se corrigen en 3.4.0 y **dos no tienen versión corregida ni siquiera en 3.5.0**. | Baja hoy; media a futuro | Subir a 3.4.0 como mínimo y evaluar migrar a PyJWT. **Exposición real baja:** se usa solo HS256 con clave simétrica y lista fija de algoritmos, sin JWE ni claves asimétricas, y ninguno de los avisos aplica a ese uso. | Ivonne (auth) |
-| H-3 | **No hay límite de intentos de login**: se puede probar contraseñas sin freno. El login iguala el tiempo de respuesta para no revelar usuarios, pero no bloquea. | Media | Limitar intentos por correo y por IP (p. ej. en el servidor o en nginx). | Ivonne / Ignacio |
-| H-4 | **nginx no envía cabeceras de seguridad** (`X-Content-Type-Options`, `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy`) y no redirige a HTTPS. | Baja | Agregarlas en `frontend/nginx.conf`; HSTS cuando haya HTTPS. | Ignacio |
-| H-5 | **El refresh token vive en `sessionStorage`** y quedaría expuesto si hubiera un XSS (riesgo M-11). | Baja | Aceptado para el MVP; la alternativa es una cookie `HttpOnly`, que exige cambiar el login. | Equipo |
-| H-6 | **Las alertas y predicciones no son inmutables en la base**, solo en el código (NFR-009 lo acepta). | Baja | Si se quiere reforzar, un trigger que rechace `UPDATE` y `DELETE`. | Equipo |
-| H-7 | Las imágenes base de Docker no se escanearon. | Baja | Escanear con un analizador de imágenes antes del despliegue. | Ignacio |
-| H-8 | El `CMD` del Dockerfile usa `--forwarded-allow-ips='*'`: uvicorn confía en `X-Forwarded-For` de cualquier origen. Es correcto mientras la API solo sea alcanzable a través del proxy de Render. | Baja | Restringir a las IP del proxy si el hosting lo permite. | Ignacio |
-| H-9 | **Sin `Strict-Transport-Security`** en el despliegue (lo detectó el control de HTTPS). | Baja | Agregarla desde la API o el proxy cuando el dominio sea estable. | Ignacio |
+| H-1 | `python-multipart 0.0.9`: 10 avisos (DoS al leer formularios) en el login público. | Media | **Resuelto** | Subido a `0.0.31` y `starlette 1.10.0` (el aviso de DoS en formularios también estaba en Starlette). `requirements-api.txt`. |
+| H-2 | `python-jose 3.3.0`: 4 avisos, 2 sin versión corregida. | Baja hoy; media a futuro | **Resuelto** | Se migró a **PyJWT 2.15.1** (`app/core/security.py`): desaparece la dependencia con avisos sin corrección. Mismo comportamiento: solo HS256, firma, expiración, emisor y tipo de token; las pruebas de tokens manipulados y de algoritmo distinto siguen en verde. |
+| H-3 | Sin límite de intentos de login. | Media | **Resuelto** | `app/core/limite_intentos.py`: 5 intentos fallidos por correo y 20 por IP en 15 minutos; después, `429` con `Retry-After`, sin comparar la contraseña. Un login correcto borra el contador del correo. Configurable (`LOGIN_MAX_INTENTOS_EMAIL`, `LOGIN_MAX_INTENTOS_IP`, `LOGIN_VENTANA_SEGUNDOS`; `0` lo desactiva). 12 pruebas en `tests/api/test_limite_login.py`. **Límites conocidos:** el contador vive en la memoria de una instancia (con varias instancias o tras un reinicio cada una cuenta aparte), y bloquear por correo permite que alguien impida entrar a un usuario durante 15 minutos; se acepta porque lo contrario (probar claves sin freno) es peor. |
+| H-4 | nginx sin cabeceras de seguridad. | Baja | **Resuelto** | `frontend/nginx.conf`: `Content-Security-Policy` (solo este origen y las teselas de OpenStreetMap), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `server_tokens off`. Verificado en el navegador: el mapa y el login funcionan sin violaciones de la política. La API añade las suyas (`app/core/cabeceras_seguridad.py`, 5 pruebas). La redirección a HTTPS la hace Render, no nginx. |
+| H-5 | El refresh token vive en `sessionStorage` (riesgo M-11). | Baja | **Aceptado** | Mitigado por la CSP nueva (`script-src 'self'`, que dificulta un XSS), el access token solo en memoria y los refresh revocables en el servidor. La alternativa (cookie `HttpOnly`) exige rediseñar el login y queda para después del MVP. |
+| H-6 | Predicciones y alertas no son inmutables en la base, solo en el código. | Baja | **Aceptado** | NFR-009 pide inmutabilidad de aplicación. Un trigger que bloquee `UPDATE` y `DELETE` impediría también la limpieza de las pruebas y de la carga de demostración; el control automático verifica que ningún código las modifique. |
+| H-7 | Imágenes de Docker sin escanear. | Baja | **Resuelto** | Se escanearon con Trivy (graves y críticas con corrección disponible). `api` y `ml`: 0. `web` (nginx 1.27): 60 (58 graves, 2 críticas) en paquetes del sistema; se pasó a `nginx:1.30-alpine` con `apk upgrade` y quedó en 0. Las 3 imágenes: **0 graves o críticas**. Repetir con `docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --ignore-unfixed <imagen>`. |
+| H-8 | `--forwarded-allow-ips='*'` en el `CMD`. | Baja | **Aceptado** | Render no publica un rango fijo de IP de su proxy. Consecuencia: quien alcance la API directamente podría falsear `X-Forwarded-For` y evadir el límite **por IP**; el límite **por correo** no depende de eso y sigue frenando la adivinación de una cuenta. |
+| H-9 | Sin `Strict-Transport-Security`. | Baja | **Resuelto en código; falta comprobarlo en Render** | La API la envía con `ENVIRONMENT=production` (también `Content-Security-Policy` cerrada). Tras el redespliegue: `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com` debe dejar de avisar. |
 
-La API **ya está expuesta en internet** (Render). Por eso conviene resolver pronto H-1 a H-3: las dependencias con avisos y, sobre todo, el límite de intentos de login.
+**Hallazgo corregido durante esta revisión:** el límite de tiempo por consulta (TASK-040) se pasaba como parámetro de arranque de la conexión y el pooler de Neon lo rechaza ("unsupported startup parameter"), por lo que la API desplegada devolvía 503 en `/health/ready` y no podía consultar la base. Ahora se aplica con `SET LOCAL` por transacción; verificado contra Neon y en el despliegue (`scripts/smoke_test.py`: 8 de 8).
 
-**Hallazgo corregido durante esta revisión:** el límite de tiempo por consulta (TASK-040) se pasaba como parámetro de arranque de la conexión y el pooler de Neon lo rechaza ("unsupported startup parameter"), por lo que la API desplegada devolvía 503 en `/health/ready` y no podía consultar la base. Ahora se aplica con `SET LOCAL` por transacción; verificado contra Neon con consultas de solo lectura (`/health/ready` → 200) y vigilado por una prueba.
+**Dependencias tras las correcciones:** `pip-audit -r requirements-api.txt`: sin vulnerabilidades conocidas; `npm audit`: 0. Para llegar ahí hubo que subir `fastapi` de 0.115.0 a 0.162.0 (con Starlette 1.10.0): la suite completa pasó (456 pruebas de backend); el único ajuste fue una prueba que recorría `app.routes` y ahora debe tolerar el enrutador agrupado de FastAPI.
 
 ## 4. Límites de esta revisión
 
 - La búsqueda de secretos es heurística: no reemplaza a una herramienta dedicada ni revisa el historial de git.
 - No se hicieron pruebas de penetración ni de carga.
 - El Dockerfile corre como usuario sin privilegios (`appuser`), pero no se revisó el resto de la configuración del contenedor.
-- Todo se verificó **en local y en Docker**; nada se probó contra un despliegue real.
+- Las correcciones se verificaron **en local y en Docker**. Contra el despliegue real solo se corrió la prueba de humo (antes de estas correcciones); falta repetirla y el control `--url` tras redesplegar.
 
 ## 5. Firma del equipo
 

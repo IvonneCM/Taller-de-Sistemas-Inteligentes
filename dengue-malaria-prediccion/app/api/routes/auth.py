@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import get_settings
 from app.core.database import get_db
+from app.core.limite_intentos import limite_login
 from app.core.security import (
     TokenError,
     crear_access_token,
@@ -23,6 +27,7 @@ from app.models import RefreshToken, Usuario
 from app.schemas.auth import RefreshTokenRequest, TokenPair
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger("app.auth")
 
 # Hash de relleno para que un email inexistente tarde lo mismo que una
 # contrasena incorrecta y no permita enumerar usuarios por tiempo.
@@ -78,21 +83,50 @@ def _emitir_par_tokens(db: Session, usuario: Usuario) -> TokenPair:
     )
 
 
+def _bloqueado(clave: str, maximo: int) -> int:
+    return limite_login.segundos_de_espera(clave, maximo) if maximo > 0 else 0
+
+
 @router.post("/login", response_model=TokenPair)
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ) -> TokenPair:
+    ajustes = get_settings()
+    limite_login.configurar(ajustes.LOGIN_VENTANA_SEGUNDOS)
     email = form_data.username.strip()
+    clave_email = f"email:{email.lower()}"
+    clave_ip = f"ip:{request.client.host if request.client else 'desconocida'}"
+
+    espera = max(
+        _bloqueado(clave_email, ajustes.LOGIN_MAX_INTENTOS_EMAIL),
+        _bloqueado(clave_ip, ajustes.LOGIN_MAX_INTENTOS_IP),
+    )
+    if espera:
+        # Ni se compara la contrasena: un intento bloqueado no da pistas. No se
+        # registra el correo en el log.
+        logger.warning("Login bloqueado por demasiados intentos fallidos (ip=%s)", clave_ip[3:])
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Demasiados intentos fallidos. Intenta de nuevo mas tarde.",
+            headers={"Retry-After": str(espera)},
+        )
+
     usuario = _buscar_usuario_por_email(db, email)
 
     if usuario is None:
         verify_password(form_data.password, _HASH_RELLENO)
+        limite_login.registrar_fallo(clave_email)
+        limite_login.registrar_fallo(clave_ip)
         raise _credenciales_invalidas()
 
     if not verify_password(form_data.password, usuario.password_hash):
+        limite_login.registrar_fallo(clave_email)
+        limite_login.registrar_fallo(clave_ip)
         raise _credenciales_invalidas()
 
+    limite_login.olvidar(clave_email)
     return _emitir_par_tokens(db, usuario)
 
 

@@ -12,7 +12,7 @@ Guía para la 2.ª Defensa (Demostración del MVP y Sprint Review 2). La regla d
 | 2 | **Probar en la máquina de la demo**, no solo en la propia | Se ejecuta la sección 2 completa desde cero |
 | 3 | **Correr las pruebas** y registrar el resultado real | `pytest -q` y `npm test`; anotar cuántas pasan y cuáles fallan |
 | 4 | **Datos autorizados:** usar solo los CSV del repositorio (sin datos de pacientes) | Revisar `data/processed` |
-| 5 | **Preparar el Plan B** (sección 5) | Existe el respaldo y la grabación |
+| 5 | **Preparar el Plan B** (sección 5) | Existe el respaldo de la base y el registro real de pruebas |
 | 6 | **Ensayar** con cronómetro, todo el equipo | Cada persona puede explicar el sistema integrado, no solo su parte |
 
 ## 2. Poner el sistema en marcha desde cero
@@ -104,11 +104,11 @@ Caso principal: **una autoridad de salud entra, ve el riesgo y un epidemiólogo 
 | La interfaz o la API | Reiniciar con la sección 2 (2 min). Si no arranca, mostrar el **log del error** y pasar al respaldo |
 | La base de datos | Restaurar el respaldo: `pg_restore -d dengue_malaria respaldo_demo.dump` |
 | El despliegue o la red | Se defiende en local; el despliegue es un riesgo declarado (M-10) |
-| Todo lo anterior | Mostrar la **grabación de una ejecución real**, diciendo explícitamente que es una grabación |
+| Todo lo anterior | Mostrar el **respaldo**: restaurar la base y los resultados reales de las pruebas, y decir que la demo en vivo no pudo hacerse. No se sustituye la demostración por capturas |
 
 Qué preparar:
 - **Respaldo de base:** con el sistema funcionando, `pg_dump -Fc dengue_malaria > respaldo_demo.dump` (guardarlo fuera del repositorio).
-- **Grabación real:** grabar la pantalla de una ejecución completa de la sección 4 el día del ensayo. No se edita ni se reemplaza por capturas.
+- **Grabación (opcional):** la guía de defensa **no la exige**; pide una demostración en vivo y un respaldo que no maquille la realidad. Si el equipo quiere una grabación de pantalla sin editar como último recurso, es un extra, nunca un reemplazo de la demo.
 - **Registro de pruebas:** guardar la salida real de `pytest` y `npm test`, incluidas las fallas si las hubiera.
 
 Un Plan B que oculta un error es un antipatrón fatal. Si una prueba falla el día de la defensa, **se dice**, se muestra el resultado real y se explica el porqué.
@@ -121,12 +121,12 @@ Un Plan B que oculta un error es un antipatrón fatal. Si una prueba falla el d�
 - **¿Qué es un brote aquí?** Todavía no hay una definición epidemiológica; la etiqueta es "al menos un caso en 3 semanas".
 - **¿Por qué los cuadrados en el mapa?** Son referenciales (≈ 5 km); no tenemos los polígonos oficiales del INE.
 - **¿Hay datos de pacientes?** No: solo conteos agregados por municipio y semana.
-- **¿Qué falta?** Despliegue en la nube, tarea semanal automática (TASK-016), fuente de brotes confirmados y las vistas de priorización de campañas.
+- **¿Qué falta?** Una fuente de brotes confirmados (sin ella no se pueden validar NFR-001 y NFR-002), más datos y años para el modelo, polígonos oficiales y la validación de las reglas de campañas con SEDES. El despliegue (Render + Neon), la tarea semanal y las vistas de campañas ya están hechos.
 
 ## 7. Checklist del día
 
 - [ ] Versión congelada (tag) y todos con el mismo commit
 - [ ] `smoke_test.py` en verde en la máquina de la demo
-- [ ] Respaldo de base y grabación real listos
+- [ ] Respaldo de la base listo (`pg_restore` probado) y resultado real de las pruebas guardado
 - [ ] Resultado real de `pytest` y `npm test` a mano
 - [ ] Cada integrante puede explicar el flujo completo

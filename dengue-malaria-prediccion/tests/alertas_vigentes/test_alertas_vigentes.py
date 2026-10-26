@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from uuid import uuid4
 
-FALTANTES = [p for p in ("fastapi", "sqlalchemy", "psycopg2", "geoalchemy2", "bcrypt", "httpx", "jose") if importlib.util.find_spec(p) is None]
+FALTANTES = [p for p in ("fastapi", "sqlalchemy", "psycopg2", "geoalchemy2", "bcrypt", "httpx", "jwt") if importlib.util.find_spec(p) is None]
 URL = os.getenv("GATOBYTE_TEST_DATABASE_URL")
 
 

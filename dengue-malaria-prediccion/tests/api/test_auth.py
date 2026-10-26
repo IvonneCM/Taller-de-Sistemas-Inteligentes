@@ -3,7 +3,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 from sqlalchemy import select
 
 from app.core.security import decodificar_token
