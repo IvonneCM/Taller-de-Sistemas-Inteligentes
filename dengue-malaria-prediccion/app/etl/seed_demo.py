@@ -17,8 +17,12 @@ Pasos (cada uno es idempotente salvo el ultimo, ver abajo):
 Que NO se inventa (CLAUDE.md regla 1):
   - No hay predicciones de malaria: no existe modelo de malaria (solo hay
     acumulados SE1-13, ADR-005). La malaria se muestra con casos observados.
-  - No se cargan brotes confirmados ni alertas: no hay fuente de brotes y las
-    alertas las crea evaluacion_alertas (TASK-015) con sus reglas.
+  - No se cargan brotes confirmados: no hay fuente de brotes.
+  - Las alertas NO se inventan: las crea evaluacion_alertas (TASK-015) con el
+    umbral vigente (70 % por defecto, valor referencial de REQ-009). Con las
+    predicciones actuales (15 a 44 %) no se emite ninguna; para ver alertas, un
+    admin baja el umbral (POST /admin/umbrales) y se ejecuta
+    `python -m app.ml.evaluacion_alertas`.
   - La fecha de generacion es la del momento de ejecucion (o `--fecha`), no la
     de los datos: el panel cubre SE1-13 de 2026.
 
@@ -124,7 +128,7 @@ def sembrar_demo(
                 directorio=directorio,
             )
             resumen = prediccion.persistir_predicciones(
-                calculadas, modelo_id=modelo_id, session=db
+                calculadas, modelo_id=modelo_id, session=db, evaluar_alertas=True
             )
 
         if propio:
@@ -137,6 +141,7 @@ def sembrar_demo(
             "predicciones_insertadas": len(resumen["insertadas"]),
             "predicciones_omitidas": resumen["omitidas"],
             "predicciones_no_publicadas": resumen["no_publicadas"],
+            "alertas_emitidas": (resumen.get("alertas") or {}).get("total_creadas", 0),
             "motivo_sin_predicciones": resumen.get("motivo"),
         }
     except Exception:
@@ -178,7 +183,8 @@ def main(argv: list[str] | None = None) -> int:
     if resultado["predicciones_omitidas"]:
         fuera = len(resultado["predicciones_omitidas"])
         print(f"Omitidas (fuera de la zona piloto del catalogo): {fuera}")
-    print("Malaria: sin predicciones (no hay modelo; ver ADR-005). Brotes y alertas: no se cargan.")
+    print(f"Alertas emitidas con el umbral vigente: {resultado['alertas_emitidas']}")
+    print("Malaria: sin predicciones (no hay modelo; ver ADR-005). Brotes confirmados: no se cargan.")
     return 0
 
 

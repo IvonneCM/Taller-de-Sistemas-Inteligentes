@@ -29,8 +29,7 @@ casos observados** (no hay serie semanal, así que no hay modelo; ver
 a 3 semanas**. Para recorrerlo y defenderlo paso a paso, ver
 [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md); la arquitectura
 real está en [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md).
-Faltan, entre otras cosas, el despliegue (TASK-004), la generación automática de
-alertas (TASK-015), la tarea semanal (TASK-016) y la priorización de campañas
+Faltan, entre otras cosas, el despliegue (TASK-004), la tarea semanal (TASK-016) y la priorización de campañas
 (TASK-024/025/031). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
@@ -228,8 +227,10 @@ uvicorn app.main:app --port 8000
 SMOKE_EMAIL=autoridad@demo.local SMOKE_PASSWORD="$SEED_DEMO_PASSWORD" python scripts/smoke_test.py
 ```
 
-No carga predicciones de malaria (no hay modelo), ni brotes confirmados, ni
-alertas: no existen esas fuentes. El script de humo (`scripts/smoke_test.py`)
+No carga predicciones de malaria (no hay modelo) ni brotes confirmados: no
+existen esas fuentes. Las alertas las crea `evaluacion_alertas` con el umbral
+vigente (70 % por defecto), así que hoy no se emite ninguna hasta que un admin lo
+baje con `POST /admin/umbrales`. El script de humo (`scripts/smoke_test.py`)
 sirve también contra un despliegue (`SMOKE_URL=https://…`).
 
 ### Interfaz web
@@ -267,7 +268,7 @@ alembic check
 ```
 
 `pytest` necesita la base de datos del paso "Configuración" y un `.env` con
-`SECRET_KEY`. Estado verificado el 2026-10-26: **284 tests del backend** y
+`SECRET_KEY`. Estado verificado el 2026-10-26: **298 tests del backend** y
 **104 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
 (`pytest --cov=app/etl --cov=app/ml`). Los tests necesitan `DATABASE_URL`
 apuntando a una base con las migraciones aplicadas. Cada test corre dentro de

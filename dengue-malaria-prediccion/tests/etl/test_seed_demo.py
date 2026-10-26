@@ -58,11 +58,29 @@ def test_crea_los_cinco_usuarios_demo(db_session, demo):
     assert _contar(db_session, Usuario) == 5
 
 
-def test_no_inventa_malaria_brotes_ni_alertas(db_session, demo):
+def test_no_inventa_malaria_brotes_ni_alertas_con_el_umbral_por_defecto(db_session, demo):
     enfermedades = {p.enfermedad.nombre for p in db_session.execute(select(Prediccion)).scalars()}
     assert enfermedades == {"dengue"}
     assert _contar(db_session, BroteConfirmado) == 0
     assert _contar(db_session, Alerta) == 0
+
+
+def test_con_un_umbral_bajo_la_evaluacion_real_emite_alertas_justificadas(db_session, catalogo):
+    from app.services.umbrales import configurar_umbral
+
+    dengue = catalogo["enfermedades"]["dengue"]
+    configurar_umbral(db_session, enfermedad_id=dengue.id, departamento_id=None,
+                      umbral_probabilidad_pct=40)
+
+    resultado = sembrar_demo(password=CLAVE_DEMO, db=db_session)
+
+    alertas = db_session.execute(select(Alerta)).scalars().all()
+    assert resultado["alertas_emitidas"] == len(alertas) > 0
+    for alerta in alertas:
+        assert alerta.prediccion.probabilidad_pct >= 40  # solo las que superan el umbral
+        assert alerta.umbral_aplicado == 40
+        assert alerta.justificacion.strip()               # REQ-005
+        assert len(alerta.prediccion.variables_explicativas) >= 1
 
 
 def test_ejecutar_dos_veces_no_duplica_predicciones(db_session, demo):

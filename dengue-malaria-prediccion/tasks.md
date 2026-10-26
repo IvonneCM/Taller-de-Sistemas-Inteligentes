@@ -3,18 +3,17 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local (datos
-> reales → ingesta → modelo → API con login por rol → interfaz web). Hechas:
-> la capa de datos (TASK-005 a 010), el baseline (012), el motor de predicción y
-> la autenticación (014, 017, 018), la API de zonas, alertas y casos
-> (019 a 022, 047), las pruebas y la cobertura (032), el manejo de errores
-> (040) y parte de la Fase 7 de integración y defensa (037 a 044, 047, 048).
+> ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
+> (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
+> web) y la CI de GitHub está en verde. Hechas: la capa de datos (005 a 010), el
+> baseline (012), el motor de predicción, las alertas y la autenticación (014,
+> 015, 017, 018), la API (019 a 023, 047), las pruebas y la cobertura (032), el
+> manejo de errores (040) y casi toda la Fase 7 (037 a 044, 046 a 048).
 > **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta decidir
-> proveedor), la generación de alertas (TASK-015, de la que depende cerrar la
-> 023) y una fuente de brotes confirmados. La guía de defensa pide además el
-> tag de versión (041), el ensayo con el Plan B (045) y la CI verificada (046).
-> Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
-> porque no existe serie semanal (ADR-005).
+> proveedor) y una fuente de brotes confirmados. Faltan además el tag de versión
+> (041), el ensayo con el Plan B (045), la tarea semanal (016) y las vistas de
+> priorización (024, 025, 031). Dengue se predice a 3 semanas; **malaria se
+> muestra con casos observados** porque no existe serie semanal (ADR-005).
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -271,11 +270,11 @@ calor navegables.*
       Fase 2.
       *Estado 2026-10-26 (sin marcar):* existe la vista de historial para técnicos (`Historial.jsx`) con predicciones, brote confirmado y la regla de comparación. **Faltan el filtro por rango de fechas en pantalla** (la API ya lo soporta) **y datos de brotes confirmados** (sin fuente, riesgo M-08), así que hoy ninguna predicción aparece como acertada.
 
-- [ ] **TASK-030** [REQ-009] Implementar panel de alertas activas con
+- [x] **TASK-030** [REQ-009] Implementar panel de alertas activas con
       justificación visible (variables explicativas).
       *Verificación:* prueba manual — cada alerta mostrada incluye al menos
       una variable explicativa (nunca una alerta "vacía").
-      *Estado 2026-10-26 (sin marcar):* el panel existe (`Alertas.jsx`) y, con datos de prueba, cada alerta muestra su justificación y variables (nunca una alerta vacía; `App.test.jsx`). Sin alertas en la base (falta TASK-015) solo se ve el estado vacío, así que no se pudo hacer la prueba manual del criterio.
+      *Verificado 2026-10-26:* prueba manual en el navegador contra el sistema en Docker: con el umbral de dengue bajado a 40 % (`POST /admin/umbrales`) y `python -m app.ml.evaluacion_alertas` (TASK-015), el panel muestra las dos alertas reales (Guayaramerín 44 % e Ixiamas 43 %), cada una con su justificación y las variables que la explican (nunca una alerta vacía). Sin alertas muestra el estado vacío. Cubierto también por `frontend/src/test/App.test.jsx` y `tests/e2e/test_flujo_completo.py`.
 
 - [ ] **TASK-031** [REQ-011, REQ-012] Implementar vista de priorización de
       campañas de fumigación y recomendación de recursos por municipio.
@@ -294,7 +293,7 @@ considerarse listo para el piloto.*
       en esos módulos.
       *Verificación:* `pytest --cov=app/etl --cov=app/ml` reporta ≥ 70%.
       *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
-      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (284 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
+      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (298 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
 
 - [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.
@@ -399,10 +398,10 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       *Depende de:* TASK-038/039. *Verificación:* ensayo completo cronometrado.
       *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Falta el ensayo cronometrado del equipo, la grabación real de una ejecución y el respaldo de base** (se preparan con el sistema final).
 
-- [ ] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
+- [x] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
       `pytest` (con PostGIS) en cada PR. *Persona sugerida:* Ignacio.
       *Verificación:* check verde en un PR.
-      *Estado 2026-10-26 (sin marcar):* `.github/workflows/ci.yml` escrito (backend con PostGIS real y cobertura mínima de 70 %, y frontend con pruebas y build); YAML validado. **No se ha ejecutado en GitHub**: se marca cuando haya un check verde en un PR.
+      *Verificado 2026-10-26:* `.github/workflows/ci.yml` se ejecutó en GitHub al subir `dilan` (run 40277147552): **Interfaz (vitest + build) en verde en 15 s y Backend (pytest + PostGIS 3.4) en verde en 2 min 48 s**, con migraciones, `alembic check` y cobertura mínima de 70 %. Aviso de GitHub (no falla): `actions/checkout@v4` y `setup-node@v4` usan Node 20, en retirada.
 
 - [x] **TASK-047** [REQ-008, REQ-014] `GET /casos/resumen`: casos observados
       por municipio y enfermedad (total, rango de fechas, granularidad y

@@ -76,6 +76,39 @@ def test_flujo_completo_desde_el_boletin_hasta_la_respuesta_por_rol(sistema):
     assert client.get(historial, headers=epidemiologo).status_code == 200
 
 
+def test_el_admin_baja_el_umbral_y_la_siguiente_evaluacion_emite_alertas(sistema, db_session):
+    """REQ-010 de punta a punta: el cambio de umbral rige en la siguiente
+    evaluacion, sin redeploy, y las alertas llevan su justificacion (REQ-005)."""
+    from app.ml.evaluacion_alertas import evaluar_alertas_pendientes
+
+    client = sistema
+    admin = _entrar(client, "admin@demo.local")
+    autoridad = _entrar(client, "autoridad@demo.local")
+    zonas = client.get("/zonas/riesgo", headers=autoridad).json()
+    dengue_id = zonas[0]["enfermedad_id"]
+
+    # Con el umbral por defecto (70 %) ninguna prediccion (15 a 44 %) alerta.
+    assert client.get("/alertas", headers=autoridad).json() == []
+
+    respuesta = client.post(
+        "/admin/umbrales", headers=admin,
+        json={"enfermedad_id": dengue_id, "umbral_probabilidad_pct": 40},
+    )
+    assert respuesta.status_code == 201
+
+    resumen = evaluar_alertas_pendientes(db_session)
+
+    alertas = client.get("/alertas", headers=autoridad).json()
+    sobre_umbral = [z for z in zonas if z["probabilidad_pct"] >= 40]
+    assert resumen["total_creadas"] == len(alertas) == len(sobre_umbral) > 0
+    for alerta in alertas:
+        assert alerta["umbral_aplicado"] == 40
+        assert "supera el umbral configurado (40.0%)" in alerta["justificacion"]
+        assert len(alerta["variables_explicativas"]) >= 1
+    # Una zona bajo el umbral sigue sin alerta.
+    assert {a["municipio_id"] for a in alertas} == {z["municipio_id"] for z in sobre_umbral}
+
+
 def test_sin_sesion_no_se_ve_nada(sistema):
     for ruta in ("/zonas/riesgo", "/casos/resumen", "/alertas"):
         assert sistema.get(ruta).status_code == 401

@@ -40,10 +40,14 @@ export function Alertas() {
             Probabilidad de <strong>{formatearPorcentaje(alerta.probabilidad_pct)}</strong>, sobre el
             umbral de {formatearPorcentaje(alerta.umbral_aplicado)}.
           </p>
-          <p className="fila-texto">{alerta.justificacion}</p>
-          <p className="nota">
-            Variables: {alerta.variables_explicativas.slice(0, 3).map((v) => etiquetaVariable(v.variable)).join(" · ")}
+          <p className="fila-texto">
+            <strong>Qué la explica:</strong>{" "}
+            {alerta.variables_explicativas.slice(0, 3).map((v) => etiquetaVariable(v.variable)).join(" · ")}.
           </p>
+          <details className="mas">
+            <summary>Justificación completa del modelo</summary>
+            <p>{alerta.justificacion}</p>
+          </details>
         </article>
       ))}
     </section>

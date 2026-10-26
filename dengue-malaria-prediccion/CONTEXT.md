@@ -227,7 +227,7 @@ backlog de la sección 5.
 
 ### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
 
-**Estado:** implementado y verificado en local: **284 tests del backend, 104 de la
+**Estado:** implementado y verificado en local: **298 tests del backend, 104 de la
 interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
 Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
 exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
@@ -263,10 +263,10 @@ vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
 
 **Pendientes (no son de esta sesión)**
 1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
-2. TASK-015 `evaluacion_alertas` (cierra la 023; sin ella no hay alertas) y TASK-016.
+2. TASK-016 (tarea semanal). TASK-015 ya la entregó Ivonne y está integrada: con el umbral por defecto (70 %) ninguna predicción alerta; el equipo de salud debe fijar el umbral real.
 3. Fuente de `brotes_confirmados` (riesgo M-08).
 4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla.
-5. TASK-041 (tag), 045 (ensayo, grabación, respaldo), 046 (ver el check verde en un PR).
+5. TASK-041 (tag) y 045 (ensayo, grabación, respaldo). La CI (046) ya corrió en verde en GitHub.
 6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
    `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.
 

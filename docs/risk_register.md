@@ -346,13 +346,13 @@ inicial: la complementa con lo que se aprendió al construir el MVP.
 | M-06 | **Zona piloto de 4 municipios**: el resto del país no está implementado (REQ-017). | Alcance acordado | Ampliar el catálogo con polígonos oficiales | `contrato_esquema_bd.md` |
 | M-07 | **Datos provisionales y con retraso de reporte**: la última semana muestra ~39 % de los casos que terminan reportándose. | Abierto | Marcar datos como provisionales; no tratar la última semana como definitiva | `contrato_esquema_bd.md` |
 | M-08 | **Brotes confirmados sin fuente**: la tabla existe pero nadie la carga; el historial y la validación retrospectiva (TASK-034) quedan sin evidencia. | Abierto — decisión pendiente del equipo | Definir de dónde salen los brotes confirmados | `design.md` §3 |
-| M-09 | **Alertas aún no se generan**: falta `evaluacion_alertas` (TASK-015). La regla de "sin variable explicativa no hay alerta" está en la base y en la API, pero nada emite alertas. | Abierto | Implementar TASK-015 usando `obtener_umbral` | `tasks.md` |
+| M-09 | **Las alertas dependen del umbral y del modelo**: `evaluacion_alertas` (TASK-015) ya las genera, pero con el umbral por defecto (70 %, referencial) ninguna de las predicciones actuales (15 a 44 %) alerta. La regla «sin variable explicativa no hay alerta» está en la base, en el módulo y en la API. | Resuelto en código; el umbral real lo define el equipo de salud | Un admin lo cambia con `POST /admin/umbrales` y rige en la siguiente evaluación | `app/ml/evaluacion_alertas.py`, `tests/e2e/test_flujo_completo.py` |
 | M-10 | **Despliegue en la nube pendiente** (TASK-004): sin HTTPS verificado en un entorno real. | Abierto — decisión de proveedor pendiente | Decidir proveedor y probar con `scripts/smoke_test.py` | `tasks.md`, ADR-003 |
 | M-11 | **Sesión del navegador**: el refresh token se guarda en `sessionStorage` para no pedir contraseña al recargar; queda expuesto si hubiera XSS. | Aceptado para el MVP | Access token solo en memoria, refresh revocable en el servidor, sin datos de pacientes | `frontend/src/api.js` |
 | M-12 | **Clima de dos fuentes**: SENAMHI (observado) y NASA POWER (modelado) no son equivalentes. | Declarado | Comparación documentada en el contrato de datos | `contrato_esquema_datos_procesados.md` §7bis |
 | M-13 | **Confianza de la predicción** mide la proporción de datos climáticos faltantes o imputados (NFR-007); **no** mide qué tan bien acierta el modelo. | Declarado en la interfaz ("Confianza de los datos") | No leerla como probabilidad de acierto | `app/ml/prediccion.py` |
 | M-14 | **Sin datos de pacientes**: todo es conteo agregado por municipio. Es una protección, y también un límite (no hay detalle individual). | Por diseño (REQ-020) | — | `privacidad_datos.md` |
 
-Los riesgos M-08, M-09 y M-10 bloquean parte de la demostración completa; el
+Los riesgos M-08 y M-10 bloquean parte de la demostración completa; el
 resto son límites que deben decirse en voz alta durante la defensa.
 

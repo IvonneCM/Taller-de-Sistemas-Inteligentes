@@ -112,7 +112,7 @@ Cada respuesta lleva `X-Request-ID` (se acepta el del cliente si es `[A-Za-z0-9.
 
 ## Lo que esta API todavía no hace
 
-- No genera alertas: falta `evaluacion_alertas` (TASK-015). La tabla y `GET /alertas` existen; hoy no hay alertas emitidas.
+- No genera alertas: las crea el job `app/ml/evaluacion_alertas.py` (TASK-015) con el umbral vigente (`obtener_umbral`); la API solo las lista. Con el umbral por defecto (70 %) las predicciones actuales no alertan: un admin lo cambia con `POST /admin/umbrales` y se ejecuta `python -m app.ml.evaluacion_alertas`.
 - No hay predicciones de malaria (no existe modelo; ADR-005) ni se cargan brotes confirmados (no hay fuente), así que el historial no muestra brotes.
 - No expone la ingesta (`POST /datos/...` de `design.md` §4): los datos entran por comando (`python -m app.etl.seed_demo`).
 - No restringe por `municipio_asignado_id`: un coordinador municipal ve todas las zonas; el diseño no lo pide.

@@ -43,7 +43,7 @@ SMOKE_EMAIL=autoridad@demo.local SMOKE_PASSWORD="$SEED_DEMO_PASSWORD" python scr
 cd frontend && npm ci && npm run dev      # http://localhost:5173
 ```
 
-`seed_demo` carga los casos reales del Boletín N.º 13, registra el modelo, genera las predicciones con el pipeline real y crea cinco usuarios `@demo.local` (uno por rol). **No** carga malaria predicha, brotes ni alertas, porque no existen esas fuentes (ver riesgos M-03, M-08 y M-09).
+`seed_demo` carga los casos reales del Boletín N.º 13, registra el modelo, genera las predicciones con el pipeline real y crea cinco usuarios `@demo.local` (uno por rol). **No** carga malaria predicha ni brotes confirmados, porque no existen esas fuentes (riesgos M-03 y M-08). Las alertas las crea `evaluacion_alertas` con el umbral vigente: con el 70 % por defecto no se emite ninguna (las predicciones son de 15 a 44 %), y eso es lo correcto.
 
 > **Mac:** `requirements-ml.txt` pide `xgboost-cpu`, que no tiene versión para macOS. Instalar `xgboost==2.1.1` y el resto a mano.
 
@@ -85,8 +85,9 @@ Caso principal: **una autoridad de salud entra, ve el riesgo y un epidemiólogo 
 2. **Malaria (vista de entrada).** Aparecen **450 casos acumulados** en 3 municipios (Guayaramerín 293, Ixiamas 156, San Buenaventura 1). Señalar el aviso: *no hay predicción de malaria* y por qué (ADR-005).
 3. **Dengue.** Cambiar a Dengue: probabilidades por municipio (en la corrida del 2026-10-26: Guayaramerín 44 %, Ixiamas 43 %, Palos Blancos 23 %, San Buenaventura 15 %; pueden variar si se reentrena). Elegir una zona: la autoridad ve el resumen y la invitación a pedir el detalle técnico.
 4. **Otro rol.** Salir y entrar como `epidemiologo@demo.local`: ahora aparecen "Qué influyó en esta predicción" y la pestaña **Historial**. Es el mismo dato con respuesta distinta **desde el servidor** (no se oculta en pantalla).
-5. **Prueba extremo a extremo.** En la terminal: `pytest tests/e2e -q`. Recorre el mismo camino automáticamente.
-6. **Manejo de errores y diagnóstico** (la guía lo exige en vivo):
+5. **Alertas y umbral configurable (REQ-010).** Como admin (`admin@demo.local`): `curl -X POST localhost:8000/admin/umbrales -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"enfermedad_id": <id de dengue>, "umbral_probabilidad_pct": 40}'` y luego `python -m app.ml.evaluacion_alertas`. En la pestaña **Alertas** aparecen las zonas sobre el 40 % (Guayaramerín e Ixiamas en la corrida del 2026-10-26) con su justificación y variables. Las alertas son inmutables: para repetir la demo desde cero hay que restaurar el respaldo.
+6. **Prueba extremo a extremo.** En la terminal: `pytest tests/e2e -q`. Recorre el mismo camino automáticamente.
+7. **Manejo de errores y diagnóstico** (la guía lo exige en vivo):
    - Entrada inválida: `curl -s -X POST localhost:8000/auth/login -d "username=x"` → 422 sin devolver lo enviado.
    - Dependencia caída, sin tocar la base real: levantar otra API apuntando a un puerto vacío y consultar su estado.
      ```bash
@@ -120,7 +121,7 @@ Un Plan B que oculta un error es un antipatrón fatal. Si una prueba falla el d�
 - **¿Qué es un brote aquí?** Todavía no hay una definición epidemiológica; la etiqueta es "al menos un caso en 3 semanas".
 - **¿Por qué los cuadrados en el mapa?** Son referenciales (≈ 5 km); no tenemos los polígonos oficiales del INE.
 - **¿Hay datos de pacientes?** No: solo conteos agregados por municipio y semana.
-- **¿Qué falta?** Despliegue en la nube, alertas automáticas (TASK-015), tarea semanal (TASK-016), fuente de brotes confirmados y las vistas de priorización de campañas.
+- **¿Qué falta?** Despliegue en la nube, tarea semanal automática (TASK-016), fuente de brotes confirmados y las vistas de priorización de campañas.
 
 ## 7. Checklist del día
 
