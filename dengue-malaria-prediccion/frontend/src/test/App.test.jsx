@@ -55,13 +55,27 @@ const prediccion = (vista) => ({
   }],
 });
 
-function simular({ rol = "epidemiologo", alertas = [], fallo = null } = {}) {
+const PRIORIDAD = (id, municipio, posicion, nivel, prob) => ({
+  prediccion_id: 10 + posicion, municipio_id: id, municipio, departamento_id: 1, departamento: "BENI",
+  enfermedad_id: 1, enfermedad: "dengue", horizonte_semanas: 3, probabilidad_pct: prob, nivel_riesgo: nivel,
+  nivel_confianza: "alto", fecha_generacion: "2026-10-26T12:00:00Z", fecha_estimada_riesgo: "2026-11-16", posicion,
+});
+const RANKING = [PRIORIDAD(1, "GUAYARAMERIN", 1, "alto", 71.2), PRIORIDAD(2, "IXIAMAS", 2, "medio", 43.17)];
+const RECURSOS = {
+  ...RANKING[0], nivel_atencion: "PRIORITARIO",
+  recomendaciones: ["Reforzar vigilancia epidemiológica.", "Priorizar campañas preventivas."],
+  nota: "Los umbrales de riesgo y las recomendaciones son decisiones provisionales del MVP.",
+};
+
+function simular({ rol = "epidemiologo", alertas = [], fallo = null, ranking = RANKING } = {}) {
   restaurarSesion.mockResolvedValue({ id: 1, rol });
   pedir.mockImplementation(async (ruta) => {
     if (fallo && ruta === fallo.ruta) throw fallo.error;
     if (ruta === "/casos/resumen") return CASOS;
     if (ruta === "/zonas/riesgo") return RIESGO;
     if (ruta === "/alertas") return alertas;
+    if (ruta === "/campanas/priorizacion") return ranking;
+    if (/^\/municipios\/\d+\/recursos$/.test(ruta)) return RECURSOS;
     if (ruta === "/zonas/1/prediccion") return prediccion(["epidemiologo", "admin"].includes(rol) ? "completa" : "resumida");
     if (ruta === "/zonas/1/historial") return { predicciones: [], brotes_confirmados: [], ventana_correlacion_dias: 7 };
     throw new Error(`ruta no simulada: ${ruta}`);
@@ -182,6 +196,54 @@ describe("vistas y permisos", () => {
     expect(await screen.findByText("Lluvia reciente y casos en alza.")).toBeInTheDocument();
     expect(screen.getByText(/Precipitación, hace 2 semanas/)).toBeInTheDocument();
     expect(screen.getByText("82 %")).toBeInTheDocument();
+  });
+});
+
+describe("campañas y recursos (TASK-031)", () => {
+  it("la pestaña Campañas solo aparece para SEDES y coordinación municipal", async () => {
+    for (const [rol, aparece] of [["sedes", true], ["coordinador_municipal", true], ["autoridad", false], ["epidemiologo", false], ["admin", false]]) {
+      simular({ rol });
+      const { unmount } = render(<App />);
+      await screen.findByRole("tab", { name: "Alertas" });
+      expect(screen.queryByRole("tab", { name: "Campañas" }) !== null, rol).toBe(aparece);
+      unmount();
+    }
+  });
+
+  it("SEDES ve el orden de prioridad, sin recomendaciones por municipio", async () => {
+    simular({ rol: "sedes" });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Campañas" }));
+
+    const lista = await screen.findByRole("list");
+    const filas = within(lista).getAllByRole("listitem");
+    expect(filas).toHaveLength(2);
+    expect(filas[0]).toHaveTextContent("Guayaramerín");
+    expect(filas[0]).toHaveTextContent("71 %");
+    expect(filas[0]).toHaveTextContent("Riesgo alto");
+    expect(within(filas[0]).getByLabelText("Posición 1")).toBeInTheDocument();
+    expect(within(lista).queryByRole("button")).not.toBeInTheDocument(); // no hay acción: SEDES no consulta recursos
+    expect(screen.getByText(/recomendaciones de atención por municipio las consulta la coordinación/)).toBeInTheDocument();
+    expect(pedir).not.toHaveBeenCalledWith(expect.stringMatching(/recursos/), expect.anything());
+    expect(screen.getByText(/no son\s+protocolos oficiales de SEDES/)).toBeInTheDocument();
+  });
+
+  it("la coordinación municipal ve las recomendaciones de su municipio", async () => {
+    simular({ rol: "coordinador_municipal", ranking: [RANKING[0]] });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Campañas" }));
+
+    expect(await screen.findByText("Reforzar vigilancia epidemiológica.")).toBeInTheDocument();
+    expect(screen.getByText("Priorizar campañas preventivas.")).toBeInTheDocument();
+    expect(screen.getByText(/Atención prioritaria/)).toBeInTheDocument();
+    expect(screen.getByText(/decisiones provisionales del MVP/)).toBeInTheDocument();
+  });
+
+  it("sin predicciones vigentes explica qué falta, sin cifras inventadas", async () => {
+    simular({ rol: "sedes", ranking: [] });
+    render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Campañas" }));
+    expect(await screen.findByText("No hay zonas para priorizar")).toBeInTheDocument();
   });
 });
 

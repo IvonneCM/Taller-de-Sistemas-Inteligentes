@@ -5,15 +5,17 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas: la capa de datos (005 a 010), el
-> baseline (012), el motor de predicción, las alertas y la autenticación (014,
-> 015, 017, 018), la API (019 a 023, 047), las pruebas y la cobertura (032), el
-> manejo de errores (040) y casi toda la Fase 7 (037 a 044, 046 a 048).
-> **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta decidir
-> proveedor) y una fuente de brotes confirmados. Faltan además el tag de versión
-> (041), el ensayo con el Plan B (045), la tarea semanal (016) y las vistas de
-> priorización (024, 025, 031). Dengue se predice a 3 semanas; **malaria se
-> muestra con casos observados** porque no existe serie semanal (ADR-005).
+> web) y la CI de GitHub está en verde. Hechas 35 de 48: la capa de datos (005 a
+> 010), el baseline (012), el motor de predicción, las alertas y la autenticación
+> (014, 015, 017, 018), toda la API (019 a 025, 047), las pruebas y la cobertura
+> (032), el manejo de errores (040), la vista de campañas (031) y casi toda la
+> Fase 7. **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta
+> decidir proveedor) y una fuente de brotes confirmados. Faltan además la tarea
+> semanal (016), `/modelo/desempeno` (026), la prueba de carga (033), la
+> validación retrospectiva (034), la revisión de seguridad (035), las
+> limitaciones del informe (036), el tag (041) y el ensayo con el Plan B (045).
+> Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
+> porque no existe serie semanal (ADR-005).
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -228,15 +230,17 @@ control de acceso por rol.*
       llamada a `evaluacion_alertas` (TASK-015).
       *Verificado 2026-10-26:* `app.services.umbrales.obtener_umbral` es consumido directamente por `app/ml/evaluacion_alertas.py` (TASK-015). Verificado en `tests/ml/test_evaluacion_alertas.py::test_req010_cambio_dinamico_de_umbral` y `tests/api/test_admin_umbrales.py`.
 
-- [ ] **TASK-024** [REQ-011] Implementar `GET /campanas/priorizacion`
+- [x] **TASK-024** [REQ-011] Implementar `GET /campanas/priorizacion`
       (zonas ordenadas por riesgo y proximidad de fecha estimada).
       *Verificación:* test de integración valida el orden esperado dado un
       conjunto de predicciones de ejemplo.
+      *Verificado 2026-10-26:* implementada por Adriana (`app/api/routes/campanas.py`, `app/services/prevencion.py`). Ella dejó sus 27 pruebas de integración omitidas por no tener una base de pruebas; se corrieron contra PostgreSQL 16 real con JWT: **46 de 46 pasan** (`tests/prevencion/`, con `GATOBYTE_TEST_DATABASE_URL`), y el CI ya las ejecuta. Con las predicciones reales del pipeline, SEDES ve los 4 municipios ordenados, la coordinación solo el suyo y el admin recibe 403 (`tests/e2e/test_flujo_completo.py`). Las reglas son provisionales y así lo dice la respuesta (`docs/task_024_025_api.md`).
 
-- [ ] **TASK-025** [REQ-012] Implementar `GET /municipios/{id}/recursos`
+- [x] **TASK-025** [REQ-012] Implementar `GET /municipios/{id}/recursos`
       (recomendación de nivel de atención según riesgo vigente).
       *Verificación:* test de integración devuelve recomendación coherente
       con el nivel de riesgo almacenado.
+      *Verificado 2026-10-26:* igual que la TASK-024: 46 pruebas de integración en verde contra PostgreSQL; la coordinación solo ve su municipio (403 en otro), el admin ve cualquiera, y la recomendación es coherente con el nivel de riesgo almacenado. Son recomendaciones orientativas, no inventarios ni protocolos oficiales.
 
 - [ ] **TASK-026** [REQ-016] Implementar `GET /modelo/desempeno` (métricas
       de precisión espacial y anticipación calculadas sobre un periodo).
@@ -276,10 +280,11 @@ calor navegables.*
       una variable explicativa (nunca una alerta "vacía").
       *Verificado 2026-10-26:* prueba manual en el navegador contra el sistema en Docker: con el umbral de dengue bajado a 40 % (`POST /admin/umbrales`) y `python -m app.ml.evaluacion_alertas` (TASK-015), el panel muestra las dos alertas reales (Guayaramerín 44 % e Ixiamas 43 %), cada una con su justificación y las variables que la explican (nunca una alerta vacía). Sin alertas muestra el estado vacío. Cubierto también por `frontend/src/test/App.test.jsx` y `tests/e2e/test_flujo_completo.py`.
 
-- [ ] **TASK-031** [REQ-011, REQ-012] Implementar vista de priorización de
+- [x] **TASK-031** [REQ-011, REQ-012] Implementar vista de priorización de
       campañas de fumigación y recomendación de recursos por municipio.
       *Verificación:* prueba manual con coordinador municipal de ejemplo.
       *Estado 2026-10-26:* sin avance. Necesita los endpoints de TASK-024 y 025, que no existen.
+      *Verificado 2026-10-26:* pestaña «Campañas» (`frontend/src/components/Campanas.jsx`) para SEDES y coordinación municipal. Prueba manual en el navegador con `coordinador@demo.local` contra el sistema en Docker: ve su municipio (Guayaramerín, 44 %, riesgo medio) con sus recomendaciones y la advertencia de reglas provisionales. SEDES ve el orden de todos los municipios sin recomendaciones. 108 pruebas de interfaz en verde.
 
 ---
 
@@ -293,7 +298,7 @@ considerarse listo para el piloto.*
       en esos módulos.
       *Verificación:* `pytest --cov=app/etl --cov=app/ml` reporta ≥ 70%.
       *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
-      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (298 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
+      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (345 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
 
 - [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.
@@ -334,7 +339,7 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       vistas de las TASK-027 a 031 no pueden pedir datos (la API exige JWT).
       *Persona sugerida:* Tania o Ignacio. *Depende de:* TASK-017 (hecha).
       *Verificación:* prueba manual con dos roles; `npm run build` sin errores.
-      *Verificado 2026-10-26:* `frontend/src/components/Acceso.jsx` y `src/api.js`. Prueba manual en el navegador con `epidemiologo@demo.local` y `autoridad@demo.local` (cada una ve su vista), y recarga de la página sin pedir contraseña de nuevo. 104 pruebas de interfaz en verde (login, refresco único ante 401, sesión vencida, tiempo máximo, cierre de sesión) y `npm run build` sin errores. Decisión: access token en memoria y refresh token en `sessionStorage` (riesgo M-11).
+      *Verificado 2026-10-26:* `frontend/src/components/Acceso.jsx` y `src/api.js`. Prueba manual en el navegador con `epidemiologo@demo.local` y `autoridad@demo.local` (cada una ve su vista), y recarga de la página sin pedir contraseña de nuevo. 108 pruebas de interfaz en verde (login, refresco único ante 401, sesión vencida, tiempo máximo, cierre de sesión) y `npm run build` sin errores. Decisión: access token en memoria y refresh token en `sessionStorage` (riesgo M-11).
 
 - [x] **TASK-038** [REQ-001, REQ-002, REQ-013] Datos de demostración
       reproducibles con un solo comando: registra el modelo en `modelos`,

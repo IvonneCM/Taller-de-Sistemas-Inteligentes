@@ -227,7 +227,7 @@ backlog de la sección 5.
 
 ### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
 
-**Estado:** implementado y verificado en local: **298 tests del backend, 104 de la
+**Estado:** implementado y verificado en local: **345 tests del backend, 108 de la
 interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
 Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
 exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
@@ -261,11 +261,13 @@ Hallazgo: `app/services/casos.py` importaba `pandas` y la imagen `api` no lo tra
 (la API no arrancaba); corregido moviendo las constantes a `app/etl/fuentes.py` y
 vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
 
+**Integraciones posteriores (2026-10-26):** TASK-015 (Ivonne) y TASK-024/025 (Adriana) integradas en `dilan`. Las pruebas de integración de Adriana venían omitidas (necesitan una base exclusiva): corridas contra PostgreSQL, 46 de 46 pasan; el CI ya las ejecuta. Se agregó la pestaña «Campañas» (TASK-031) y un E2E por rol.
+
 **Pendientes (no son de esta sesión)**
 1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
 2. TASK-016 (tarea semanal). TASK-015 ya la entregó Ivonne y está integrada: con el umbral por defecto (70 %) ninguna predicción alerta; el equipo de salud debe fijar el umbral real.
 3. Fuente de `brotes_confirmados` (riesgo M-08).
-4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla.
+4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla; TASK-026, 033, 034, 035, 036.
 5. TASK-041 (tag) y 045 (ensayo, grabación, respaldo). La CI (046) ya corrió en verde en GitHub.
 6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
    `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.

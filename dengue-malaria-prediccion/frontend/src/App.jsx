@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
 import { pedir } from "./api.js";
 import { ProveedorSesion, useSesion } from "./auth.jsx";
-import { esTecnico } from "./format.js";
+import { esTecnico, veCampanas } from "./format.js";
 import { useCarga } from "./useCarga.js";
 import { Acceso } from "./components/Acceso.jsx";
 import { Alertas } from "./components/Alertas.jsx";
 import { Barra } from "./components/Barra.jsx";
+import { Campanas } from "./components/Campanas.jsx";
 import { Cargando } from "./components/Estado.jsx";
 import { Historial } from "./components/Historial.jsx";
 import { Segmentado } from "./components/Segmentado.jsx";
@@ -38,18 +39,23 @@ function Aplicacion() {
   const vistas = [
     { valor: "mapa", etiqueta: "Mapa" },
     { valor: "alertas", etiqueta: "Alertas" },
+    ...(veCampanas(usuario.rol) ? [{ valor: "campanas", etiqueta: "Campañas" }] : []),
     ...(esTecnico(usuario.rol) ? [{ valor: "historial", etiqueta: "Historial" }] : []),
   ];
 
   return (
     <div className="app">
-      <Barra usuario={usuario} enfermedad={enfermedad} alCambiarEnfermedad={elegirEnfermedad} alSalir={cerrar} />
+      <Barra
+        usuario={usuario} enfermedad={enfermedad} alCambiarEnfermedad={elegirEnfermedad} alSalir={cerrar}
+        mostrarEnfermedad={vista === "mapa"}
+      />
       <main className="contenido">
         <div className="vistas">
           <Segmentado rol="tab" etiqueta="Vista" opciones={vistas} valor={vista} alCambiar={setVista} />
         </div>
         {vista === "mapa" && <VistaMapa enfermedad={enfermedad} riesgo={riesgo} casos={casos} usuario={usuario} />}
         {vista === "alertas" && <Alertas />}
+        {vista === "campanas" && <Campanas usuario={usuario} />}
         {vista === "historial" && <Historial zonas={riesgo.datos} />}
       </main>
     </div>

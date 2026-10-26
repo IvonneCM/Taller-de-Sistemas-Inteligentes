@@ -5,7 +5,7 @@
 **Fuente de verdad:** `dengue-malaria-prediccion/app/api/routes/`, `app/schemas/` y `app/services/`. La documentación interactiva sale de FastAPI (`/docs`, `/openapi.json`).
 **Relacionado:** `dengue-malaria-prediccion/design.md` §4 · [`contrato_esquema_bd.md`](./contrato_esquema_bd.md)
 
-Estado: **implementados** los endpoints de abajo, el login con JWT y el control de acceso por rol. Siguen pendientes los de priorización, recursos y desempeño (TASK-024, 025 y 026).
+Estado: **implementados** los endpoints de abajo, el login con JWT y el control de acceso por rol. Sigue pendiente `GET /modelo/desempeno` (TASK-026). Los contratos de priorización y recursos (TASK-024 y 025, de Adriana) están en [`task_024_025_api.md`](./task_024_025_api.md); sus reglas son provisionales del MVP.
 
 ## Autenticación
 
@@ -31,6 +31,8 @@ El rol sale de la base de datos en cada petición (`app/api/deps.py`: `get_curre
 | `GET /alertas` | todos | TASK-022 · REQ-009 |
 | `POST /admin/umbrales` | `admin` | TASK-023 · REQ-010 |
 | `GET /casos/resumen` | todos | TASK-047 · REQ-008, REQ-014 |
+| `GET /campanas/priorizacion` | `sedes`, `coordinador_municipal` (solo su municipio) | TASK-024 · REQ-011 |
+| `GET /municipios/{id}/recursos` | `coordinador_municipal` (solo el suyo), `admin` | TASK-025 · REQ-012 |
 | `GET /health` · `GET /health/ready` | público | TASK-040 · NFR-003 |
 
 `{municipio_id}` es el id del municipio (la zona base). Errores: 404 si la zona, enfermedad o departamento no existe; 422 si un parámetro es inválido (fecha mal escrita, `desde` posterior a `hasta`, número fuera de rango).

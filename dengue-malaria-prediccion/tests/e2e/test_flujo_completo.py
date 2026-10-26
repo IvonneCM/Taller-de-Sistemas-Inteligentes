@@ -109,8 +109,40 @@ def test_el_admin_baja_el_umbral_y_la_siguiente_evaluacion_emite_alertas(sistema
     assert {a["municipio_id"] for a in alertas} == {z["municipio_id"] for z in sobre_umbral}
 
 
+def test_priorizacion_de_campanas_y_recursos_segun_el_rol(sistema):
+    """TASK-024/025 con las predicciones reales del pipeline: SEDES ve todos los
+    municipios; la coordinacion solo el suyo; el admin no ve campanas."""
+    client = sistema
+    sedes = _entrar(client, "sedes@demo.local")
+    coordinador = _entrar(client, "coordinador@demo.local")   # asignado a Guayaramerin
+    admin = _entrar(client, "admin@demo.local")
+
+    ranking = client.get("/campanas/priorizacion", headers=sedes).json()
+    assert {f["municipio"] for f in ranking} == PILOTO
+    assert [f["posicion"] for f in ranking] == [1, 2, 3, 4]
+    orden = {"alto": 0, "medio": 1, "bajo": 2}
+    assert [orden[f["nivel_riesgo"]] for f in ranking] == sorted(orden[f["nivel_riesgo"]] for f in ranking)
+
+    propio = client.get("/campanas/priorizacion", headers=coordinador).json()
+    assert [f["municipio"] for f in propio] == ["GUAYARAMERIN"]
+
+    assert client.get("/campanas/priorizacion", headers=admin).status_code == 403
+    assert client.get("/campanas/priorizacion", headers=_entrar(client, "autoridad@demo.local")).status_code == 403
+
+    mio = propio[0]["municipio_id"]
+    recursos = client.get(f"/municipios/{mio}/recursos", headers=coordinador)
+    assert recursos.status_code == 200
+    cuerpo = recursos.json()
+    assert cuerpo["nivel_atencion"] in {"PRIORITARIO", "PREVENTIVO", "RUTINARIO"}
+    assert cuerpo["recomendaciones"] and "protocolos oficiales" in cuerpo["nota"]
+    # La coordinacion no ve recursos de otro municipio; el admin si.
+    otro = next(f["municipio_id"] for f in ranking if f["municipio_id"] != mio)
+    assert client.get(f"/municipios/{otro}/recursos", headers=coordinador).status_code == 403
+    assert client.get(f"/municipios/{otro}/recursos", headers=admin).status_code == 200
+
+
 def test_sin_sesion_no_se_ve_nada(sistema):
-    for ruta in ("/zonas/riesgo", "/casos/resumen", "/alertas"):
+    for ruta in ("/zonas/riesgo", "/casos/resumen", "/alertas", "/campanas/priorizacion"):
         assert sistema.get(ruta).status_code == 401
 
 

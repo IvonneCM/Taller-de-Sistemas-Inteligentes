@@ -219,3 +219,16 @@ details.mas p { color: var(--texto-2); margin-top: var(--e-sm); }
 .leaflet-touch .leaflet-bar a, .leaflet-bar a {
   width: var(--objetivo-minimo); height: var(--objetivo-minimo); line-height: var(--objetivo-minimo);
 }
+
+/* ---------- Priorización de campañas ---------- */
+
+.ranking { counter-reset: ninguno; }
+.fila-ranking { grid-template-columns: auto 1fr auto; align-items: center; }
+.fila-ranking.sin-accion { cursor: default; }
+.posicion {
+  display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--pista); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.ranking-cola { display: grid; justify-items: end; gap: var(--e-xs); }
+.bloque { display: block; }
+.recomendaciones { margin: 0; padding-left: 1.25rem; display: grid; gap: var(--e-sm); font: var(--t-fila); }

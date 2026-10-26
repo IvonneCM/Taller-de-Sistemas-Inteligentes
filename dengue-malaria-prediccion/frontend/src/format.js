@@ -26,6 +26,10 @@ export const etiquetaRol = (rol) => ROLES[rol] ?? rol;
 
 // Solo para decidir qué sugerir en pantalla; el servidor decide qué devuelve.
 export const esTecnico = (rol) => rol === "epidemiologo" || rol === "admin";
+// Priorización de campañas: SEDES y coordinación municipal (design.md §4).
+export const veCampanas = (rol) => rol === "sedes" || rol === "coordinador_municipal";
+// Recomendaciones de atención por municipio: coordinación y administración.
+export const veRecursos = (rol) => rol === "coordinador_municipal" || rol === "admin";
 
 const entero = new Intl.NumberFormat("es-BO");
 export const formatearEntero = (n) => entero.format(n);

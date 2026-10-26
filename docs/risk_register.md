@@ -352,6 +352,7 @@ inicial: la complementa con lo que se aprendió al construir el MVP.
 | M-12 | **Clima de dos fuentes**: SENAMHI (observado) y NASA POWER (modelado) no son equivalentes. | Declarado | Comparación documentada en el contrato de datos | `contrato_esquema_datos_procesados.md` §7bis |
 | M-13 | **Confianza de la predicción** mide la proporción de datos climáticos faltantes o imputados (NFR-007); **no** mide qué tan bien acierta el modelo. | Declarado en la interfaz ("Confianza de los datos") | No leerla como probabilidad de acierto | `app/ml/prediccion.py` |
 | M-14 | **Sin datos de pacientes**: todo es conteo agregado por municipio. Es una protección, y también un límite (no hay detalle individual). | Por diseño (REQ-020) | — | `privacidad_datos.md` |
+| M-15 | **Reglas de campañas y recomendaciones provisionales**: los cortes de riesgo (33,33 % y 66,67 %) y los textos de recomendación son decisiones del MVP, no protocolos de SEDES. | Declarado en la API y en la interfaz | Validar con SEDES antes de usarlas para decidir | `docs/decisiones_task_024_025.md` |
 
 Los riesgos M-08 y M-10 bloquean parte de la demostración completa; el
 resto son límites que deben decirse en voz alta durante la defensa.

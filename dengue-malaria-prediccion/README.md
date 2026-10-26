@@ -29,8 +29,8 @@ casos observados** (no hay serie semanal, así que no hay modelo; ver
 a 3 semanas**. Para recorrerlo y defenderlo paso a paso, ver
 [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md); la arquitectura
 real está en [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md).
-Faltan, entre otras cosas, el despliegue (TASK-004), la tarea semanal (TASK-016) y la priorización de campañas
-(TASK-024/025/031). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
+Faltan, entre otras cosas, el despliegue (TASK-004), la tarea semanal (TASK-016), `/modelo/desempeno` (TASK-026) y
+la validación retrospectiva (TASK-034). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -268,13 +268,16 @@ alembic check
 ```
 
 `pytest` necesita la base de datos del paso "Configuración" y un `.env` con
-`SECRET_KEY`. Estado verificado el 2026-10-26: **298 tests del backend** y
-**104 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
+`SECRET_KEY`. Estado verificado el 2026-10-26: **345 tests del backend** y
+**108 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
 (`pytest --cov=app/etl --cov=app/ml`). Los tests necesitan `DATABASE_URL`
 apuntando a una base con las migraciones aplicadas. Cada test corre dentro de
 una transacción que se revierte y parte de las tablas de datos vacías, así que
 es seguro correrlos contra una base de desarrollo con datos de demostración. La
-suite se niega a correr con `ENVIRONMENT=production`. El flujo completo está en
+suite se niega a correr con `ENVIRONMENT=production`. Las 27 pruebas de integración de
+TASK-024/025 (`tests/prevencion/`) se omiten salvo que `GATOBYTE_TEST_DATABASE_URL`
+apunte a una base de pruebas **vacía y migrada** (no a la de desarrollo con la demo
+cargada); el CI la define. El flujo completo está en
 `tests/e2e/`. Hay integración continua en `.github/workflows/ci.yml`.
 
 ## Estructura actual
