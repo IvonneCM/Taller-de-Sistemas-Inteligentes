@@ -1,33 +1,72 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { useCallback, useState } from "react";
+import { pedir } from "./api.js";
+import { ProveedorSesion, useSesion } from "./auth.jsx";
+import { esTecnico } from "./format.js";
+import { useCarga } from "./useCarga.js";
+import { Acceso } from "./components/Acceso.jsx";
+import { Alertas } from "./components/Alertas.jsx";
+import { Barra } from "./components/Barra.jsx";
+import { Cargando } from "./components/Estado.jsx";
+import { Historial } from "./components/Historial.jsx";
+import { Segmentado } from "./components/Segmentado.jsx";
+import { VistaMapa } from "./components/VistaMapa.jsx";
 
-// Esqueleto de la Fase 5 (no implementa TASK-027 a 031): solo comprueba que la
-// API responde y muestra un mapa base de Bolivia. Sin datos de riesgo todavia.
-const API_URL = import.meta.env.VITE_API_URL ?? "/api";
-const BOLIVIA = [-16.5, -64.5];
+const CLAVE_ENFERMEDAD = "siptb.enfermedad";
 
-export default function App() {
-  const [estado, setEstado] = useState("comprobando...");
+function enfermedadInicial() {
+  try {
+    const guardada = window.localStorage.getItem(CLAVE_ENFERMEDAD);
+    return guardada === "dengue" ? "dengue" : "malaria"; // la malaria es la entrada por defecto
+  } catch {
+    return "malaria";
+  }
+}
 
-  useEffect(() => {
-    fetch(`${API_URL}/health`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
-      .then((d) => setEstado(d.status === "ok" ? "conectada" : "respuesta inesperada"))
-      .catch(() => setEstado("sin conexión"));
+function Aplicacion() {
+  const { usuario, cerrar } = useSesion();
+  const [enfermedad, setEnfermedad] = useState(enfermedadInicial);
+  const [vista, setVista] = useState("mapa");
+
+  const riesgo = useCarga(useCallback(() => pedir("/zonas/riesgo"), []), []);
+  const casos = useCarga(useCallback(() => pedir("/casos/resumen"), []), []);
+
+  const elegirEnfermedad = useCallback((valor) => {
+    setEnfermedad(valor);
+    try { window.localStorage.setItem(CLAVE_ENFERMEDAD, valor); } catch { /* sin almacenamiento */ }
   }, []);
+
+  const vistas = [
+    { valor: "mapa", etiqueta: "Mapa" },
+    { valor: "alertas", etiqueta: "Alertas" },
+    ...(esTecnico(usuario.rol) ? [{ valor: "historial", etiqueta: "Historial" }] : []),
+  ];
 
   return (
     <div className="app">
-      <header>
-        <h1>Predicción temprana de brotes de dengue y malaria</h1>
-        <span>API: {estado}</span>
-      </header>
-      <MapContainer center={BOLIVIA} zoom={6} className="mapa">
-        <TileLayer
-          attribution="&copy; colaboradores de OpenStreetMap"
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-      </MapContainer>
+      <Barra usuario={usuario} enfermedad={enfermedad} alCambiarEnfermedad={elegirEnfermedad} alSalir={cerrar} />
+      <main className="contenido">
+        <div className="vistas">
+          <Segmentado rol="tab" etiqueta="Vista" opciones={vistas} valor={vista} alCambiar={setVista} />
+        </div>
+        {vista === "mapa" && <VistaMapa enfermedad={enfermedad} riesgo={riesgo} casos={casos} usuario={usuario} />}
+        {vista === "alertas" && <Alertas />}
+        {vista === "historial" && <Historial zonas={riesgo.datos} />}
+      </main>
     </div>
+  );
+}
+
+function Puerta() {
+  const { estado } = useSesion();
+  if (estado === "cargando") return <main className="acceso"><Cargando etiqueta="Restaurando la sesión" /></main>;
+  if (estado === "anonimo") return <Acceso />;
+  return <Aplicacion />;
+}
+
+export default function App() {
+  return (
+    <ProveedorSesion>
+      <Puerta />
+    </ProveedorSesion>
   );
 }

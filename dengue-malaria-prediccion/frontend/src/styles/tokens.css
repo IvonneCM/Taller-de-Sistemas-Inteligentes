@@ -1,0 +1,128 @@
+/* Sistema de diseño (TASK-048): tokens del estilo Apple (fuente del sistema,
+   claro/oscuro, ritmo de espacios 4/8/16/24/48/96) con la malaria como
+   enfermedad de entrada.
+
+   Contraste: los textos secundarios usan #6e6e73 (5,1:1 sobre blanco) y no
+   #86868b (3,5:1), que no llega al 4,5:1 exigido. src/test/contraste.test.js
+   comprueba cada par de color de este archivo. */
+
+:root {
+  color-scheme: light dark;
+
+  --fuente: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+
+  /* Jerarquía tipográfica: tamaño, interlineado y tracking van juntos.
+     Lo grande se aprieta (tracking negativo); el cuerpo queda en 0. */
+  --t-hero: 600 clamp(2.25rem, 5vw, 3rem) / 1.08 var(--fuente);
+  --t-titulo: 600 clamp(1.5rem, 3vw, 2rem) / 1.2 var(--fuente);
+  --t-subtitulo: 600 1.1875rem / 1.3 var(--fuente);
+  --t-cuerpo: 400 1.0625rem / 1.5 var(--fuente);
+  --t-fila: 400 0.9375rem / 1.4 var(--fuente);
+  --t-nota: 400 0.8125rem / 1.4 var(--fuente);
+  --tracking-hero: -0.025em;
+  --tracking-titulo: -0.018em;
+  --tracking-nota: 0.01em;
+
+  /* Espacios */
+  --e-xs: 0.25rem;
+  --e-sm: 0.5rem;
+  --e-md: 1rem;
+  --e-lg: 1.5rem;
+  --e-xl: 3rem;
+  --e-2xl: 6rem;
+
+  --radio-tarjeta: 18px;
+  --radio-control: 12px;
+  --radio-pildora: 980px;
+  --objetivo-minimo: 44px;
+
+  /* Movimiento */
+  --curva: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --t-corto: 120ms;
+  --t-medio: 300ms;
+
+  /* Claro */
+  --fondo: #ffffff;
+  --fondo-2: #f5f5f7;
+  --superficie: rgba(255, 255, 255, 0.72);
+  --superficie-solida: #ffffff;
+  --texto: #1d1d1f;
+  --texto-2: #6e6e73;
+  --linea: rgba(0, 0, 0, 0.08);
+  --linea-fuerte: rgba(0, 0, 0, 0.22);
+  --acento: #0071e3;
+  --enlace: #0066cc; /* texto de enlace: #0071e3 queda en 4,3:1 sobre #f5f5f7 */
+  --sobre-acento: #ffffff;
+  --sombra: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --pista: rgba(118, 118, 128, 0.12);
+
+  /* Riesgo (escala semáforo) y malaria (casos observados, otra familia de
+     color a propósito: no es una escala de riesgo). `--x` es el relleno y
+     `--x-texto` el texto legible sobre su fondo tintado `--x-tinte`. */
+  --riesgo-bajo: #34c759;
+  --riesgo-bajo-texto: #1b7a33;
+  --riesgo-bajo-tinte: #e6f6ea;
+  --riesgo-medio: #ff9f0a;
+  --riesgo-medio-texto: #8a5300;
+  --riesgo-medio-tinte: #fff1dc;
+  --riesgo-alto: #ff3b30;
+  --riesgo-alto-texto: #c1271d;
+  --riesgo-alto-tinte: #ffe7e5;
+  --malaria: #5e5ce6;
+  --malaria-texto: #4644c4;
+  --malaria-tinte: #ececfd;
+  --dengue: #0a84a8;
+  --dengue-texto: #0a6a87;
+  --dengue-tinte: #e1f3f8;
+  --info-tinte: #f0f4fa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #000000;
+    --fondo-2: #1c1c1e;
+    --superficie: rgba(28, 28, 30, 0.72);
+    --superficie-solida: #1c1c1e;
+    --texto: #f5f5f7;
+    --texto-2: #a1a1a6;
+    --linea: rgba(255, 255, 255, 0.12);
+    --linea-fuerte: rgba(255, 255, 255, 0.3);
+    --acento: #2997ff;
+    --enlace: #2997ff;
+    --sobre-acento: #000000;
+    --sombra: 0 4px 24px rgba(0, 0, 0, 0.5);
+    --pista: rgba(118, 118, 128, 0.32);
+
+    --riesgo-bajo: #32d74b;
+    --riesgo-bajo-texto: #5ee27a;
+    --riesgo-bajo-tinte: #12301a;
+    --riesgo-medio: #ffb340;
+    --riesgo-medio-texto: #ffc266;
+    --riesgo-medio-tinte: #3a2a0c;
+    --riesgo-alto: #ff6961;
+    --riesgo-alto-texto: #ff8a84;
+    --riesgo-alto-tinte: #3b1512;
+    --malaria: #7d7aff;
+    --malaria-texto: #a3a1ff;
+    --malaria-tinte: #25244a;
+    --dengue: #40c8e0;
+    --dengue-texto: #6dd7ea;
+    --dengue-tinte: #0f2f38;
+    --info-tinte: #1c2430;
+  }
+}
+
+/* Menos transparencia: superficies sólidas, sin desenfoque. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --superficie: var(--superficie-solida);
+  }
+}
+
+/* Más contraste: bordes definidos. */
+@media (prefers-contrast: more) {
+  :root {
+    --linea: var(--linea-fuerte);
+    --texto-2: var(--texto);
+  }
+}

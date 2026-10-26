@@ -1,5 +1,7 @@
 # Diagramas C4 — Arquitectura
 
+> **Estado:** estos diagramas son del Sprint 1 y muestran el **diseño objetivo**. Lo que existe y corre hoy está en [`../arquitectura_actual.md`](../arquitectura_actual.md), con cada pieza enlazada a su código y las diferencias respecto al diseño.
+
 **Responsable:** Tania Perez
 **Sección del backlog:** Architecture
 

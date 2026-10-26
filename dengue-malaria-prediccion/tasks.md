@@ -3,15 +3,18 @@
 **Versión:** 1.0
 **Basado en:** `requirements.md` v1.0, `design.md` v1.0
 
-> ▶️ **Estado (2026-10-26):** la Fase 1 está cerrada salvo el despliegue en
-> la nube (TASK-004, pendiente: falta decidir proveedor; ver su nota). La
-> Fase 2 (capa de datos, TASK-005 a TASK-010) está implementada y verificada
-> contra PostgreSQL + PostGIS reales (`alembic upgrade head` aplicado).
-> TASK-009 se implementó con serie SEMANAL de dengue (decisión 2 del reparto
-> "Listo para Empezar"); ver su nota abajo. TASK-019 a 022 (API de zonas y
-> alertas) están hechas; TASK-023 está implementada y pendiente solo de que
-> `evaluacion_alertas` (TASK-015) use `obtener_umbral`. El estado de las
-> tareas de Ivonne, Adriana e Ignacio está en cada tarea.
+> ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local (datos
+> reales → ingesta → modelo → API con login por rol → interfaz web). Hechas:
+> la capa de datos (TASK-005 a 010), el baseline (012), el motor de predicción y
+> la autenticación (014, 017, 018), la API de zonas, alertas y casos
+> (019 a 022, 047), las pruebas y la cobertura (032), el manejo de errores
+> (040) y parte de la Fase 7 de integración y defensa (037 a 044, 047, 048).
+> **Bloquean la defensa:** el despliegue en la nube (TASK-004, falta decidir
+> proveedor), la generación de alertas (TASK-015, de la que depende cerrar la
+> 023) y una fuente de brotes confirmados. La guía de defensa pide además el
+> tag de versión (041), el ensayo con el Plan B (045) y la CI verificada (046).
+> Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
+> porque no existe serie semanal (ADR-005).
 
 Cada tarea referencia su(s) REQ/NFR correspondiente en la misma línea del
 checkbox, para que sea verificable de forma automática.
@@ -54,6 +57,13 @@ base de datos PostGIS lista.*
       fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore`,
       `railway.toml` y `docker compose up --build api web` →
       `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
+      *Re-verificado 2026-10-26 en un Mac con Apple Silicon (Colima):* las tres
+      imágenes (`api` 355 MB, `ml` 1,16 GB, `web` 76 MB) se construyen; con
+      `docker compose` se migra, se carga la demostración y `scripts/smoke_test.py`
+      pasa contra `:8000` y contra `:8080/api` (nginx). La suite completa pasa
+      también contra PostgreSQL 16 + PostGIS 3.4, la misma versión que usa el CI.
+      Esa prueba encontró que la API importaba `pandas` (ausente en la imagen
+      `api`); corregido y vigilado por `tests/test_api_ligera.py`.
       Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
       `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública.
 
@@ -245,26 +255,31 @@ calor navegables.*
       selector de nivel de agregación (zona/municipio/departamento).
       *Verificación:* prueba manual — el mapa cambia de color según nivel de
       riesgo y responde al cambio de agregación.
+      *Estado 2026-10-26 (sin marcar):* hay mapa navegable con Leaflet (`frontend/src/components/MapaZonas.jsx`) que consume `GET /zonas/riesgo` (dengue) y `GET /casos/resumen` (malaria), con cambio de enfermedad. **Falta el selector de nivel de agregación** (zona, municipio, departamento): hoy solo hay municipio.
 
-- [ ] **TASK-028** [REQ-007] Implementar vista simplificada para autoridades
+- [x] **TASK-028** [REQ-007] Implementar vista simplificada para autoridades
       (indicadores generales, zonas críticas) y vista detallada para
       epidemiólogos/equipos técnicos (variables, confianza, historial).
       *Verificación:* prueba manual con dos usuarios de rol distinto
       confirma diferencias de UI acorde a REQ-007.
+      *Verificado 2026-10-26:* prueba manual en el navegador con `autoridad@demo.local` y `epidemiologo@demo.local`: la autoridad recibe la vista resumida (probabilidad y confianza) y ve la invitación a pedir el detalle técnico; el epidemiólogo ve además «Qué influyó en esta predicción» (variables SHAP) y la pestaña Historial. La diferencia sale del servidor (`vista: resumida | completa`), no de la interfaz. Cubierto por `frontend/src/test/App.test.jsx`.
 
 - [ ] **TASK-029** [REQ-008] Implementar vista de historial de predicciones
       vs. brotes confirmados, con filtro por zona y fecha.
       *Verificación:* prueba manual sobre datos de ejemplo cargados en
       Fase 2.
+      *Estado 2026-10-26 (sin marcar):* existe la vista de historial para técnicos (`Historial.jsx`) con predicciones, brote confirmado y la regla de comparación. **Faltan el filtro por rango de fechas en pantalla** (la API ya lo soporta) **y datos de brotes confirmados** (sin fuente, riesgo M-08), así que hoy ninguna predicción aparece como acertada.
 
 - [ ] **TASK-030** [REQ-009] Implementar panel de alertas activas con
       justificación visible (variables explicativas).
       *Verificación:* prueba manual — cada alerta mostrada incluye al menos
       una variable explicativa (nunca una alerta "vacía").
+      *Estado 2026-10-26 (sin marcar):* el panel existe (`Alertas.jsx`) y, con datos de prueba, cada alerta muestra su justificación y variables (nunca una alerta vacía; `App.test.jsx`). Sin alertas en la base (falta TASK-015) solo se ve el estado vacío, así que no se pudo hacer la prueba manual del criterio.
 
 - [ ] **TASK-031** [REQ-011, REQ-012] Implementar vista de priorización de
       campañas de fumigación y recomendación de recursos por municipio.
       *Verificación:* prueba manual con coordinador municipal de ejemplo.
+      *Estado 2026-10-26:* sin avance. Necesita los endpoints de TASK-024 y 025, que no existen.
 
 ---
 
@@ -273,11 +288,12 @@ calor navegables.*
 *Meta de la fase: confirmar que el sistema cumple los NFR críticos antes de
 considerarse listo para el piloto.*
 
-- [ ] **TASK-032** [NFR-010] Escribir pruebas unitarias para módulos de
+- [x] **TASK-032** [NFR-010] Escribir pruebas unitarias para módulos de
       ingesta, limpieza y predicción, alcanzando cobertura mínima del 70%
       en esos módulos.
       *Verificación:* `pytest --cov=app/etl --cov=app/ml` reporta ≥ 70%.
       *Avance 2026-10-26 (sin marcar):* `pytest --cov=app/etl --cov=app/ml` da 86 % sobre los módulos actuales (205 tests). Falta `app/ml/prediccion.py` (TASK-014, Ivonne); se marca `[x]` cuando exista y siga ≥ 70 %.
+      *Verificado 2026-10-26:* `pytest --cov=app/etl --cov=app/ml` da **80 %** (284 tests) con `app/ml/prediccion.py` ya incluido: ingesta 87-94 %, limpieza 91 %, predicción 74 %, entrenamiento 80 %, explicabilidad 91 %. El mínimo de 70 % se exige en CI (`--cov-fail-under=70`). `seed_demo.py` y `seed_usuarios.py` (utilidades de carga) quedan en 62-65 %, fuera de los módulos que pide la tarea.
 
 - [ ] **TASK-033** [NFR-004] Realizar prueba de carga básica sobre
       `GET /zonas/riesgo` con un dataset simulado de hasta 350 municipios.
@@ -301,6 +317,108 @@ considerarse listo para el piloto.*
       cobertura climática irregular) y cómo el sistema las mitiga
       parcialmente.
       *Verificación:* sección de limitaciones presente en el informe final.
+
+---
+
+## Fase 7 — Integración y defensa del MVP
+
+*Meta de la fase: cerrar lo que la "Guía de Defensa del MVP" exige y que las
+fases 1-6 no cubrían: sistema integrado y desplegado, flujo extremo a extremo
+demostrable, evidencia reproducible y trazabilidad. Estas tareas se agregaron
+el 2026-10-26 tras contrastar la guía con el repositorio; la "persona
+sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
+
+- [x] **TASK-037** [REQ-019] Login y sesión en el frontend: pantalla de acceso
+      contra `/auth/login`, token en memoria, refresco con `/auth/refresh`,
+      cierre de sesión con `/auth/logout` y manejo de 401/403. Sin esto las
+      vistas de las TASK-027 a 031 no pueden pedir datos (la API exige JWT).
+      *Persona sugerida:* Tania o Ignacio. *Depende de:* TASK-017 (hecha).
+      *Verificación:* prueba manual con dos roles; `npm run build` sin errores.
+      *Verificado 2026-10-26:* `frontend/src/components/Acceso.jsx` y `src/api.js`. Prueba manual en el navegador con `epidemiologo@demo.local` y `autoridad@demo.local` (cada una ve su vista), y recarga de la página sin pedir contraseña de nuevo. 104 pruebas de interfaz en verde (login, refresco único ante 401, sesión vencida, tiempo máximo, cierre de sesión) y `npm run build` sin errores. Decisión: access token en memoria y refresh token en `sessionStorage` (riesgo M-11).
+
+- [x] **TASK-038** [REQ-001, REQ-002, REQ-013] Datos de demostración
+      reproducibles con un solo comando: registra el modelo en `modelos`,
+      genera predicciones con `app/ml/prediccion.py` y las persiste, y carga
+      usuarios demo. Todo lo que no provenga de una fuente real queda marcado
+      como demo (CLAUDE.md regla 1).
+      *Persona sugerida:* Dilan con Ivonne. *Depende de:* TASK-014 (hecha);
+      alertas demo esperan TASK-015; brotes esperan la decisión de fuente.
+      *Verificación:* base vacía → un comando → `GET /zonas/riesgo` devuelve
+      zonas con predicción.
+      *Verificado 2026-10-26:* `python -m app.etl.seed_demo` sobre una base migrada crea 5 usuarios, ingiere 52 filas semanales de dengue y 3 de malaria del boletín, registra el modelo y persiste 4 predicciones (una por municipio piloto); `GET /zonas/riesgo` las devuelve (`tests/etl/test_seed_demo.py`). Es idempotente (`--forzar` agrega otra tanda). **No** carga predicciones de malaria (sin modelo), brotes ni alertas (sin fuente; TASK-015).
+
+- [x] **TASK-039** [NFR-010] Prueba extremo a extremo del backend (login →
+      predicción persistida → `/zonas/riesgo` → `/zonas/{id}/prediccion` con
+      dos roles) y script de humo para el despliegue (`/health`, login y
+      consulta con curl).
+      *Persona sugerida:* Dilan. *Depende de:* TASK-038.
+      *Verificación:* `pytest tests/e2e` en verde; el script de humo sale con
+      código 0 contra una URL.
+      *Verificado 2026-10-26:* `tests/e2e/test_flujo_completo.py` recorre boletín → ingesta → modelo → login → API con dos roles, y la base caída; `scripts/smoke_test.py` pasa contra un servidor real (`tests/e2e/test_smoke_script.py`) y contra la API local. Pendiente repetirlo contra la URL pública cuando exista el despliegue (TASK-004).
+
+- [x] **TASK-040** [NFR-003] Manejo de errores y diagnóstico: logs con
+      identificador de petición, respuesta uniforme ante errores no previstos
+      (sin filtrar trazas), timeouts de conexión a la base y `/health/ready`
+      que responda 503 si la base no responde.
+      *Persona sugerida:* Dilan. *Verificación:* tests con la base caída y con
+      entrada inválida; los logs muestran el error sin datos sensibles.
+      *Verificado 2026-10-26:* `tests/test_observabilidad.py` (12 tests): `/health/ready` responde 503 con la base caída, una consulta lenta se corta y responde 503, el error no previsto responde 500 genérico con la traza solo en el log, el 422 no devuelve lo enviado, y los logs no contienen contraseñas ni correos. Comprobado también en vivo con una API apuntando a un puerto vacío.
+
+- [ ] **TASK-041** Congelar la versión de defensa y la trazabilidad: tag
+      `v0.2-mvp`, PR con títulos descriptivos, issues etiquetados con el
+      backlog de estabilización y sus responsables.
+      *Persona sugerida:* todo el equipo, al final. *Depende de:* TASK-004 y
+      las demás de esta fase. *Verificación:* tag y PR visibles en GitHub.
+      *Estado 2026-10-26:* pendiente hasta cerrar la fase. PR #28 ya incorporó el primer merge de `dilan`; falta el tag y los issues del backlog de estabilización (no existe ningún issue en el repositorio).
+
+- [x] **TASK-042** Arquitectura vigente: actualizar los diagramas C4,
+      `design.md` y el README con lo realmente implementado (contenedores
+      Docker, frontend, despliegue), distinguiendo código, configuración y
+      secretos. *Persona sugerida:* Tania.
+      *Verificación:* cada caja del diagrama tiene su código en el repo.
+      *Verificado 2026-10-26:* `docs/arquitectura_actual.md` (diagrama de lo que existe, código por pieza, código vs configuración vs secretos y diferencias con `design.md`); `docs/c4/README.md` lo enlaza. Los SVG C4 del Sprint 1 se conservan como diseño objetivo.
+
+- [x] **TASK-043** Registro de riesgos y limitaciones al estado del MVP: el
+      modelo no supera la regla simple en t+3, malaria solo tiene acumulados,
+      geometría referencial, 13 semanas de historia, datos provisionales,
+      brotes confirmados sin fuente. *Persona sugerida:* Adriana (con
+      TASK-036). *Verificación:* `docs/risk_register.md` actualizado.
+      *Verificado 2026-10-26:* `docs/risk_register.md`, sección «Actualización al estado del MVP» (14 riesgos y límites reales, M-01 a M-14).
+
+- [x] **TASK-044** [NFR-001, NFR-002] Resumen de resultados experimentales
+      contra la línea base, incluidos los intentos fallidos (Experimento C),
+      en un solo documento para la defensa. *Persona sugerida:* Ivonne o
+      Adriana. *Verificación:* tabla modelo vs baseline con enlaces a los
+      artefactos.
+      *Verificado 2026-10-26:* `docs/resultados_experimentales.md`: tablas t+3 y t+4 contra la clase mayoritaria y la regla de casos recientes, experimentos A a D con el sobreajuste del C, y la razón de que malaria no tenga modelo.
+
+- [ ] **TASK-045** Guion de demostración y Plan B: pasos de la demo en vivo,
+      grabación real de una ejecución y base precargada de respaldo, sin
+      maquillar resultados. *Persona sugerida:* todo el equipo.
+      *Depende de:* TASK-038/039. *Verificación:* ensayo completo cronometrado.
+      *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Falta el ensayo cronometrado del equipo, la grabación real de una ejecución y el respaldo de base** (se preparan con el sistema final).
+
+- [ ] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
+      `pytest` (con PostGIS) en cada PR. *Persona sugerida:* Ignacio.
+      *Verificación:* check verde en un PR.
+      *Estado 2026-10-26 (sin marcar):* `.github/workflows/ci.yml` escrito (backend con PostGIS real y cobertura mínima de 70 %, y frontend con pruebas y build); YAML validado. **No se ha ejecutado en GitHub**: se marca cuando haya un check verde en un PR.
+
+- [x] **TASK-047** [REQ-008, REQ-014] `GET /casos/resumen`: casos observados
+      por municipio y enfermedad (total, rango de fechas, granularidad y
+      fuente), todos los roles. Permite mostrar la malaria, que solo tiene
+      acumulados SE1-13 (ADR-005) y para la que no hay modelo de predicción.
+      *Persona sugerida:* Dilan. *Verificación:* test de integración con
+      casos de dengue semanales y de malaria acumulados.
+      *Verificado 2026-10-26:* `tests/api/test_casos_resumen.py` (13 tests): dengue semanal y malaria acumulada, geometría para el mapa, filtro, y que nunca suma semanales con acumuladas.
+
+- [x] **TASK-048** [REQ-006, REQ-007] Sistema de diseño del frontend (estilo
+      Apple: tipografía del sistema, modo claro y oscuro, escala de espacios,
+      materiales translúcidos, movimiento con `prefers-reduced-motion`),
+      orientado a la malaria como enfermedad de entrada. Base visual de las
+      TASK-027, 028, 030 y 037. *Persona sugerida:* Dilan.
+      *Verificación:* contraste ≥ 4,5:1, objetivos táctiles ≥ 44 px y modo
+      oscuro revisados en el navegador.
+      *Verificado 2026-10-26:* `frontend/src/styles/tokens.css` (fuente del sistema, claro y oscuro, ritmo de espacios, materiales translúcidos, `prefers-reduced-motion/transparency/contrast`). `src/test/contraste.test.js` comprueba 45 pares de color a 4,5:1 en claro y oscuro (detectó que el azul de enlace `#0071e3` solo daba 4,3:1 y se añadió `--enlace`). Revisado en el navegador en escritorio, 390 px y modo oscuro; los 11 controles interactivos miden al menos 44 px.
 
 ---
 

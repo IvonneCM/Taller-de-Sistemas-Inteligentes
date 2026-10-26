@@ -225,6 +225,51 @@ backlog de la sección 5.
 
 ## 9. Registro de sesiones
 
+### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
+
+**Estado:** implementado y verificado en local: **284 tests del backend, 104 de la
+interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
+Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
+exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
+se contrastó con el repositorio y se agregaron las tareas que faltaban (Fase 7 de
+`tasks.md`).
+
+**Hecho**
+- `app/core/observabilidad.py` + `app/api/routes/health.py` (TASK-040): `X-Request-ID`,
+  logs sin secretos, 503 ante base caída, `/health/ready`, timeouts de conexión y consulta.
+- `app/etl/seed_demo.py` (TASK-038): un comando carga casos reales, modelo, predicciones
+  y usuarios demo. `tests/e2e/` (TASK-039) y `scripts/smoke_test.py`.
+- `GET /casos/resumen` (TASK-047) para mostrar la malaria (solo acumulados, ADR-005).
+- Interfaz React (`frontend/`): login, mapa, detalle por rol, alertas, historial;
+  sistema de diseño estilo Apple con malaria como entrada (TASK-037, 048, 028 y parte
+  de 027, 029, 030). Pruebas con Vitest, incluido el contraste de los colores.
+- Documentos: `arquitectura_actual.md`, `resultados_experimentales.md`,
+  `guion_demo_y_plan_b.md`, riesgos M-01 a M-14 en `risk_register.md`,
+  `contrato_api.md` al día, `.github/workflows/ci.yml` (sin ejecutar en GitHub).
+- `tests/conftest.py`: cada test parte de las tablas de datos vacías (dentro de la
+  transacción que se revierte), para poder correrlos contra una base con la demo cargada.
+
+**Decisiones a confirmar con el equipo**
+- La malaria es la vista de entrada pero **sin predicciones**: casos observados.
+- `refresh_token` en `sessionStorage` (riesgo M-11); access token en memoria.
+- Regla de «acierto» del historial: ±7 días (ya anotada en `contrato_api.md`).
+
+**Docker (verificado 2026-10-26, Colima en Apple Silicon):** las 3 imágenes
+construyen, `docker compose` migra y carga la demo, el humo pasa por la API y por
+nginx, y los 283 tests pasan contra PostgreSQL 16 + PostGIS 3.4 (como el CI).
+Hallazgo: `app/services/casos.py` importaba `pandas` y la imagen `api` no lo trae
+(la API no arrancaba); corregido moviendo las constantes a `app/etl/fuentes.py` y
+vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
+
+**Pendientes (no son de esta sesión)**
+1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
+2. TASK-015 `evaluacion_alertas` (cierra la 023; sin ella no hay alertas) y TASK-016.
+3. Fuente de `brotes_confirmados` (riesgo M-08).
+4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla.
+5. TASK-041 (tag), 045 (ensayo, grabación, respaldo), 046 (ver el check verde en un PR).
+6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
+   `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.
+
 ### 2026-10-26 — API de zonas y alertas (TASK-019 a TASK-023, Dilan)
 
 **Estado:** implementado y verificado contra PostgreSQL 17 + PostGIS 3.6

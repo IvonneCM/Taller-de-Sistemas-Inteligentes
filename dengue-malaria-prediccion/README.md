@@ -19,16 +19,19 @@ preventivas.
 Este proyecto tiene dos frentes de trabajo con avance muy distinto, que
 conviene no confundir:
 
-**Backend (este directorio) — Fase 1 cerrada salvo el despliegue en la nube; Fase 2 (capa de datos) implementada.**
-Incluye especificación funcional y no funcional, diseño de arquitectura,
-modelo de datos y API propuesta, backlog técnico dividido por fases,
-estructura inicial del backend con FastAPI y el endpoint local `GET
-/health`. Ya existen la conexión a PostgreSQL/PostGIS, las migraciones
-Alembic, los conectores ETL formales (`app/etl/`), el baseline XGBoost con
-explicabilidad SHAP, la autenticación JWT con RBAC y la configuración por
-entorno. Todavía faltan los endpoints de datos, el pipeline de predicción
-completo y el dashboard. Ver `CONTEXT.md` (§9) para el estado exacto y las
-decisiones pendientes.
+**Sistema (este directorio) — MVP funcional en local; despliegue en la nube pendiente.**
+Hay un recorrido completo y reproducible: datos reales del Boletín Epidemiológico
+N.º 13 → ingesta (`app/etl/`) → base PostgreSQL/PostGIS → modelo XGBoost con
+explicabilidad SHAP (`app/ml/`) → API FastAPI con login JWT y control de acceso
+por rol → interfaz web React con mapa (`frontend/`). La **malaria se muestra con
+casos observados** (no hay serie semanal, así que no hay modelo; ver
+`../docs/adr/ADR-005-malaria-acumulado-en-bd.md`) y el **dengue con predicciones
+a 3 semanas**. Para recorrerlo y defenderlo paso a paso, ver
+[`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md); la arquitectura
+real está en [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md).
+Faltan, entre otras cosas, el despliegue (TASK-004), la generación automática de
+alertas (TASK-015), la tarea semanal (TASK-016) y la priorización de campañas
+(TASK-024/025/031). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -40,8 +43,9 @@ Este trabajo todavía no está integrado al backend — los conectores de
 vez de rediseñarla desde cero.
 
 Las métricas de precisión y anticipación del modelo (NFR-001, NFR-002)
-siguen siendo objetivos de diseño, no resultados validados: no existe
-todavía un motor de predicción entrenado (ver `../docs/metricas_valor.md`).
+siguen siendo objetivos de diseño, no resultados validados: existe un modelo de
+referencia entrenado, pero con 13 semanas de datos **no supera de forma
+concluyente a una regla simple** (ver `../docs/resultados_experimentales.md`).
 
 ## Documentación
 
@@ -68,6 +72,10 @@ Lectura recomendada:
 19. [`../docs/adr/`](../docs/adr/): registro de decisiones de arquitectura (ADR).
 20. [`../docs/risk_register.md`](../docs/risk_register.md): Risk Register inicial.
 21. [`../docs/declaracion_uso_ia.md`](../docs/declaracion_uso_ia.md): declaración de uso de IA y revisión humana.
+22. [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md): arquitectura real del MVP (código, configuración y secretos).
+23. [`../docs/contrato_api.md`](../docs/contrato_api.md): endpoints, roles y formato de errores.
+24. [`../docs/resultados_experimentales.md`](../docs/resultados_experimentales.md): resultados contra la línea base, con los intentos fallidos.
+25. [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md): guion de la demostración y Plan B.
 
 ## Tecnología propuesta
 
@@ -208,6 +216,47 @@ sus refresh tokens:
 .\.venv\Scripts\python.exe -m app.etl.seed_usuarios --delete
 ```
 
+### Demostración de punta a punta (datos reales)
+
+Con la base y las variables del paso anterior, **un comando** carga los casos
+reales del boletín, registra el modelo, genera las predicciones y crea los cinco
+usuarios demo (`SEED_DEMO_PASSWORD` es obligatoria):
+
+```bash
+python -m app.etl.seed_demo          # idempotente; --forzar agrega otra tanda de predicciones
+uvicorn app.main:app --port 8000
+SMOKE_EMAIL=autoridad@demo.local SMOKE_PASSWORD="$SEED_DEMO_PASSWORD" python scripts/smoke_test.py
+```
+
+No carga predicciones de malaria (no hay modelo), ni brotes confirmados, ni
+alertas: no existen esas fuentes. El script de humo (`scripts/smoke_test.py`)
+sirve también contra un despliegue (`SMOKE_URL=https://…`).
+
+### Interfaz web
+
+```bash
+cd frontend
+npm ci
+npm run dev      # http://localhost:5173 (reenvía /api al backend en el puerto 8000)
+npm test         # pruebas de la interfaz
+npm run build
+```
+
+La interfaz abre en **malaria** y permite cambiar a dengue. Sigue el sistema de
+diseño de `frontend/src/styles/tokens.css` (fuente del sistema, modo claro y
+oscuro, contraste revisado por prueba automática). El access token vive solo en
+memoria; el refresh token en `sessionStorage` (ver riesgo M-11 en
+`../docs/risk_register.md`).
+
+### Observabilidad y errores
+
+Cada respuesta trae `X-Request-ID`, que también aparece en los logs de esa
+petición. Una base de datos caída responde `503` (no `500`) y
+`GET /health/ready` la comprueba; `GET /health` solo dice que la API vive. Los
+errores nunca devuelven trazas ni lo que la persona envió. Ajustes opcionales:
+`LOG_LEVEL`, `DB_CONNECT_TIMEOUT_SECONDS`, `DB_STATEMENT_TIMEOUT_MS`,
+`DB_POOL_TIMEOUT_SECONDS` (ver `.env.example`).
+
 ### Verificaciones disponibles
 
 ```bash
@@ -218,10 +267,14 @@ alembic check
 ```
 
 `pytest` necesita la base de datos del paso "Configuración" y un `.env` con
-`SECRET_KEY`. Estado verificado el 2026-10-25: 27 tests en verde.
-Los tests de API necesitan `DATABASE_URL` apuntando a una base con las
-migraciones aplicadas. Los fixtures crean sus usuarios dentro de una
-transacción y revierten los cambios al terminar.
+`SECRET_KEY`. Estado verificado el 2026-10-26: **284 tests del backend** y
+**104 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
+(`pytest --cov=app/etl --cov=app/ml`). Los tests necesitan `DATABASE_URL`
+apuntando a una base con las migraciones aplicadas. Cada test corre dentro de
+una transacción que se revierte y parte de las tablas de datos vacías, así que
+es seguro correrlos contra una base de desarrollo con datos de demostración. La
+suite se niega a correr con `ENVIRONMENT=production`. El flujo completo está en
+`tests/e2e/`. Hay integración continua en `.github/workflows/ci.yml`.
 
 ## Estructura actual
 
