@@ -166,13 +166,14 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       la valida contra las restricciones de `design.md` §3 (tabla
       `predicciones`).
 
-- [ ] **TASK-015** [REQ-005, REQ-009, REQ-010] Implementar
+- [x] **TASK-015** [REQ-005, REQ-009, REQ-010] Implementar
       `app/ml/evaluacion_alertas.py`: compara `probabilidad_pct` contra
       `umbrales_configuracion`; si se supera el umbral **y** existen
       variables explicativas, crea fila en `alertas`; si no hay
       justificación, no se crea la alerta y se registra en log.
       *Verificación:* test unitario con probabilidad alta pero sin variables
       explicativas confirma que NO se genera alerta.
+      *Verificado 2026-10-26:* `app/ml/evaluacion_alertas.py` implementa `evaluar_prediccion`, `evaluar_alertas_lote`, `evaluar_alertas_pendientes` y CLI. `tests/ml/test_evaluacion_alertas.py` (12 tests) pasa al 100%: confirma REQ-005 (probabilidad alta sin explicabilidad no genera alerta y registra log warning), REQ-009 (probabilidad >= umbral genera alerta), REQ-010 (cambio de umbral con `configurar_umbral` en caliente se refleja de inmediato sin reinicio) y jerarquía departamental vs general.
 
 - [ ] **TASK-016** Configurar tarea programada (APScheduler o cron de
       Railway) para ejecutar el pipeline de predicción semanalmente.
@@ -222,11 +223,11 @@ control de acceso por rol.*
       parámetros de consulta.
       *Verificado 2026-10-26:* `tests/api/test_alertas.py` pasa: filtros por zona, enfermedad y fechas, paginación; no publica alertas cuya predicción no tenga variables explicativas.
 
-- [ ] **TASK-023** [REQ-010] Implementar `POST /admin/umbrales` (solo rol
+- [x] **TASK-023** [REQ-010] Implementar `POST /admin/umbrales` (solo rol
       admin) para configurar umbrales por enfermedad/departamento.
       *Verificación:* test confirma que el cambio se refleja en la siguiente
       llamada a `evaluacion_alertas` (TASK-015).
-      *Estado 2026-10-26 (sin marcar):* el endpoint y `app.services.umbrales.obtener_umbral` están implementados y probados (`tests/api/test_admin_umbrales.py`: un cambio se lee en la llamada siguiente, sin caché). Falta el criterio literal de esta tarea: que `evaluacion_alertas` (TASK-015, Ivonne) use `obtener_umbral`. Se marca `[x]` cuando exista.
+      *Verificado 2026-10-26:* `app.services.umbrales.obtener_umbral` es consumido directamente por `app/ml/evaluacion_alertas.py` (TASK-015). Verificado en `tests/ml/test_evaluacion_alertas.py::test_req010_cambio_dinamico_de_umbral` y `tests/api/test_admin_umbrales.py`.
 
 - [ ] **TASK-024** [REQ-011] Implementar `GET /campanas/priorizacion`
       (zonas ordenadas por riesgo y proximidad de fecha estimada).
