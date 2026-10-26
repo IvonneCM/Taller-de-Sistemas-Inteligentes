@@ -273,18 +273,13 @@ backlog de la sección 5.
   `metricas_entrenamiento` JSONB válido.
 
 **Pendientes**
-- Ivonne debe revisar y hacer el commit/push (instrucción explícita: el
-  agente no commitea).
-- La rama local `ivonne2` sigue detrás de `origin/ivonne2`; no se hizo
-  commit ni push.
 - `.gitignore` tiene un cambio previo no relacionado (ignora
   `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
 
 ### 2026-10-25 — TASK-017/018 autenticación JWT y RBAC
 
 **Estado:** implementación terminada, tests verdes y `TASK-017`/`TASK-018`
-marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25). Falta
-solo que Ivonne revise y haga el commit.
+marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25)
 
 **Implementado**
 - `app/core/security.py`: bcrypt (costo 12) y JWT HS256 con access de 30
@@ -338,10 +333,57 @@ solo que Ivonne revise y haga el commit.
   base `dengue_malaria`. Queda levantado para pruebas manuales.
 
 **Pendientes**
-- Ivonne debe revisar y commitear; el agente no commitea.
 - Se mantiene la extensión aprobada por Ivonne: `/auth/refresh` y
   `/auth/logout` además de `/auth/login`, documentada en `design.md` §4.
 - Rate limiting de login (SEG-10) y HTTPS de despliegue siguen fuera de
   alcance de estas dos tareas.
 - El access token no es revocable; si se requiere, evaluar una lista de
   revocación o expiración aún más corta.
+
+### 2026-10-26 — TASK-014 pipeline de predicción + SHAP + tabla predicciones
+
+**Estado:** implementación terminada, verificada y `TASK-014` marcada como
+`[x]` tras confirmación explícita de Ivonne (2026-10-26). 
+
+**Decisiones acordadas para esta sesión**
+- Horizonte operativo **t+3**; t+4 queda disponible por parámetro pero no se
+  publica en el lote semanal. Motivo: la validación t+4 solo tiene 2 orígenes
+  walk-forward y `predicciones` no tiene columna de horizonte; publicar ambos
+  crearía filas/alertas duplicadas indistinguibles.
+- Cortes provisionales de `nivel_riesgo`: `<33.33` bajo, `33.33-66.67`
+  medio, `>=66.67` alto. **No validados** ni equivalentes a brote.
+- `nivel_confianza` NFR-007 estricto con los umbrales de TASK-010:
+  `<=5 %` alto, `>5 % y <=20 %` bajo, `>20 %` no se publica; `medio` queda
+  reservado.
+- El modelo puntúa los 28 municipios del panel, pero solo se persisten los 4
+  del catálogo piloto. Ampliar el catálogo requiere geometrías oficiales y
+  pertenece a la capa de datos, no a TASK-014.
+
+**Implementado**
+- `app/ml/prediccion.py`: features → artefacto TASK-012 → SHAP TASK-013,
+  cálculo de riesgo/confianza/fecha, persistencia inmutable y CLI.
+- `app/models/prediccion.py` + migración `5f6a7b8c9d01`: tabla
+  `predicciones` con los CHECK de `design.md` §3, incluido el horizonte de
+  21-28 días.
+- `tests/ml/test_prediccion.py`: 18 pruebas (cortes, NFR-007, fechas, ORM,
+  persistencia simulada y pipeline real con SHAP).
+- `docs/task_014_prediccion.md`: decisiones, uso, verificación y limitaciones.
+
+**Verificación**
+- `python -B -m unittest discover -s tests/ml -p "test_prediccion.py" -v`:
+  **18 OK**.
+- Suite `tests/ml`: **66 OK, 3 omitidas** (omisiones previas de pandas 2.2.3;
+  SHAP ya quedó disponible en el intérprete global).
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Inserción real en transacción sobre PostgreSQL/PostGIS: 28 predicciones,
+  4 insertadas (piloto), 24 omitidas por catálogo; rollback posterior.
+- `ruff check` y `python -m compileall -q app tests`: OK.
+
+**Pendientes**
+- Si se quiere publicar t+4, agregar `horizonte_semanas` al esquema y definir
+  la regla de selección para `GET /zonas/riesgo` y alertas.
+- Integrar el porcentaje real de imputación de TASK-010; mientras el panel v2
+  no conserve `es_dato_imputado`, la confianza usa una estimación por
+  features climáticas ausentes.
+- TASK-015 debe partir de `predicciones.variables_explicativas` y no crear
+  alertas sin justificación.

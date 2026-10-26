@@ -124,7 +124,7 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       *Verificación:* test que, dado un input de ejemplo, retorna una lista
       ordenada de variables con peso numérico.
 
-- [ ] **TASK-014** [REQ-001, REQ-002, REQ-003, NFR-007] Implementar
+- [x] **TASK-014** [REQ-001, REQ-002, REQ-003, NFR-007] Implementar
       `app/ml/prediccion.py`: ejecuta el pipeline completo (features →
       modelo → SHAP), calcula `nivel_riesgo`, `probabilidad_pct`,
       `nivel_confianza` (bajo si el % de datos imputados supera el umbral de
