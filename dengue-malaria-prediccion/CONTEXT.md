@@ -298,10 +298,10 @@ backlog de la sección 5.
 **Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
 - La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
   `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
-  (1,1 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  (2,3 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
   sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
-  27 tests). `xgboost` pasó a `xgboost-cpu==2.1.1` (misma versión y mismo
-  `import xgboost`). `api` es la última etapa a propósito: un `docker build .`
+  27 tests). Se probó `xgboost-cpu` (la `ml` bajaba a 1,1 GB) pero por decisión
+  del usuario se volvió a `xgboost==2.1.1` normal. `api` es la última etapa a propósito: un `docker build .`
   sin target (Railway) construye la API.
 - Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
   mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
@@ -325,6 +325,26 @@ backlog de la sección 5.
   al Root Directory; hay que poner Config File Path
   `/dengue-malaria-prediccion/railway.toml` en el servicio.
 - No se tocó nada del job semanal (TASK-016).
+
+**Archivos de Railway eliminados (2026-10-26)**
+- Se borró `railway.toml` por decisión del usuario (sigue en el historial de Git).
+  Se conserva `docs/guia_despliegue_railway.md` como referencia, con un aviso al
+  inicio. El `Dockerfile` y `config.py` no cambian y sirven con cualquier
+  proveedor. Se perdió la migración automática en cada despliegue
+  (`alembic upgrade head`), que cada alternativa debe resolver por su cuenta.
+
+**Ruta elegida para el despliegue: Render + Neon + GitHub Actions (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_render_neon.md`: API en Render (gratis, se duerme), base
+  PostGIS en Neon, job semanal como workflow programado de GitHub Actions
+  (solo diseño: no se agrega el archivo hasta que exista `app/ml/prediccion.py`).
+- Las migraciones se aplican con el Docker Command de Render
+  (`alembic upgrade head && uvicorn ...`); se probó en local con la imagen `api`
+  contra una base vacía y `PORT=10000`: migra y responde 200.
+- Corrección (el usuario vio el panel de Render): Dockerfile Path es relativo a la
+  raíz del repo (`./dengue-malaria-prediccion/Dockerfile`) y Health Check Path /
+  Auto-Deploy no están en el formulario de creación.
+- Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
+  conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
 
 **Pendiente**
 - **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta

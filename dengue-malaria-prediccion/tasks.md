@@ -47,15 +47,16 @@ base de datos PostGIS lista.*
       más adelante; el equipo debe decidir proveedor (Railway con crédito de
       prueba o plan Hobby de $5/mes, u otra opción con base de datos PostGIS
       gratuita; ver `CONTEXT.md` §9). *Hecho y verificado en local:*
-      `Dockerfile` con dos targets (`api` 323 MB, `ml` 1,1 GB; Python 3.12
-      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore`,
-      `railway.toml` y `docker compose up --build api web` →
+      `Dockerfile` con dos targets (`api` 323 MB, `ml` 2,3 GB; Python 3.12
+      fijado), `frontend/Dockerfile` (`web`, 74 MB), `.dockerignore` y
+      `docker compose up --build api web` →
       `curl http://localhost:8000/health` = 200 y `curl http://localhost:8080/api/health` = 200.
       Falta crear el proyecto en el proveedor, definir `DATABASE_URL`,
-      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública. Pasos
-      completos en `../docs/guia_despliegue_railway.md`; `railway.toml` ya corre
-      `alembic upgrade head` como pre-deploy (probado en local contra una base
-      vacía).
+      `SECRET_KEY` y `ENVIRONMENT=production`, y probar la URL pública. El
+      `railway.toml` se eliminó el 2026-10-26 (queda en el historial de Git);
+      `alembic upgrade head` se probó en local contra una base vacía, pero ya no
+      corre automáticamente en ningún proveedor. Ruta elegida: Render + Neon + GitHub Actions, en
+      `../docs/guia_despliegue_render_neon.md`.
 
 ---
 

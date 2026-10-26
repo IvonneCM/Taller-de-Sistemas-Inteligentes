@@ -127,13 +127,12 @@ Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend)
 |---|---|---|---|
 | `api` | target `api` | 323 MB | `docker compose up --build api` |
 | `web` | `frontend/Dockerfile` (nginx) | 74 MB | `docker compose up --build api web` → http://localhost:8080 |
-| `ml` | target `ml` (pandas, xgboost-cpu, shap) | 1,1 GB | `docker compose run --rm ml python -m <modulo>` |
+| `ml` | target `ml` (pandas, xgboost, shap) | 2,3 GB | `docker compose run --rm ml python -m <modulo>` |
 
 El `frontend/` es solo un esqueleto (mapa base y comprobación de `/health`); no
-implementa las vistas de TASK-027 a 031. Si ya tenías el entorno virtual con
-`xgboost` instalado, ejecuta `pip uninstall xgboost` antes de
-`pip install -r requirements.txt`: ahora se usa `xgboost-cpu`, que instala el
-mismo módulo `xgboost` sin las librerías de GPU.
+implementa las vistas de TASK-027 a 031. La imagen `ml` pesa más porque
+`xgboost` incluye librerías de GPU de NVIDIA (unos 470 MB) que no se usan en CPU;
+la imagen `api` no las lleva.
 
 ### Ejecución
 

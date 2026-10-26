@@ -23,7 +23,7 @@
 | Frontend / Dashboard | React + librería de mapas (ej. Leaflet o Mapbox GL) | Mapas de calor interactivos y vistas por rol |
 | Autenticación | JWT (OAuth2 password flow de FastAPI) | Estándar, simple de integrar con RBAC |
 | Despliegue | Railway (API + PostgreSQL/PostGIS) — **pendiente de confirmar** | Ver justificación acordada con el usuario. El despliegue (TASK-004) está en espera y el proveedor puede cambiar; ver §10 |
-| Contenedores | Docker: tres imágenes — `api` (323 MB), `ml` (1,1 GB, ETL y predicción semanal) y `web` (74 MB, nginx); Python 3.12 fijado | La API solo lee resultados, así que no carga pandas/xgboost/shap; el job de predicción corre fuera de FastAPI con la imagen `ml`. La BD local usa `postgis/postgis:16-3.4` |
+| Contenedores | Docker: tres imágenes — `api` (323 MB), `ml` (2,3 GB, ETL y predicción semanal) y `web` (74 MB, nginx); Python 3.12 fijado | La API solo lee resultados, así que no carga pandas/xgboost/shap; el job de predicción corre fuera de FastAPI con la imagen `ml`. La BD local usa `postgis/postgis:16-3.4` |
 | Entrenamiento de modelo (offline) | Google Colab o servidor de la universidad | Evita cargar cómputo pesado en el entorno de producción liviano |
 
 > Nota: los nombres de librerías específicas (ej. XGBoost vs. Prophet vs.
@@ -326,11 +326,10 @@ dengue-malaria-prediccion/
 ├── alembic/                      # migraciones de base de datos
 ├── Dockerfile                    # targets: api (ligera) y ml (pandas, xgboost, shap); Python 3.12
 ├── docker-compose.yml            # db PostGIS + api + web (+ ml, profile "jobs")
-├── railway.toml                  # solo si se despliega en Railway
 ├── frontend/                     # React + Vite + Leaflet; Dockerfile propio (nginx)
 ├── requirements.txt              # entorno local completo (incluye los tres de abajo)
 ├── requirements-api.txt          # imagen api
-├── requirements-ml.txt           # imagen ml (xgboost-cpu)
+├── requirements-ml.txt           # imagen ml (xgboost, pandas, shap)
 ├── requirements-dev.txt          # pytest, black, ruff (solo local)
 ├── requirements.md
 ├── design.md
