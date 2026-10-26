@@ -5,12 +5,12 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 45 de 48: toda la capa de datos,
+> web) y la CI de GitHub está en verde. Hechas 46 de 48: toda la capa de datos,
 > el motor de predicción, las alertas, la autenticación, toda la API (019 a 026,
 > 047), la tarea semanal (016), las vistas (027 a 031), las pruebas y la cobertura
 > (032), el manejo de errores (040) y casi toda la Fase 7. **Bloquea la defensa:**
-> una fuente de brotes confirmados (034). Faltan además la revisión de seguridad
-> firmada (035) y las limitaciones pegadas en el informe (036).
+> una fuente de brotes confirmados (034). Falta además pegar las limitaciones en el
+> informe (036).
 > Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
 > porque no existe serie semanal (ADR-005).
 >
@@ -343,13 +343,13 @@ considerarse listo para el piloto.*
       *Verificación:* reporte documentado con las métricas obtenidas,
       aclarando que son resultados del piloto, no garantías generales.
 
-- [ ] **TASK-035** _(Resp.: Dilan)_ [REQ-005, REQ-020] Revisión de seguridad y cumplimiento:
+- [x] **TASK-035** _(Resp.: Dilan)_ [REQ-005, REQ-020] Revisión de seguridad y cumplimiento:
       confirmar ausencia de datos personales de pacientes, verificar HTTPS
       en despliegue, y confirmar que no existen alertas sin justificación en
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
-      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Firmado por Dilan (2026-10-26); falta la firma de Ignacio, Tania, Ivonne y Adriana** en la sección 5 del documento (issue #34).
+      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Firmado por las cinco personas del equipo (2026-10-26)** en la sección 5 del documento (issue #34 cerrado).
 
 - [ ] **TASK-036** _(Resp.: Adriana)_ Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,
