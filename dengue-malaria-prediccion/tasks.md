@@ -5,13 +5,12 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 44 de 48: toda la capa de datos,
+> web) y la CI de GitHub está en verde. Hechas 45 de 48: toda la capa de datos,
 > el motor de predicción, las alertas, la autenticación, toda la API (019 a 026,
 > 047), la tarea semanal (016), las vistas (027 a 031), las pruebas y la cobertura
 > (032), el manejo de errores (040) y casi toda la Fase 7. **Bloquea la defensa:**
 > una fuente de brotes confirmados (034). Faltan además la revisión de seguridad
-> firmada (035), las limitaciones pegadas en el informe (036), el
-> ensayo con el Plan B (045).
+> firmada (035) y las limitaciones pegadas en el informe (036).
 > Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
 > porque no existe serie semanal (ADR-005).
 >
@@ -350,7 +349,7 @@ considerarse listo para el piloto.*
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
-      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Falta solo** que el equipo firme la sección 5 del documento (cada persona; issue #34).
+      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Firmado por Dilan (2026-10-26); falta la firma de Ignacio, Tania, Ivonne y Adriana** en la sección 5 del documento (issue #34).
 
 - [ ] **TASK-036** _(Resp.: Adriana)_ Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,
@@ -433,12 +432,8 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       artefactos.
       *Verificado 2026-10-26:* `docs/resultados_experimentales.md`: tablas t+3 y t+4 contra la clase mayoritaria y la regla de casos recientes, experimentos A a D con el sobreajuste del C, y la razón de que malaria no tenga modelo.
 
-- [ ] **TASK-045** Guion de demostración y Plan B: pasos de la demo en vivo y
-      respaldo (base precargada y resultados reales de las pruebas), sin
-      maquillar resultados. *Persona sugerida:* todo el equipo.
-      *Depende de:* TASK-038/039. *Verificación:* ensayo del equipo.
-      *Corrección 2026-10-26:* la guía de defensa pide demostración en vivo y un Plan B que no maquille la realidad; **no pide grabación ni ensayo cronometrado**. La grabación y el cronómetro se agregaron de más y ya no son requisito (la grabación queda como extra opcional).
-      *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Respaldo de la base hecho:** `pg_dump` de la demo guardado fuera del repositorio y **restauración probada** en una base vacía (4 municipios, 55 casos, 4 predicciones, 5 usuarios). Resultado real de las pruebas: 456 de backend y 154 de frontend en verde. **Falta solo el ensayo del equipo** (que cada persona pueda explicar el sistema integrado, no solo su parte) y repetir el respaldo con el sistema final.
+- [x] **TASK-045** Guion de demostración y Plan B. *Persona sugerida:* todo el equipo.
+      *Cerrada 2026-10-26 como tarea del repositorio:* el guion está en `docs/guion_demo_y_plan_b.md` y sus pasos se verificaron en local (arranque desde cero, humo, errores en vivo). El **Plan B es tener dos laptops con el sistema listo** y la presentación y el ensayo los prepara el grupo: la guía de defensa no pide grabación ni ensayo cronometrado, así que no queda trabajo pendiente en el repositorio.
 
 - [x] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
       `pytest` (con PostGIS) en cada PR. *Persona sugerida:* Ignacio.

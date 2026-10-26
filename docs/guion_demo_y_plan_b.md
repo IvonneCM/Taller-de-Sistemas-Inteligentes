@@ -97,21 +97,19 @@ Caso principal: **una autoridad de salud entra, ve el riesgo y un epidemiólogo 
      ```
    - Mostrar el log: cada línea trae el `request_id` que también devuelve la respuesta (`X-Request-ID`); no aparecen contraseñas ni correos.
 
-## 5. Plan B (preparar con tiempo, sin maquillar)
+## 5. Plan B
+
+**El Plan B es tener dos laptops con el sistema listo.** Si una falla, se sigue con la otra. La presentación y el ensayo los prepara el grupo; no son una tarea del repositorio.
 
 | Si falla… | Plan |
 |---|---|
-| La interfaz o la API | Reiniciar con la sección 2 (2 min). Si no arranca, mostrar el **log del error** y pasar al respaldo |
-| La base de datos | Restaurar el respaldo: `pg_restore -d dengue_malaria respaldo_demo.dump` |
-| El despliegue o la red | Se defiende en local; el despliegue es un riesgo declarado (M-10) |
-| Todo lo anterior | Mostrar el **respaldo**: restaurar la base y los resultados reales de las pruebas, y decir que la demo en vivo no pudo hacerse. No se sustituye la demostración por capturas |
+| La interfaz o la API en una laptop | Pasar a la segunda laptop (misma versión, `v0.2-mvp`) |
+| Una laptop no arranca el sistema | Reiniciar con la sección 2 (2 min) o usar la otra |
+| La red o el despliegue | Se defiende en local en cualquiera de las dos; el despliegue en Render es un riesgo declarado (M-10) |
 
-Qué preparar:
-- **Respaldo de base:** con el sistema funcionando, `pg_dump -Fc dengue_malaria > respaldo_demo.dump` (guardarlo fuera del repositorio).
-- **Grabación (opcional):** la guía de defensa **no la exige**; pide una demostración en vivo y un respaldo que no maquille la realidad. Si el equipo quiere una grabación de pantalla sin editar como último recurso, es un extra, nunca un reemplazo de la demo.
-- **Registro de pruebas:** guardar la salida real de `pytest` y `npm test`, incluidas las fallas si las hubiera.
+Antes de la defensa, en **las dos** laptops: la versión `v0.2-mvp`, el sistema arrancado con la sección 2 y `scripts/smoke_test.py` en verde.
 
-Un Plan B que oculta un error es un antipatrón fatal. Si una prueba falla el día de la defensa, **se dice**, se muestra el resultado real y se explica el porqué.
+Un Plan B que oculta un error es un antipatrón fatal. Si algo falla el día de la defensa, **se dice**, se muestra el resultado real y se explica el porqué. Nunca se sustituye la demostración por capturas.
 
 ## 6. Preguntas probables (respuestas honestas)
 
@@ -127,6 +125,6 @@ Un Plan B que oculta un error es un antipatrón fatal. Si una prueba falla el d�
 
 - [ ] Versión congelada (tag) y todos con el mismo commit
 - [ ] `smoke_test.py` en verde en la máquina de la demo
-- [ ] Respaldo de la base listo (`pg_restore` probado) y resultado real de las pruebas guardado
+- [ ] Segunda laptop lista con el mismo sistema (Plan B)
 - [ ] Resultado real de `pytest` y `npm test` a mano
 - [ ] Cada integrante puede explicar el flujo completo
