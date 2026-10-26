@@ -16,3 +16,7 @@ geoalchemy2==0.15.2
 PyJWT==2.15.1
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.31
+
+# Lectura de boletines en PDF subidos por una persona (POST /admin/boletines).
+# Misma version que usa el pipeline de datos (requirements.txt de la raiz).
+pdfplumber==0.11.10

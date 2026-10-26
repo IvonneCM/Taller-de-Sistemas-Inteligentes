@@ -50,9 +50,15 @@
   --texto-2: #6e6e73;
   --linea: rgba(0, 0, 0, 0.08);
   --linea-fuerte: rgba(0, 0, 0, 0.22);
-  --acento: #0071e3;
-  --enlace: #0066cc; /* texto de enlace: #0071e3 queda en 4,3:1 sobre #f5f5f7 */
+  /* Identidad en rojo (2026-10-26): acento, enlaces y encabezado. El semaforo de
+     riesgo conserva sus colores: el rojo de marca es mas oscuro (carmesi) que el
+     de "riesgo alto" y las dos cosas siempre llevan texto, nunca solo color. */
+  --acento: #c8102e;
+  --enlace: #b50d29; /* texto de enlace sobre #f5f5f7: 5,9:1 */
   --sobre-acento: #ffffff;
+  --hero-1: #8f0a1f;
+  --hero-2: #e0243b;
+  --sobre-hero: #ffffff;
   --sombra: 0 4px 24px rgba(0, 0, 0, 0.06);
   --pista: rgba(118, 118, 128, 0.12);
 
@@ -87,9 +93,12 @@
     --texto-2: #a1a1a6;
     --linea: rgba(255, 255, 255, 0.12);
     --linea-fuerte: rgba(255, 255, 255, 0.3);
-    --acento: #2997ff;
-    --enlace: #2997ff;
+    --acento: #ff4d5e;
+    --enlace: #ff8a95;
     --sobre-acento: #000000;
+    --hero-1: #4d0814;
+    --hero-2: #b3122d;
+    --sobre-hero: #ffffff;
     --sombra: 0 4px 24px rgba(0, 0, 0, 0.5);
     --pista: rgba(118, 118, 128, 0.32);
 

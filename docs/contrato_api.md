@@ -34,6 +34,8 @@ El rol sale de la base de datos en cada petición (`app/api/deps.py`: `get_curre
 | `GET /modelo/desempeno` | `epidemiologo`, `admin` | TASK-026 · REQ-016 |
 | `POST /admin/umbrales` | `admin` | TASK-023 · REQ-010 |
 | `GET /casos/resumen` | todos | TASK-047 · REQ-008, REQ-014 |
+| `GET /panel/resumen` | todos | Pantalla de resumen · REQ-001, REQ-009 |
+| `POST /admin/boletines/vista-previa` · `POST /admin/boletines` | `epidemiologo`, `admin` | Ingesta asistida · REQ-013, REQ-014, REQ-015 |
 | `GET /campanas/priorizacion` | `sedes`, `coordinador_municipal` (solo su municipio) | TASK-024 · REQ-011 |
 | `GET /municipios/{id}/recursos` | `coordinador_municipal` (solo el suyo), `admin` | TASK-025 · REQ-012 |
 | `GET /health` · `GET /health/ready` | público | TASK-040 · NFR-003 |
@@ -110,6 +112,21 @@ Query opcional: `enfermedad_id`. Casos **observados** (no predichos) por municip
 | `fuente` | Boletín de origen |
 
 Si hay serie semanal se usa solo esa; **nunca se suman filas semanales con acumuladas** de la misma enfermedad. Son conteos agregados: sin datos de pacientes.
+
+### `GET /panel/resumen`
+
+Indicadores de la pantalla de entrada en una sola llamada: alertas emitidas y vigentes, distribución del riesgo vigente de dengue y zonas de mayor probabilidad, serie semanal nacional de dengue (suma de los municipios cargados; `ultima_semana` es provisional), casos acumulados de malaria y los municipios con más casos. Sin datos devuelve ceros y listas vacías.
+
+### `POST /admin/boletines/vista-previa` y `POST /admin/boletines`
+
+Ingesta asistida: el sitio del Ministerio de Salud bloquea la descarga automática, así que una persona sube el Boletín Epidemiológico en PDF (`multipart/form-data`, campo `archivo`, máximo 20 MB). Las dos rutas leen y verifican igual; `vista-previa` no escribe nada y la otra guarda. El cliente envía el mismo archivo dos veces (el servidor no guarda archivos).
+
+- **Qué se extrae:** la tabla «Dinámica semanal de casos de dengue por municipio» (semanas 1 a N del boletín N). La semana y el año salen de la portada. Malaria no se extrae (ADR-005).
+- **Verificación:** cada fila contra su total impreso y cada columna contra la fila de totales. Si algo no cuadra, el boletín se rechaza entero.
+- **Política de guardado:** cada municipio queda con una sola serie semanal, la del boletín más reciente. Un boletín nuevo reemplaza los valores del anterior (las correcciones se devuelven en `revisiones`) y agrega las semanas que faltaban. Un boletín igual o más viejo que el cargado no cambia nada. Los municipios fuera del catálogo se informan en `fuera_de_catalogo` y se omiten. `fuente` registra el número de boletín.
+- **No cambia las predicciones:** el modelo usa el panel semanal del pipeline de datos (casos + clima), que se reconstruye aparte.
+
+Errores: **400** con el motivo (no es PDF, no es un boletín, no trae la tabla, la tabla no cuadra), **413** si supera 20 MB, **401/403** sin sesión o sin rol. Boletines de 2026 probados: SE 3, 5, 7, 8, 9 y 13 se aceptan; SE 6 (tabla partida) y SE 21 (ya no trae la tabla municipal) se rechazan.
 
 ### `GET /health` y `GET /health/ready`
 

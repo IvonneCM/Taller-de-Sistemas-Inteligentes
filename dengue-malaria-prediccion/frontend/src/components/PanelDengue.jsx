@@ -154,7 +154,7 @@ export function PanelDengue({ carga, casos, usuario, seleccionado, alSeleccionar
         <h3>Una estimación exploratoria</h3>
         <p>
           Estas probabilidades salen de un modelo de referencia entrenado con 13 semanas de 2026
-          en cuatro municipios. Sirven para orientar dónde mirar primero; no son un diagnóstico
+          de los 28 municipios con dengue del boletín. Sirven para orientar dónde mirar primero; no son un diagnóstico
           ni una garantía, y todavía no validan las metas de precisión del proyecto.
         </p>
       </div>

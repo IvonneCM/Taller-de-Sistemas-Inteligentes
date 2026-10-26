@@ -11,7 +11,11 @@ const NOMBRES = {
 export function nombreZona(nombre) {
   if (!nombre) return "";
   if (NOMBRES[nombre]) return NOMBRES[nombre];
-  return nombre.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+  const MINUSCULAS = new Set(["de", "del", "la", "las", "los", "y"]);
+  // "EUREKA(SANTOS MERCADO)" -> "Eureka (Santos Mercado)": espacio antes del paréntesis
+  // y mayúscula también en la primera palabra dentro de él.
+  return nombre.toLowerCase().replace(/(\S)\(/g, "$1 (").replace(/(^|\s)(\S+)/g, (_, espacio, palabra, indice) =>
+    `${espacio}${indice > 0 && MINUSCULAS.has(palabra) ? palabra : palabra.replace(/^(\(?)(.)/, (__, p, c) => p + c.toUpperCase())}`);
 }
 
 export const ROLES = {

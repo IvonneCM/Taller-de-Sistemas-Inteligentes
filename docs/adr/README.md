@@ -18,6 +18,7 @@ justificación, además de consecuencias.
 | [ADR-004](./ADR-004-linea-base-nacional-referencia-inicial.md) | Adoptar la línea base nacional como referencia inicial | Aceptado |
 | [ADR-005](./ADR-005-malaria-acumulado-en-bd.md) | Malaria se guarda como acumulado (sin serie semanal inventada) | Aceptado |
 | [ADR-006](./ADR-006-despliegue-render-neon.md) | Render + Neon como plataforma de despliegue | Aceptado |
+| [ADR-007](./ADR-007-catalogo-ampliado-opcional.md) | Ampliar el catálogo de municipios más allá de la zona piloto (opcional) | Propuesto (falta la aceptación del equipo) |
 
 ## ADRs candidatos (pendientes)
 

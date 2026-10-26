@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  ApiError, _reiniciar, alCambiarSesion, entrar, haySesion, pedir, restaurarSesion, salir, usuarioDelToken,
+  ApiError, _reiniciar, alCambiarSesion, entrar, enviarArchivo, haySesion, pedir, restaurarSesion, salir, usuarioDelToken,
 } from "../api.js";
 
 // JWT de prueba (sin firma: el cliente solo lee la carga para mostrar el rol).
@@ -92,6 +92,23 @@ describe("pedir", () => {
     const [url, opciones] = fetchSimulado.mock.calls[0];
     expect(url).toBe("/api/alertas?limite=50");
     expect(opciones.headers.Authorization).toBe(`Bearer ${PAR.access_token}`);
+  });
+
+  it("enviarArchivo hace POST multipart con el token y reintenta con el mismo archivo tras un 401", async () => {
+    await conSesion();
+    fetchSimulado
+      .mockReturnValueOnce(responder(401, { detail: "x" }))
+      .mockReturnValueOnce(responder(200, PAR_2))
+      .mockReturnValueOnce(responder(400, { detail: "El archivo no es un PDF." }));
+    const archivo = new File(["hola"], "b.pdf", { type: "application/pdf" });
+
+    await expect(enviarArchivo("/admin/boletines", archivo)).rejects.toThrow("El archivo no es un PDF.");
+
+    const [url, opciones] = fetchSimulado.mock.calls[2];
+    expect(url).toBe("/api/admin/boletines");
+    expect(opciones.method).toBe("POST");
+    expect(opciones.body.get("archivo")).toBe(archivo);
+    expect(opciones.headers.Authorization).toBe(`Bearer ${PAR_2.access_token}`);
   });
 
   it("sin sesión no llama a la red", async () => {

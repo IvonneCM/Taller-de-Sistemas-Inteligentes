@@ -27,7 +27,7 @@ from statistics import mean, median
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import BroteConfirmado, Prediccion
+from app.models import BroteConfirmado, BroteSimulado, Prediccion
 from app.services.errores import RecursoNoEncontrado
 from app.services.historial import VENTANA_CORRELACION_DIAS
 from app.services.predicciones import validar_enfermedad
@@ -55,23 +55,28 @@ def calcular_desempeno(
     desde: date | None = None,
     hasta: date | None = None,
     nivel_minimo: str = "medio",
+    usar_brotes_simulados: bool = False,
 ) -> dict:
     if enfermedad_id is not None:
         validar_enfermedad(db, enfermedad_id)
     if nivel_minimo not in ORDEN:
         raise RecursoNoEncontrado(f"Nivel de riesgo desconocido: {nivel_minimo}.")
 
+    # TASK-034: sin fuente de brotes confirmados, la vista brotes_simulados es un
+    # sustituto referencial (riesgos M-04 y M-08). Por defecto se usan los confirmados.
+    Brote = BroteSimulado if usar_brotes_simulados else BroteConfirmado
+
     q_pred = select(Prediccion)
-    q_brotes = select(BroteConfirmado)
+    q_brotes = select(Brote)
     if enfermedad_id is not None:
         q_pred = q_pred.where(Prediccion.enfermedad_id == enfermedad_id)
-        q_brotes = q_brotes.where(BroteConfirmado.enfermedad_id == enfermedad_id)
+        q_brotes = q_brotes.where(Brote.enfermedad_id == enfermedad_id)
     if desde is not None:
         q_pred = q_pred.where(Prediccion.fecha_estimada_riesgo >= desde)
-        q_brotes = q_brotes.where(BroteConfirmado.fecha_confirmacion >= desde)
+        q_brotes = q_brotes.where(Brote.fecha_confirmacion >= desde)
     if hasta is not None:
         q_pred = q_pred.where(Prediccion.fecha_estimada_riesgo <= hasta)
-        q_brotes = q_brotes.where(BroteConfirmado.fecha_confirmacion <= hasta)
+        q_brotes = q_brotes.where(Brote.fecha_confirmacion <= hasta)
 
     predicciones = db.execute(q_pred).scalars().all()
     brotes = db.execute(q_brotes).scalars().all()
@@ -79,12 +84,12 @@ def calcular_desempeno(
     # brote confirmado justo despues de `hasta` sigue siendo el de esa prediccion.
     todos_los_brotes = brotes
     if desde is not None or hasta is not None:
-        q_todos = select(BroteConfirmado)
+        q_todos = select(Brote)
         if enfermedad_id is not None:
-            q_todos = q_todos.where(BroteConfirmado.enfermedad_id == enfermedad_id)
+            q_todos = q_todos.where(Brote.enfermedad_id == enfermedad_id)
         todos_los_brotes = db.execute(q_todos).scalars().all()
 
-    por_zona: dict[tuple[int, int], list[BroteConfirmado]] = {}
+    por_zona: dict[tuple[int, int], list] = {}
     for b in todos_los_brotes:
         por_zona.setdefault((b.municipio_id, b.enfermedad_id), []).append(b)
 

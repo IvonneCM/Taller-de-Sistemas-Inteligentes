@@ -106,6 +106,10 @@ def run_migrations_online() -> None:
         def include_object(object_, name, type_, reflected, compare_to):
             if type_ == "table" and name in tablas_extension:
                 return False
+            # Vistas mapeadas en el ORM (p. ej. brotes_simulados): las crea su
+            # migracion con SQL; autogenerate no debe proponerlas como tablas.
+            if type_ == "table" and not reflected and object_.info.get("es_vista"):
+                return False
             if type_ == "index" and getattr(object_, "table", None) is not None:
                 if object_.table.name in tablas_extension:
                     return False
