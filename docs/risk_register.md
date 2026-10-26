@@ -355,6 +355,7 @@ inicial: la complementa con lo que se aprendió al construir el MVP.
 | M-15 | **Reglas de campañas y recomendaciones provisionales**: los cortes de riesgo (33,33 % y 66,67 %) y los textos de recomendación son decisiones del MVP, no protocolos de SEDES. | Declarado en la API y en la interfaz | Validar con SEDES antes de usarlas para decidir | `docs/decisiones_task_024_025.md` |
 | M-16 | **Dependencias con avisos de seguridad**: `python-multipart 0.0.9` (10 avisos; se usa en el login público) y `python-jose 3.3.0` (4 avisos, 2 sin corrección). | Abierto | Subir `python-multipart` a 0.0.31 (probado) y `python-jose` a 3.4.0 o migrar a PyJWT | `docs/revision_seguridad.md` H-1 y H-2 |
 | M-17 | **Sin límite de intentos de login ni cabeceras de seguridad en nginx.** | Abierto | Limitar intentos y agregar cabeceras antes de exponer la API | `docs/revision_seguridad.md` H-3 y H-4 |
+| M-18 | **Rendimiento de `GET /zonas/riesgo` (NFR-004) solo se cumple con 1 a 5 usuarios simultáneos**: con 350 municipios simulados el p95 fue 423 ms (1 usuario), 1 775 ms (5), 4 229 ms (10) y 11 627 ms (25). La respuesta pesa 5,1 MB y el servidor atiende ~3 peticiones/s. Datos simulados y medición local, no de Render. | Aceptado (TASK-033) | Reducir el peso (simplificar polígonos, geometría aparte o compresión) si se prevé más de 5 usuarios a la vez | `dengue-malaria-prediccion/scripts/prueba_carga_zonas_riesgo.py` y `tasks.md` TASK-033 |
 
 Los riesgos M-08 y M-10 bloquean parte de la demostración completa; el
 resto son límites que deben decirse en voz alta durante la defensa.

@@ -454,6 +454,17 @@ TASK-023 queda sin marcar (ver pendientes).
 - Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
   conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
 
+**TASK-033 cerrada con limitación (2026-10-26)**
+- `scripts/prueba_carga_zonas_riesgo.py` (base temporal local, datos simulados,
+  se borra sola; se niega a correr contra hosts no locales). p95 con 350
+  municipios: 423 ms (1 usuario), 1 775 ms (5), 4 229 ms (10), 11 627 ms (25).
+  Respuesta de 5,1 MB. El usuario aceptó el resultado con 1 a 5 usuarios
+  simultáneos y la tarea quedó `[x]`; con 10 o más el p95 supera los 2 s
+  (límite documentado en `tasks.md` y en `docs/risk_register.md` M-18).
+- TASK-028 ya estaba hecha: el frontend es real (`frontend/src`, vistas por rol).
+  Los tests de vitest no corren en esta máquina (Node 22.14; jsdom 30 pide
+  >= 22.22), pero la CI sí los ejecuta.
+
 **TASK-004 verificada (2026-10-26)**
 - `https://taller-de-sistemas-inteligentes.onrender.com/health` responde 200 con
   TLS válido; `http://` redirige con 301; `POST /auth/login` con credenciales
