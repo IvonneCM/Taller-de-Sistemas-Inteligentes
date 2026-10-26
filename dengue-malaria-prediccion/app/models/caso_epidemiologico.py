@@ -1,13 +1,12 @@
 """Modelo ORM: casos_epidemiologicos. Implementa TASK-006 / REQ-013,
 REQ-015.
 
-Nota de granularidad (decision corregida 2026-10-25, ver CONTEXT.md): la
-fuente real (Min. de Salud y Deportes, Boletin Epidemiologico N.13) entrega
-acumulados municipales SE1-13, no series semana-a-semana. `fecha_reporte`
-puede entonces representar el fin del periodo acumulado reportado (no un dia
-puntual con conteo diario). El modelo no fuerza una granularidad porque el
-esquema es compatible con cualquiera (acumulado por periodo hoy, semanal si
-en el futuro la fuente lo permite) — ver REQ-014 en tasks.md TASK-009.
+Nota de granularidad (actualizada 2026-10-25, decision 2 del reparto): el
+esquema admite cualquier granularidad; `fecha_reporte` es el DOMINGO de la
+semana ISO para filas semanales (dengue: serie real por municipio) y el
+cierre del periodo para filas acumuladas (malaria: solo hay acumulados SE1-k).
+Las filas semanales y acumuladas de una misma enfermedad no deben mezclarse:
+se distinguen por `fuente`. Ver app/etl/conectores/epidemiologia.py.
 """
 
 from sqlalchemy import (
