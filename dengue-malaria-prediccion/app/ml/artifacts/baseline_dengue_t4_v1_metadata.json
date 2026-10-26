@@ -1,0 +1,356 @@
+{
+  "tarea": "TASK-012",
+  "nombre": "xgboost_baseline_dengue_t4",
+  "version": "v1",
+  "enfermedad": "dengue",
+  "horizonte_semanas": 4,
+  "etiqueta": "casos_dengue_t_mas_4 > 0",
+  "es_definicion_de_brote": false,
+  "fecha_entrenamiento": "2026-10-25T23:55:32.474244+00:00",
+  "features": [
+    "casos_dengue_lag2",
+    "casos_dengue_lag3",
+    "casos_dengue_lag4",
+    "casos_dengue_media_movil_2sem",
+    "casos_dengue_media_movil_3sem",
+    "casos_dengue_media_movil_4sem",
+    "temperatura_media_lag2",
+    "temperatura_media_lag3",
+    "temperatura_media_lag4",
+    "temperatura_media_media_movil_2sem",
+    "temperatura_media_media_movil_3sem",
+    "temperatura_media_media_movil_4sem",
+    "humedad_media_lag2",
+    "humedad_media_lag3",
+    "humedad_media_lag4",
+    "humedad_media_media_movil_2sem",
+    "humedad_media_media_movil_3sem",
+    "humedad_media_media_movil_4sem",
+    "precipitacion_total_mm_lag2",
+    "precipitacion_total_mm_lag3",
+    "precipitacion_total_mm_lag4",
+    "precipitacion_total_mm_media_movil_2sem",
+    "precipitacion_total_mm_media_movil_3sem",
+    "precipitacion_total_mm_media_movil_4sem"
+  ],
+  "n_features": 24,
+  "retraso_semanas": 0,
+  "exigir_historia_completa": false,
+  "umbral_probabilidad": 0.5,
+  "hiperparametros": {
+    "n_estimators": 200,
+    "max_depth": 2,
+    "learning_rate": 0.05,
+    "subsample": 0.9,
+    "colsample_bytree": 0.9,
+    "min_child_weight": 1,
+    "reg_lambda": 1.0,
+    "objective": "binary:logistic",
+    "eval_metric": "logloss",
+    "tree_method": "hist",
+    "random_state": 42,
+    "n_jobs": 1
+  },
+  "datos": {
+    "archivo": "panel_semanal_dengue_clima.csv",
+    "filas_panel": 364,
+    "filas_entrenamiento_final": 196,
+    "municipios": 28,
+    "primera_semana": "2025-12-29",
+    "ultima_semana": "2026-03-23"
+  },
+  "validacion": {
+    "protocolo": "walk-forward por fecha; train solo con objetivos disponibles en el origen",
+    "origenes": [
+      "2026-02-16",
+      "2026-02-23"
+    ],
+    "por_origen": [
+      {
+        "origen": "2026-02-16",
+        "n_train": 28,
+        "n_test": 28,
+        "positivos_train": 14,
+        "positivos_test": 12,
+        "modelo": {
+          "n": 28,
+          "positivos": 12,
+          "negativos": 16,
+          "prevalencia": 0.4286,
+          "accuracy": 0.3571,
+          "balanced_accuracy": 0.3646,
+          "precision": 0.3125,
+          "recall": 0.4167,
+          "f1": 0.3571,
+          "roc_auc": 0.3646,
+          "pr_auc": 0.4369,
+          "brier": 0.3803,
+          "matriz_confusion": {
+            "tn": 5,
+            "fp": 11,
+            "fn": 7,
+            "tp": 5
+          }
+        },
+        "baselines": {
+          "clase_mayoritaria": {
+            "n": 28,
+            "positivos": 12,
+            "negativos": 16,
+            "prevalencia": 0.4286,
+            "accuracy": 0.4286,
+            "balanced_accuracy": 0.5,
+            "precision": 0.4286,
+            "recall": 1.0,
+            "f1": 0.6,
+            "roc_auc": 0.5,
+            "pr_auc": 0.4286,
+            "brier": 0.25,
+            "matriz_confusion": {
+              "tn": 0,
+              "fp": 16,
+              "fn": 0,
+              "tp": 12
+            }
+          },
+          "casos_recientes": {
+            "n": 28,
+            "positivos": 12,
+            "negativos": 16,
+            "prevalencia": 0.4286,
+            "accuracy": 0.5,
+            "balanced_accuracy": 0.5208,
+            "precision": 0.4444,
+            "recall": 0.6667,
+            "f1": 0.5333,
+            "roc_auc": 0.5208,
+            "pr_auc": 0.4392,
+            "brier": 0.5,
+            "matriz_confusion": {
+              "tn": 6,
+              "fp": 10,
+              "fn": 4,
+              "tp": 8
+            }
+          }
+        }
+      },
+      {
+        "origen": "2026-02-23",
+        "n_train": 56,
+        "n_test": 28,
+        "positivos_train": 24,
+        "positivos_test": 1,
+        "modelo": {
+          "n": 28,
+          "positivos": 1,
+          "negativos": 27,
+          "prevalencia": 0.0357,
+          "accuracy": 0.8929,
+          "balanced_accuracy": 0.9444,
+          "precision": 0.25,
+          "recall": 1.0,
+          "f1": 0.4,
+          "roc_auc": 0.8889,
+          "pr_auc": 0.25,
+          "brier": 0.1263,
+          "matriz_confusion": {
+            "tn": 24,
+            "fp": 3,
+            "fn": 0,
+            "tp": 1
+          }
+        },
+        "baselines": {
+          "clase_mayoritaria": {
+            "n": 28,
+            "positivos": 1,
+            "negativos": 27,
+            "prevalencia": 0.0357,
+            "accuracy": 0.9643,
+            "balanced_accuracy": 0.5,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "roc_auc": 0.5,
+            "pr_auc": 0.0357,
+            "brier": 0.1888,
+            "matriz_confusion": {
+              "tn": 27,
+              "fp": 0,
+              "fn": 1,
+              "tp": 0
+            }
+          },
+          "casos_recientes": {
+            "n": 28,
+            "positivos": 1,
+            "negativos": 27,
+            "prevalencia": 0.0357,
+            "accuracy": 0.4643,
+            "balanced_accuracy": 0.7222,
+            "precision": 0.0625,
+            "recall": 1.0,
+            "f1": 0.1176,
+            "roc_auc": 0.7222,
+            "pr_auc": 0.0625,
+            "brier": 0.5357,
+            "matriz_confusion": {
+              "tn": 12,
+              "fp": 15,
+              "fn": 0,
+              "tp": 1
+            }
+          }
+        }
+      }
+    ],
+    "agregado": {
+      "modelo": {
+        "pooled": {
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.625,
+          "balanced_accuracy": 0.568,
+          "precision": 0.3,
+          "recall": 0.4615,
+          "f1": 0.3636,
+          "roc_auc": 0.5671,
+          "pr_auc": 0.3492,
+          "brier": 0.2533,
+          "matriz_confusion": {
+            "tn": 29,
+            "fp": 14,
+            "fn": 7,
+            "tp": 6
+          }
+        },
+        "macro": {
+          "n_origenes": 2,
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.625,
+          "balanced_accuracy": 0.6545,
+          "precision": 0.2812,
+          "recall": 0.7084,
+          "f1": 0.3785,
+          "roc_auc": 0.6268,
+          "pr_auc": 0.3435,
+          "brier": 0.2533,
+          "matriz_confusion": {
+            "tn": 29,
+            "fp": 14,
+            "fn": 7,
+            "tp": 6
+          }
+        }
+      },
+      "clase_mayoritaria": {
+        "pooled": {
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.6964,
+          "balanced_accuracy": 0.7755,
+          "precision": 0.4286,
+          "recall": 0.9231,
+          "f1": 0.5854,
+          "roc_auc": 0.7755,
+          "pr_auc": 0.4135,
+          "brier": 0.2194,
+          "matriz_confusion": {
+            "tn": 27,
+            "fp": 16,
+            "fn": 1,
+            "tp": 12
+          }
+        },
+        "macro": {
+          "n_origenes": 2,
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.6965,
+          "balanced_accuracy": 0.5,
+          "precision": 0.2143,
+          "recall": 0.5,
+          "f1": 0.3,
+          "roc_auc": 0.5,
+          "pr_auc": 0.2321,
+          "brier": 0.2194,
+          "matriz_confusion": {
+            "tn": 27,
+            "fp": 16,
+            "fn": 1,
+            "tp": 12
+          }
+        }
+      },
+      "casos_recientes": {
+        "pooled": {
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.4821,
+          "balanced_accuracy": 0.5555,
+          "precision": 0.2647,
+          "recall": 0.6923,
+          "f1": 0.383,
+          "roc_auc": 0.5555,
+          "pr_auc": 0.2547,
+          "brier": 0.5179,
+          "matriz_confusion": {
+            "tn": 18,
+            "fp": 25,
+            "fn": 4,
+            "tp": 9
+          }
+        },
+        "macro": {
+          "n_origenes": 2,
+          "n": 56,
+          "positivos": 13,
+          "negativos": 43,
+          "prevalencia": 0.2321,
+          "accuracy": 0.4821,
+          "balanced_accuracy": 0.6215,
+          "precision": 0.2535,
+          "recall": 0.8334,
+          "f1": 0.3255,
+          "roc_auc": 0.6215,
+          "pr_auc": 0.2509,
+          "brier": 0.5178,
+          "matriz_confusion": {
+            "tn": 18,
+            "fp": 25,
+            "fn": 4,
+            "tp": 9
+          }
+        }
+      }
+    }
+  },
+  "advertencias": [
+    "La etiqueta 'hay_casos_t_mas_N' indica al menos un caso; no es una definicion de brote epidemiologico.",
+    "El panel cubre solo SE1-SE13 de 2026; no hay ciclo anual ni validacion entre anios.",
+    "Los casos historicos pueden haber sido corregidos retrospectivamente y no representan los datos disponibles en tiempo real.",
+    "El clima de NASA POWER es modelado, no observado.",
+    "Las metricas son exploratorias y no validan NFR-001 ni NFR-002.",
+    "El protocolo de disponibilidad (semana + horizonte + 1) es una hipotesis de evaluacion, no una fecha de publicacion confirmada.",
+    "No se imputan valores faltantes; XGBoost los maneja de forma nativa."
+  ],
+  "entorno": {
+    "python": "3.12.0",
+    "pandas": "2.2.2",
+    "numpy": "1.26.4",
+    "xgboost": "2.1.1",
+    "scikit_learn": "1.9.0"
+  }
+}

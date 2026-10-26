@@ -1,14 +1,12 @@
 # Sistema de Predicción Temprana de Brotes de Dengue/Malaria
 
-> ⏸️ **Desarrollo del backend en pausa.** Esta carpeta contiene la
-> especificación y el esqueleto inicial del backend (Fase 1 de `tasks.md`),
-> generados con Spec Driven Development antes de esta primera evaluación.
-> El trabajo real de esta evaluación (EDA, calidad de datos, pipeline,
-> arquitectura, riesgos, línea base) vive en `../docs/`, `../scripts/` y
-> `../data/`, en la raíz del repositorio — no aquí. Estos documentos se
-> mantienen como referencia y como punto de partida para cuando el equipo
-> retome el desarrollo del backend (ver "Cuándo se retoma" más abajo), no
-> porque haya trabajo activo de código sucediendo en ellos ahora mismo.
+> **Backend en desarrollo incremental.** Esta carpeta contiene la
+> especificación, el diseño y la implementación del backend (FastAPI +
+> PostgreSQL/PostGIS). Ya están cerrados el baseline XGBoost con SHAP
+> (TASK-012/013) y la autenticación JWT con RBAC (TASK-017/018). El
+> trabajo de datos (EDA, calidad, pipeline, línea base) vive en
+> `../docs/`, `../scripts/` y `../data/`, en la raíz del repositorio.
+> Ver `tasks.md` y `CONTEXT.md` para el estado exacto.
 
 Proyecto universitario orientado a apoyar a SEDES, autoridades de salud y
 coordinadores municipales en la identificación de zonas con riesgo de brotes
@@ -21,14 +19,18 @@ preventivas.
 Este proyecto tiene dos frentes de trabajo con avance muy distinto, que
 conviene no confundir:
 
-**Backend (este directorio) — pausado en Fase 1 — infraestructura base.**
-Incluye especificación funcional y no funcional, diseño de arquitectura,
-modelo de datos y API propuesta, backlog técnico dividido por fases,
-estructura inicial del backend con FastAPI y el endpoint local `GET
-/health`. Todavía no están implementados la conexión a PostgreSQL/PostGIS,
-las migraciones Alembic, los conectores ETL formales (`app/etl/`), el
-motor de predicción, la autenticación ni el dashboard. **No hay trabajo de
-código previsto aquí hasta cerrar esta evaluación** (ver `CONTEXT.md`).
+**Sistema (este directorio) — MVP funcional en local; despliegue en la nube pendiente.**
+Hay un recorrido completo y reproducible: datos reales del Boletín Epidemiológico
+N.º 13 → ingesta (`app/etl/`) → base PostgreSQL/PostGIS → modelo XGBoost con
+explicabilidad SHAP (`app/ml/`) → API FastAPI con login JWT y control de acceso
+por rol → interfaz web React con mapa (`frontend/`). La **malaria se muestra con
+casos observados** (no hay serie semanal, así que no hay modelo; ver
+`../docs/adr/ADR-005-malaria-acumulado-en-bd.md`) y el **dengue con predicciones
+a 3 semanas**. Para recorrerlo y defenderlo paso a paso, ver
+[`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md); la arquitectura
+real está en [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md).
+Faltan, entre otras cosas, el despliegue (TASK-004), la tarea semanal (TASK-016), `/modelo/desempeno` (TASK-026) y
+la validación retrospectiva (TASK-034). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
 
 **Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
 backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
@@ -40,8 +42,9 @@ Este trabajo todavía no está integrado al backend — los conectores de
 vez de rediseñarla desde cero.
 
 Las métricas de precisión y anticipación del modelo (NFR-001, NFR-002)
-siguen siendo objetivos de diseño, no resultados validados: no existe
-todavía un motor de predicción entrenado (ver `../docs/metricas_valor.md`).
+siguen siendo objetivos de diseño, no resultados validados: existe un modelo de
+referencia entrenado, pero con 13 semanas de datos **no supera de forma
+concluyente a una regla simple** (ver `../docs/resultados_experimentales.md`).
 
 ## Documentación
 
@@ -68,6 +71,11 @@ Lectura recomendada:
 19. [`../docs/adr/`](../docs/adr/): registro de decisiones de arquitectura (ADR).
 20. [`../docs/risk_register.md`](../docs/risk_register.md): Risk Register inicial.
 21. [`../docs/declaracion_uso_ia.md`](../docs/declaracion_uso_ia.md): declaración de uso de IA y revisión humana.
+22. [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md): arquitectura real del MVP (código, configuración y secretos).
+23. [`../docs/contrato_api.md`](../docs/contrato_api.md): endpoints, roles y formato de errores.
+24. [`../docs/resultados_experimentales.md`](../docs/resultados_experimentales.md): resultados contra la línea base, con los intentos fallidos.
+25. [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md): guion de la demostración y Plan B.
+26. [`../docs/revision_seguridad.md`](../docs/revision_seguridad.md): revisión de seguridad con evidencia, hallazgos y firma.
 
 ## Tecnología propuesta
 
@@ -75,18 +83,21 @@ Lectura recomendada:
 - **Base de datos:** PostgreSQL 16 con PostGIS.
 - **ML:** scikit-learn, XGBoost y SHAP.
 - **Frontend:** React con Leaflet o Mapbox; aún no incluido.
-- **Despliegue:** Railway; aún no configurado.
+- **Despliegue:** Railway previsto (ADR-003), pero **pendiente de decidir** proveedor (TASK-004). `Dockerfile` y `docker-compose.yml` ya funcionan en local.
 
 ## Reproducir el avance actual
 
 ### Requisitos
 
 - Git.
-- Python 3.12 o una versión compatible con las dependencias fijadas en
-  `requirements.txt`.
+- Python 3.12 (la versión fijada en el `Dockerfile`) o una compatible con las
+  dependencias de `requirements.txt`.
+- Docker, para la base de datos PostgreSQL + PostGIS.
 
-PostgreSQL/PostGIS no es necesario para ejecutar el endpoint disponible en
-esta etapa.
+El endpoint `/health` no necesita base de datos, pero `pytest`, `alembic` y los
+conectores ETL sí.
+PostgreSQL 16 con PostGIS es necesario para autenticación, migraciones y
+las pruebas de API. Para desarrollo local se puede levantar con Docker.
 
 ### Instalación
 
@@ -106,8 +117,48 @@ En Windows, la activación del entorno es:
 .venv\Scripts\Activate.ps1
 ```
 
-El archivo `.env.example` documenta las variables previstas para las fases
-posteriores. El endpoint actual no necesita una base de datos ni secretos.
+### Configuración
+
+```bash
+cp .env.example .env     # y reemplazar los marcadores "cambiar-..." por valores propios
+docker compose up -d db  # PostgreSQL 16 + PostGIS en el puerto 5433
+alembic upgrade head
+```
+
+`app/core/config.py` lee `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`,
+`ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS` y `ENVIRONMENT` del
+entorno o de `.env`. `DATABASE_URL` y `SECRET_KEY` son obligatorias: sin ellas
+la aplicación no arranca. `docker compose up --build` levanta además la API en
+`http://localhost:8000`.
+
+Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend):
+
+| Servicio | Imagen | Tamaño | Comando |
+|---|---|---|---|
+| `api` | target `api` | 323 MB | `docker compose up --build api` |
+| `web` | `frontend/Dockerfile` (nginx) | 74 MB | `docker compose up --build api web` → http://localhost:8080 |
+| `ml` | target `ml` (pandas, xgboost, shap) | 2,3 GB | `docker compose run --rm ml python -m <modulo>` |
+
+**Interfaz completa con Docker, desde un clon limpio** (`.env` ya copiado de
+`.env.example`):
+
+```bash
+docker compose up -d --build api web     # la API crea las tablas sola (RUN_MIGRATIONS=1)
+docker compose run --rm -e SEED_DEMO_PASSWORD='<clave-de-demo>' ml python -m app.etl.seed_demo
+# abrir http://localhost:8080 y entrar con epidemiologo@demo.local (o autoridad@, sedes@, coordinador@, admin@)
+```
+
+Sin el segundo comando la interfaz carga, pero la base está vacía y no hay
+usuarios para entrar. El servicio `ml` monta `../data` en `/data` (solo lectura)
+porque los CSV procesados no van dentro de la imagen.
+
+El `frontend/` es solo un esqueleto (mapa base y comprobación de `/health`); no
+implementa las vistas de TASK-027 a 031. La imagen `ml` pesa más porque
+`xgboost` incluye librerías de GPU de NVIDIA (unos 470 MB) que no se usan en CPU;
+la imagen `api` no las lleva.
+El archivo `.env.example` documenta las variables necesarias. Copiarlo como
+`.env` y completar `DATABASE_URL`, `SECRET_KEY` y `SEED_DEMO_PASSWORD`. El
+archivo `.env` está ignorado por Git y nunca debe commitearse.
 
 ### Ejecución
 
@@ -130,16 +181,137 @@ Respuesta esperada:
 La documentación interactiva generada por FastAPI queda disponible en
 `http://127.0.0.1:8000/docs`.
 
+### Base de datos local y usuarios demo
+
+Levantar PostGIS en Docker (puerto local `55432` para no chocar con un
+PostgreSQL ya instalado):
+
+```powershell
+docker run --name dengue-postgis-local `
+  -e POSTGRES_PASSWORD=test `
+  -e POSTGRES_DB=dengue_malaria `
+  -p 55432:5432 `
+  -d postgis/postgis:16-3.4
+
+docker exec dengue-postgis-local psql -U postgres -d dengue_malaria `
+  -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+```
+
+Definir las variables y aplicar migraciones:
+
+```powershell
+$env:DATABASE_URL="postgresql://postgres:test@localhost:55432/dengue_malaria"
+$env:SECRET_KEY="cambiar-por-una-clave-larga-y-aleatoria"
+$env:ENVIRONMENT="development"
+$env:SEED_DEMO_PASSWORD="elegir-una-clave-local-de-al-menos-8-caracteres"
+
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m app.etl.seed_catalogo
+.\.venv\Scripts\python.exe -m app.etl.seed_usuarios
+```
+
+El seed crea estos usuarios ficticios (`@demo.local`), todos con la
+contraseña de `SEED_DEMO_PASSWORD`:
+
+| Email | Rol |
+|---|---|
+| `autoridad@demo.local` | `autoridad` |
+| `sedes@demo.local` | `sedes` |
+| `epidemiologo@demo.local` | `epidemiologo` |
+| `coordinador@demo.local` | `coordinador_municipal` |
+| `admin@demo.local` | `admin` |
+
+No se commitea ninguna contraseña. Para borrar únicamente esos usuarios y
+sus refresh tokens:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.etl.seed_usuarios --delete
+```
+
+### Demostración de punta a punta (datos reales)
+
+Con la base y las variables del paso anterior, **un comando** carga los casos
+reales del boletín, registra el modelo, genera las predicciones y crea los cinco
+usuarios demo (`SEED_DEMO_PASSWORD` es obligatoria):
+
+```bash
+python -m app.etl.seed_demo          # idempotente; --forzar agrega otra tanda de predicciones
+uvicorn app.main:app --port 8000
+SMOKE_EMAIL=autoridad@demo.local SMOKE_PASSWORD="$SEED_DEMO_PASSWORD" python scripts/smoke_test.py
+```
+
+No carga predicciones de malaria (no hay modelo) ni brotes confirmados: no
+existen esas fuentes. Las alertas las crea `evaluacion_alertas` con el umbral
+vigente (70 % por defecto), así que hoy no se emite ninguna hasta que un admin lo
+baje con `POST /admin/umbrales`. El script de humo (`scripts/smoke_test.py`)
+sirve también contra un despliegue (`SMOKE_URL=https://…`).
+
+### Interfaz web
+
+```bash
+cd frontend
+npm ci
+npm run dev          # http://localhost:5173, reenvía /api a la API local (puerto 8000)
+npm run dev:render   # igual, pero reenvía /api a la URL de API_TARGET en frontend/.env.render
+npm test             # pruebas de la interfaz
+npm run build
+```
+
+La primera vez, `cp frontend/.env.example frontend/.env.render` y se completa la URL
+de la API desplegada (el archivo está en `.gitignore`; sin él, `dev:render` falla
+con un mensaje claro). Para otra URL puntual: `API_TARGET=https://otra-api.example npm run dev`. El
+cambio de destino ocurre en el servidor de desarrollo de Vite (proxy), así que no
+hace falta CORS. Con `dev:render` la primera petición tarda cerca de un minuto si
+la API gratuita estaba dormida, y la interfaz corta a los 15 s: conviene
+despertarla antes con `curl https://taller-de-sistemas-inteligentes.onrender.com/health`.
+Para una compilación de producción servida desde otro origen se usa
+`VITE_API_URL` (se fija al compilar) y la API necesitaría CORS, que aún no existe.
+
+La interfaz abre en **malaria** y permite cambiar a dengue. Sigue el sistema de
+diseño de `frontend/src/styles/tokens.css` (fuente del sistema, modo claro y
+oscuro, contraste revisado por prueba automática). El access token vive solo en
+memoria; el refresh token en `sessionStorage` (ver riesgo M-11 en
+`../docs/risk_register.md`).
+
+### Revisión de seguridad
+
+```bash
+python -m app.core.revision_seguridad                             # sale con código 1 si hay una falla
+python -m app.core.revision_seguridad --url https://<despliegue>  # además comprueba HTTPS
+```
+
+Verifica que no haya datos personales de pacientes, alertas sin justificación, contraseñas sin hash ni secretos versionados. El checklist, los hallazgos y la firma del equipo están en [`../docs/revision_seguridad.md`](../docs/revision_seguridad.md). Con `ENVIRONMENT=production` la API no publica `/docs` ni `/openapi.json`.
+
+### Observabilidad y errores
+
+Cada respuesta trae `X-Request-ID`, que también aparece en los logs de esa
+petición. Una base de datos caída responde `503` (no `500`) y
+`GET /health/ready` la comprueba; `GET /health` solo dice que la API vive. Los
+errores nunca devuelven trazas ni lo que la persona envió. Ajustes opcionales:
+`LOG_LEVEL`, `DB_CONNECT_TIMEOUT_SECONDS`, `DB_STATEMENT_TIMEOUT_MS`,
+`DB_POOL_TIMEOUT_SECONDS` (ver `.env.example`).
+
 ### Verificaciones disponibles
 
 ```bash
 python -m compileall -q app tests
-pytest
+pytest tests/api -q
+pytest tests/ml -q
+alembic check
 ```
 
-En el estado actual, `pytest` no contiene casos de prueba y puede informar
-que no se recolectaron pruebas. Los comandos de base de datos y migraciones
-serán reproducibles después de completar TASK-002 y TASK-005.
+`pytest` necesita la base de datos del paso "Configuración" y un `.env` con
+`SECRET_KEY`. Estado verificado el 2026-10-26: **389 tests del backend** y
+**120 de la interfaz** en verde, con 80 % de cobertura en `app/etl` y `app/ml`
+(`pytest --cov=app/etl --cov=app/ml`). Los tests necesitan `DATABASE_URL`
+apuntando a una base con las migraciones aplicadas. Cada test corre dentro de
+una transacción que se revierte y parte de las tablas de datos vacías, así que
+es seguro correrlos contra una base de desarrollo con datos de demostración. La
+suite se niega a correr con `ENVIRONMENT=production`. Las 27 pruebas de integración de
+TASK-024/025 (`tests/prevencion/`) se omiten salvo que `GATOBYTE_TEST_DATABASE_URL`
+apunte a una base de pruebas **vacía y migrada** (no a la de desarrollo con la demo
+cargada); el CI la define. El flujo completo está en
+`tests/e2e/`. Hay integración continua en `.github/workflows/ci.yml`.
 
 ## Estructura actual
 
@@ -155,8 +327,14 @@ dengue-malaria-prediccion/
 │   ├── ml/                 # reservado para predicción y explicabilidad
 │   ├── models/             # reservado para modelos ORM
 │   └── schemas/            # reservado para esquemas Pydantic
-├── tests/                  # estructura inicial, todavía sin casos
-├── requirements.txt
+├── tests/
+├── frontend/               # esqueleto React + Vite + Leaflet (Fase 5); Dockerfile propio
+├── Dockerfile              # targets api y ml
+├── docker-compose.yml      # db, api, web y ml (profile "jobs")
+├── requirements.txt        # entorno local completo
+├── requirements-api.txt    # imagen api
+├── requirements-ml.txt     # imagen ml
+├── requirements-dev.txt    # pytest, black, ruff
 ├── requirements.md
 ├── design.md
 ├── tasks.md
@@ -196,15 +374,15 @@ Taller-de-Sistemas-Inteligentes/
   municipios con cruce de datos real (Guayaramerín, Ixiamas, Palos Blancos,
   San Buenaventura) son la referencia usada hasta ahora (ver `design.md` §10).
 
-## Cuándo se retoma el desarrollo del backend
+## Estado del desarrollo del backend
 
-Recién **después** de esta primera evaluación (defensa de decisiones
-iniciales), siguiendo `tasks.md` desde TASK-001 con `FIRST_PROMPT.md`. Antes
-de retomarlo, TASK-008/009/010 (conectores de ingesta y limpieza) deben
-reutilizar la lógica ya construida y verificada en `../scripts/` y
-`../docs/pipeline_datos.md`, no rediseñarla desde cero — ver la nota en cada
-tarea de `tasks.md`. Ver `../docs/cierre_sprint1.md` para el backlog
-completo pendiente antes de ese momento.
+El backend ya está en desarrollo activo. El orden de trabajo y las tareas
+pendientes están en `tasks.md`; el estado de la última sesión, las
+decisiones tomadas y los bloqueos están en `CONTEXT.md`. Los conectores de
+ingesta y limpieza (TASK-008/009/010) deben reutilizar la lógica ya
+construida y verificada en `../scripts/` y `../docs/pipeline_datos.md`, no
+rediseñarla desde cero. Ver `../docs/cierre_sprint1.md` para el backlog de
+datos.
 
 ## Flujo de trabajo
 

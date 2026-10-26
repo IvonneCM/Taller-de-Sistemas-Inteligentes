@@ -225,6 +225,111 @@ backlog de la sección 5.
 
 ## 9. Registro de sesiones
 
+### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
+
+**Estado:** implementado y verificado en local: **389 tests del backend, 120 de la
+interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
+Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
+exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
+se contrastó con el repositorio y se agregaron las tareas que faltaban (Fase 7 de
+`tasks.md`).
+
+**Hecho**
+- `app/core/observabilidad.py` + `app/api/routes/health.py` (TASK-040): `X-Request-ID`,
+  logs sin secretos, 503 ante base caída, `/health/ready`, timeouts de conexión y consulta.
+- `app/etl/seed_demo.py` (TASK-038): un comando carga casos reales, modelo, predicciones
+  y usuarios demo. `tests/e2e/` (TASK-039) y `scripts/smoke_test.py`.
+- `GET /casos/resumen` (TASK-047) para mostrar la malaria (solo acumulados, ADR-005).
+- Interfaz React (`frontend/`): login, mapa, detalle por rol, alertas, historial;
+  sistema de diseño estilo Apple con malaria como entrada (TASK-037, 048, 028 y parte
+  de 027, 029, 030). Pruebas con Vitest, incluido el contraste de los colores.
+- Documentos: `arquitectura_actual.md`, `resultados_experimentales.md`,
+  `guion_demo_y_plan_b.md`, riesgos M-01 a M-14 en `risk_register.md`,
+  `contrato_api.md` al día, `.github/workflows/ci.yml` (sin ejecutar en GitHub).
+- `tests/conftest.py`: cada test parte de las tablas de datos vacías (dentro de la
+  transacción que se revierte), para poder correrlos contra una base con la demo cargada.
+
+**Decisiones a confirmar con el equipo**
+- La malaria es la vista de entrada pero **sin predicciones**: casos observados.
+- `refresh_token` en `sessionStorage` (riesgo M-11); access token en memoria.
+- Regla de «acierto» del historial: ±7 días (ya anotada en `contrato_api.md`).
+
+**Docker (verificado 2026-10-26, Colima en Apple Silicon):** las 3 imágenes
+construyen, `docker compose` migra y carga la demo, el humo pasa por la API y por
+nginx, y los 283 tests pasan contra PostgreSQL 16 + PostGIS 3.4 (como el CI).
+Hallazgo: `app/services/casos.py` importaba `pandas` y la imagen `api` no lo trae
+(la API no arrancaba); corregido moviendo las constantes a `app/etl/fuentes.py` y
+vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
+
+**Integraciones posteriores (2026-10-26):** TASK-015 (Ivonne) y TASK-024/025 (Adriana) integradas en `dilan`. Las pruebas de integración de Adriana venían omitidas (necesitan una base exclusiva): corridas contra PostgreSQL, 46 de 46 pasan; el CI ya las ejecuta. Se agregó la pestaña «Campañas» (TASK-031) y un E2E por rol.
+
+**TASK-027 y 035 (2026-10-26):** selector Municipio/Departamento en el mapa (por departamento: peor caso en dengue, suma en malaria) y revisión de seguridad verificable (`python -m app.core.revision_seguridad`, `docs/revision_seguridad.md`). Hallazgos para decidir: `python-multipart 0.0.9` y `python-jose 3.3.0` con avisos (H-1, H-2), sin límite de intentos de login (H-3) y sin cabeceras de seguridad en nginx (H-4). No se cambiaron los `requirements`.
+
+**Integraciones y hallazgo en el despliegue (2026-10-26):** integradas las ramas `ignaaa` (Render + Neon, prueba de carga, `RUN_MIGRATIONS`) y `adriii` (historial y panel de alertas, filtro `solo_vigentes` de `GET /alertas`). **Bug mío corregido:** el `options=-c statement_timeout` de TASK-040 lo rechaza el pooler de Neon, así que la API desplegada daba 503 en `/health/ready`; ahora el límite se aplica con `SET LOCAL` por transacción. La base de Neon está migrada pero **vacía** (sin usuarios ni datos): falta cargar la demostración (`python -m app.etl.seed_demo`) para poder iniciar sesión en el despliegue.
+
+**Pendientes (no son de esta sesión)**
+1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
+2. TASK-016 (tarea semanal). TASK-015 ya la entregó Ivonne y está integrada: con el umbral por defecto (70 %) ninguna predicción alerta; el equipo de salud debe fijar el umbral real.
+3. Fuente de `brotes_confirmados` (riesgo M-08).
+4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla; TASK-026, 033, 034, 035, 036.
+5. TASK-041 (tag) y 045 (ensayo, grabación, respaldo). La CI (046) ya corrió en verde en GitHub.
+6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
+   `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.
+
+### 2026-10-26 — API de zonas y alertas (TASK-019 a TASK-023, Dilan)
+
+**Estado:** implementado y verificado contra PostgreSQL 17 + PostGIS 3.6
+locales (`pytest tests/api tests/test_modelos_predicciones.py`: 133 tests en
+verde; `alembic upgrade head`, `downgrade` y `alembic check` sin diferencias).
+**Sin commit ni push** de este trabajo. TASK-019 a 022 marcadas `[x]`;
+TASK-023 queda sin marcar (ver pendientes).
+
+**Implementado**
+- Modelos y migración `7c1e5d9a3b42`: `predicciones`, `alertas`,
+  `umbrales_configuracion`, `brotes_confirmados` (nadie las tenía asignadas;
+  divergencias anotadas en `design.md` §3 antes de marcar las tareas).
+- `app/api/deps.py`: verifica el JWT de acceso y el rol (`get_usuario_actual`,
+  `require_role`). No emite tokens (TASK-017) ni toca `roles`/`usuarios`.
+- `app/services/` (consultas y reglas por rol), `app/schemas/` y
+  `app/api/routes/{zonas,alertas,admin}.py`; `app/main.py` los registra.
+- `docs/contrato_api.md`: el "borrador de la API" del día 1 (rutas, payloads y
+  claims del token), además de `docs/contrato_esquema_bd.md` ampliado.
+- Pruebas en `tests/api/` y `tests/test_modelos_predicciones.py`. El fixture
+  `catalogo` pasó a `tests/conftest.py`; ahora `conftest.py` fija `SECRET_KEY`
+  solo para pruebas.
+
+**Decisiones que este diseño no fijaba (confirmar con el equipo)**
+- Vista completa de predicción: `epidemiologo` y `admin`; `autoridad`, `sedes`
+  y `coordinador_municipal` reciben la resumida.
+- Umbral por defecto 70 % (referencial, ejemplo de REQ-009).
+- Correlación predicción↔brote: ±7 días de `fecha_estimada_riesgo`.
+- `app/main.py` ahora importa `app.core.database`, por lo que arrancar la API
+  exige `DATABASE_URL` (antes `/health` arrancaba sin ella).
+
+**Pendientes**
+1. Ivonne: `/auth/login` debe emitir los claims de `docs/contrato_api.md`;
+   `evaluacion_alertas` (TASK-015) debe leer `obtener_umbral` y TASK-014 debe
+   insertar en `predicciones` (variables como lista). Seed de `roles`.
+2. Quién carga `brotes_confirmados` (sin fuente asignada): sin datos, el
+   historial y TASK-034 quedan vacíos.
+3. TASK-032: cobertura medida 2026-10-26 sobre `app/etl` + `app/ml`: **86 %**
+   total (205 tests en verde; `entrenamiento.py` 75 %, el resto ≥ 84 %).
+   Falta `prediccion.py` (TASK-014, Ivonne): al existir, repetir
+   `pytest --cov=app/etl --cov=app/ml` y marcar la tarea.
+4. TASK-031 y TASK-035 dependen de Adriana (024/025) y del cierre del resto.
+5. Entorno: Python 3.12 (`pip install -r requirements.txt` no funciona en
+   3.14). No crear el venv dentro de una carpeta sincronizada con iCloud
+   (`Documents`): los imports se cuelgan. Se usó `~/.venvs/dengue-malaria` y
+   el repo en `~/Pictures/machine/`. Suite completa: ~11 s.
+
+
+> Los registros siguientes conservan los avances, verificaciones y
+> pendientes tal como se documentaron en cada sesión y rama. Las notas
+> sobre commits o estados locales corresponden a ese momento.
+> Los pendientes de una sesión pueden quedar resueltos en entradas
+> posteriores; estas notas históricas no sustituyen el estado actual
+> de `tasks.md` ni el código integrado.
+
 ### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
 
 > Nota: las secciones 4 a 7 de arriba describen el estado de la primera
@@ -272,3 +377,424 @@ backlog de la sección 5.
    `tania/task-005-010-capa-datos`: los cambios del backend (conector y
    tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
    `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
+
+### 2026-10-25 (2) — Fase 1: TASK-001 a TASK-003 implementadas, TASK-004 a medias
+
+> TASK-001 a TASK-003 cerradas `[x]` (el usuario pidió cerrarlas tras la
+> verificación; no hay divergencia con `design.md`). TASK-004 queda abierta: el
+> despliegue en la nube se pospone.
+
+**Hecho**
+- TASK-001: `requirements.txt` ya traía todo; `pip install -r` en un venv limpio
+  termina con exit 0 y `pip check` sin conflictos. Todas las dependencias
+  tienen wheel para Linux/Python 3.12.
+- TASK-002: `docker-compose.yml` nuevo (servicio `db`, `postgis/postgis:16-3.4`,
+  puerto del host 5433 por defecto y configurable). `SELECT PostGIS_Version();`
+  devuelve 3.4. No existía ningún Dockerfile ni compose antes.
+- TASK-003: `app/core/config.py` (pydantic-settings) con las 6 variables.
+  `DATABASE_URL` y `SECRET_KEY` son obligatorias; en `production` se rechaza
+  una `SECRET_KEY` de ejemplo o de menos de 32 caracteres. `database.py` y
+  `alembic/env.py` ahora leen de ahí (antes `os.environ`). `tests/test_config.py`
+  (3 tests). 27 tests en verde con la BD de compose.
+- TASK-004 (parcial): `Dockerfile` (Python **3.12** fijado, usuario no root,
+  escucha en `$PORT`), `.dockerignore`, `railway.toml` (healthcheck `/health`).
+  En local, `docker compose up --build` responde 200 en `/health`.
+
+**Imágenes de Docker (misma sesión, después del cierre de TASK-004 local)**
+- La imagen única pesaba 2,4 GB (469 MB eran librerías de GPU de NVIDIA que trae
+  `xgboost`). Se dividió en `Dockerfile` con targets `api` (323 MB) y `ml`
+  (2,3 GB), y `requirements.txt` en `-api`, `-ml` y `-dev`; `requirements.txt`
+  sigue instalando todo (verificado en venv nuevo: exit 0, `pip check` limpio,
+  27 tests). Se probó `xgboost-cpu` (la `ml` bajaba a 1,1 GB) pero por decisión
+  del usuario se volvió a `xgboost==2.1.1` normal. `api` es la última etapa a propósito: un `docker build .`
+  sin target (Railway) construye la API.
+- Esqueleto de frontend en `frontend/` (React 19 + Vite 8 + react-leaflet 5, solo
+  mapa base y estado de `/health`) con imagen `web` (nginx, reenvía `/api/` a la
+  API). **No implementa TASK-027 a 031.**
+- En `docker-compose.yml` las variables van explícitas en `environment`: con
+  `env_file` + `docker compose run`, el contenedor `ml` solo recibía
+  `DATABASE_URL` y faltaba `SECRET_KEY`.
+- El job de predicción correrá con la imagen `ml`, no dentro de FastAPI. Sigue
+  sin decidir cómo llega el modelo entrenado en Colab al job.
+- Quien ya tenía `xgboost` instalado debe hacer `pip uninstall xgboost` antes de
+  reinstalar.
+
+**Preparación para Railway (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_railway.md`: pasos completos, variables, verificación y
+  fallos comunes. `railway.toml` ahora ejecuta `preDeployCommand =
+  ["alembic upgrade head"]`; el `Dockerfile` arranca uvicorn con
+  `--proxy-headers`; `config.py` acepta `DATABASE_URL` con esquema `postgres://`
+  (+1 test, 28 en total). Probado en local con la imagen `api`, base vacía,
+  `ENVIRONMENT=production` y `PORT` distinto: migra y responde 200.
+- Hallazgo de la documentación de Railway: el archivo de configuración no sigue
+  al Root Directory; hay que poner Config File Path
+  `/dengue-malaria-prediccion/railway.toml` en el servicio.
+- No se tocó nada del job semanal (TASK-016).
+
+**Archivos de Railway eliminados (2026-10-26)**
+- Se borró `railway.toml` por decisión del usuario (sigue en el historial de Git).
+  Se conserva `docs/guia_despliegue_railway.md` como referencia, con un aviso al
+  inicio. El `Dockerfile` y `config.py` no cambian y sirven con cualquier
+  proveedor. Se perdió la migración automática en cada despliegue
+  (`alembic upgrade head`), que cada alternativa debe resolver por su cuenta.
+
+**Ruta elegida para el despliegue: Render + Neon + GitHub Actions (2026-10-26, sin desplegar)**
+- `docs/guia_despliegue_render_neon.md`: API en Render (gratis, se duerme), base
+  PostGIS en Neon, job semanal como workflow programado de GitHub Actions
+  (solo diseño: no se agrega el archivo hasta que exista `app/ml/prediccion.py`).
+- Las migraciones se aplican con el Docker Command de Render
+  (`alembic upgrade head && uvicorn ...`); se probó en local con la imagen `api`
+  contra una base vacía y `PORT=10000`: migra y responde 200.
+- Primer despliegue en Render (2026-10-26): el build funcionó, pero el Docker
+  Command `sh -c "alembic upgrade head && uvicorn ..."` falló con `sh: 1: ...: not
+  found` (exit 127): Render no lo interpreta como Docker. Solución: la lógica pasó
+  al `CMD` del `Dockerfile` con `RUN_MIGRATIONS=1`, y el campo queda vacío.
+  Probado en local: migra y responde 200; sin la variable no migra; con una
+  migración que falla el contenedor sale con código 1.
+- Corrección (el usuario vio el panel de Render): Dockerfile Path es relativo a la
+  raíz del repo (`./dengue-malaria-prediccion/Dockerfile`) y Health Check Path /
+  Auto-Deploy no están en el formulario de creación.
+- Pendiente de confirmar en los paneles: contexto de build en Render, uso de la
+  conexión directa de Neon con Alembic, límites gratuitos de Neon y de Actions.
+
+**Docker: la interfaz no era usable desde un clon limpio (2026-10-26)**
+- Síntoma reproducido: `docker compose up api web` servía la UI en :8080, pero la
+  base no tenía tablas y el login daba 500 (`relation "usuarios" does not exist`).
+- Arreglo: `RUN_MIGRATIONS` (por defecto 1) en `docker-compose.yml` para que la API
+  migre al arrancar, y el servicio `ml` monta `../data:/data:ro` para poder correr
+  `seed_demo` dentro de Docker. Probado en un proyecto limpio: login 401 sin datos,
+  tras el seed login 200 y `/api/zonas/riesgo` devuelve las 4 zonas piloto.
+
+**TASK-033 cerrada con limitación (2026-10-26)**
+- `scripts/prueba_carga_zonas_riesgo.py` (base temporal local, datos simulados,
+  se borra sola; se niega a correr contra hosts no locales). p95 con 350
+  municipios: 423 ms (1 usuario), 1 775 ms (5), 4 229 ms (10), 11 627 ms (25).
+  Respuesta de 5,1 MB. El usuario aceptó el resultado con 1 a 5 usuarios
+  simultáneos y la tarea quedó `[x]`; con 10 o más el p95 supera los 2 s
+  (límite documentado en `tasks.md` y en `docs/risk_register.md` M-18).
+- TASK-028 ya estaba hecha: el frontend es real (`frontend/src`, vistas por rol).
+  Los tests de vitest no corren en esta máquina (Node 22.14; jsdom 30 pide
+  >= 22.22), pero la CI sí los ejecuta.
+
+**TASK-004 verificada (2026-10-26)**
+- `https://taller-de-sistemas-inteligentes.onrender.com/health` responde 200 con
+  TLS válido; `http://` redirige con 301; `POST /auth/login` con credenciales
+  falsas devuelve 401 (la API consulta Neon). Se marcó `[x]`, se creó ADR-006
+  (Render + Neon, reemplaza a ADR-003) y se actualizaron `design.md` §1/§6/§8/§10,
+  `tasks.md` y `controles_seguridad.md`.
+- Incidente: `.env` local apuntaba a Neon y un `alembic upgrade head` más la suite
+  de tests se ejecutaron contra Neon por error; solo creó las tablas (vacías).
+- Pendiente: rotar la contraseña de Neon (se compartió por chat) y cargar el
+  catálogo y los datos en Neon.
+
+**Pendiente (historial, ya resuelto arriba)**
+- **TASK-004, despliegue en la nube (pospuesto por decisión del usuario).** Falta
+  elegir proveedor. Railway: crédito de prueba de $5 o plan Hobby de $5/mes; la BD
+  debe usar la plantilla PostGIS, no el Postgres por defecto. Alternativas
+  gratuitas con PostGIS: API en Render o Northflank + base en Neon (la API de
+  Render se duerme tras 15 min; el job semanal TASK-016 tendría que dispararse
+  desde un cron externo). Render Postgres gratis caduca a los 30 días: no sirve.
+  Si se cambia de proveedor, actualizar ADR-003 y `design.md` §1 y §10.
+- Ahora hace falta un `.env` local con `SECRET_KEY` (antes bastaba `DATABASE_URL`).
+
+### 2026-10-25 — TASK-012 baseline XGBoost de dengue
+
+**Estado:** implementación terminada, verificada y `TASK-012` marcada como
+`[x]` en `tasks.md`. Solo falta que Ivonne revise y haga el commit.
+
+**Implementado**
+- `app/ml/entrenamiento.py`: etiqueta `casos_dengue_t_mas_{3,4} > 0`,
+  walk-forward cronológico, XGBoost, métricas, baselines, artefactos JSON y
+  registro opcional en BD.
+- `tests/ml/test_entrenamiento.py`: 11 pruebas; suite `tests/ml` completa
+  ejecutada con **33 OK, 1 omitida** (pandas 2.2.3 ausente).
+- `app/ml/artifacts/`: boosters y metadata de t+3 y t+4, versión `v1`.
+- `app/models/modelo.py` + `app/models/__init__.py`: ORM de `modelos`.
+- `alembic/versions/4079b097a5a2_task_012_modelos.py`: crea solo `modelos`.
+- `alembic/env.py`: exclusión dinámica de tablas/índices de extensiones
+  PostGIS en autogenerate. La consulta cierra su transacción implícita con
+  `rollback()` antes de iniciar la migración; sin eso, el DDL se revertía.
+- `docs/task_012_baseline.md` y `docs/task_012_metricas.json`.
+- `scripts/graficos_task_012.py` y `scripts/task_012_output/`: 6 gráficos
+  (métricas, matrices de confusión, ROC/PR, por origen, distribución de
+  probabilidades e importancia de variables), predicciones walk-forward y
+  CSVs de métricas. El script verifica que el recálculo coincida con la
+  metadata de los artefactos.
+
+**Datos y protocolo**
+- Panel `data/processed/panel_semanal_dengue_clima.csv`: 364 filas,
+  28 municipios, 13 semanas de 2026, 24 features.
+- Orígenes t+3: 2026-02-09/16/23 y 03-02 (112 predicciones).
+- Orígenes t+4: 2026-02-16 y 02-23 (56 predicciones).
+- Filas del modelo final: 224 (t+3) y 196 (t+4).
+
+**Resultados (macro por origen)**
+- t+3: modelo F1 0.3322 / ROC-AUC 0.6588; regla `casos_recientes`
+  F1 0.4775 / ROC-AUC 0.6913. El modelo **no supera** la regla simple.
+- t+4: modelo F1 0.3785 / ROC-AUC 0.6268; regla `casos_recientes`
+  F1 0.3255 / ROC-AUC 0.6215. Mejora marginal, no concluyente.
+- Métricas exploratorias; no validan NFR-001/NFR-002. La etiqueta no es
+  definición de brote.
+
+**Verificación BD (PostGIS temporal en Docker)**
+- `alembic upgrade head` aplicado; `alembic check` sin operaciones nuevas.
+- Upgrade desde base vacía verificado (con `CREATE EXTENSION postgis`
+  previo; la migración base no crea la extensión).
+- Catálogo: 2 enfermedades, 4 municipios piloto.
+- Filas en `modelos`: id 1 (t+3), id 2 (t+4), `enfermedad_id=1`,
+  `metricas_entrenamiento` JSONB válido.
+
+**Pendientes**
+- Ivonne debe revisar y hacer el commit/push (instrucción explícita: el
+  agente no commitea).
+- La rama local `ivonne2` sigue detrás de `origin/ivonne2`; no se hizo
+  commit ni push.
+- `.gitignore` tiene un cambio previo no relacionado (ignora
+  `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
+
+### 2026-10-25 — TASK-017/018 autenticación JWT y RBAC
+
+**Estado:** implementación terminada, tests verdes y `TASK-017`/`TASK-018`
+marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25). Falta
+solo que Ivonne revise y haga el commit.
+
+**Implementado**
+- `app/core/security.py`: bcrypt (costo 12) y JWT HS256 con access de 30
+  min y refresh de 7 días; claims `sub`, `rol`, `tipo`, `jti`, `iat`,
+  `exp`, `iss`. El algoritmo está restringido a HS256.
+- `app/models/refresh_token.py` + migración `aa12e214cb8d`: tabla
+  `refresh_tokens` (`jti` único, usuario, expiración, revocación,
+  creación). `RefreshToken` se registró en `app/models/__init__.py` y se
+  agregó la relación en `Usuario`.
+- `app/api/routes/auth.py`: `POST /auth/login` (OAuth2 password flow),
+  `POST /auth/refresh` con rotación y `POST /auth/logout` idempotente.
+- `app/api/deps.py`: `get_current_user` carga usuario y rol desde la BD en
+  cada request; `require_role(...)` aplica RBAC sin bypass implícito de
+  admin.
+- `app/schemas/auth.py`: `TokenPair` y `RefreshTokenRequest`.
+- `app/main.py`: incluye el router de auth.
+- `app/etl/seed_usuarios.py`: seed idempotente de roles y 5 usuarios
+  ficticios `@demo.local`; la contraseña sale de `SEED_DEMO_PASSWORD` o se
+  pide por consola. Incluye `--delete` y `--reset-passwords`; rechaza
+  `ENVIRONMENT=production`.
+- `.env.example`: agrega `JWT_ISSUER` y `SEED_DEMO_PASSWORD=` (vacío).
+- `README.md`: instrucciones reproducibles de PostGIS local, migraciones,
+  seed, limpieza y tests.
+- `design.md` §4: documenta `/auth/refresh` y `/auth/logout` además de
+  `/auth/login`, para que el contrato de API coincida con la implementación.
+- `tests/api/`: 19 pruebas de login, refresh, expiración, token sin
+  `exp`, rotación, logout, tipo de token y RBAC 401/403.
+
+**Decisiones**
+- El refresh token es revocable mediante `refresh_tokens` (SEG-01). En
+  `/auth/refresh` se revoca el token usado y se emite uno nuevo.
+- El access token no se persiste; su expiración corta limita el riesgo.
+- Se usa `bcrypt` directo, no `passlib`, porque el entorno tiene bcrypt
+  5.0 y passlib 1.7.4 no está instalado.
+- `decodificar_token` exige `exp` con `options={"require_exp": True}`: un
+  token firmado sin expiración ya no se acepta.
+- Los usuarios demo no se versionan: solo se versiona el script. Cada
+  desarrollador define su propia contraseña local.
+- No hay bypass automático de `admin`; cada endpoint declara sus roles.
+- El alcance por municipio (`municipio_asignado_id`) es una validación de
+  servicio posterior, no parte de `require_role`.
+
+**Verificación**
+- `pytest tests/api -q`: **19 passed**.
+- `ruff check` sobre los archivos nuevos: **All checks passed**.
+- `python -m compileall -q app tests`: OK.
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Smoke test del seed: login con `epidemiologo@demo.local` devuelve 200
+  con access y refresh; luego `--delete` elimina los 5 usuarios demo.
+- PostGIS temporal: contenedor `dengue-postgis-local`, puerto `55432`,
+  base `dengue_malaria`. Queda levantado para pruebas manuales.
+
+**Pendientes**
+- Ivonne debe revisar y commitear; el agente no commitea.
+- Se mantiene la extensión aprobada por Ivonne: `/auth/refresh` y
+  `/auth/logout` además de `/auth/login`, documentada en `design.md` §4.
+- Rate limiting de login (SEG-10) y HTTPS de despliegue siguen fuera de
+  alcance de estas dos tareas.
+- El access token no es revocable; si se requiere, evaluar una lista de
+  revocación o expiración aún más corta.
+
+### 2026-10-26 — TASK-014 pipeline de predicción + SHAP + tabla predicciones
+
+**Estado:** implementación terminada, verificada y `TASK-014` marcada como
+`[x]` tras confirmación explícita de Ivonne (2026-10-26).
+
+**Decisiones acordadas para esta sesión**
+- Horizonte operativo **t+3**; t+4 queda disponible por parámetro pero no se
+  publica en el lote semanal. Motivo: la validación t+4 solo tiene 2 orígenes
+  walk-forward y `predicciones` no tiene columna de horizonte; publicar ambos
+  crearía filas/alertas duplicadas indistinguibles.
+- Cortes provisionales de `nivel_riesgo`: `<33.33` bajo, `33.33-66.67`
+  medio, `>=66.67` alto. **No validados** ni equivalentes a brote.
+- `nivel_confianza` NFR-007 estricto con los umbrales de TASK-010:
+  `<=5 %` alto, `>5 % y <=20 %` bajo, `>20 %` no se publica; `medio` queda
+  reservado.
+- El modelo puntúa los 28 municipios del panel, pero solo se persisten los 4
+  del catálogo piloto. Ampliar el catálogo requiere geometrías oficiales y
+  pertenece a la capa de datos, no a TASK-014.
+
+**Implementado**
+- `app/ml/prediccion.py`: features → artefacto TASK-012 → SHAP TASK-013,
+  cálculo de riesgo/confianza/fecha, persistencia inmutable y CLI.
+- `app/models/prediccion.py` + migración `5f6a7b8c9d01`: tabla
+  `predicciones` con los CHECK de `design.md` §3, incluido el horizonte de
+  21-28 días.
+- `tests/ml/test_prediccion.py`: 18 pruebas (cortes, NFR-007, fechas, ORM,
+  persistencia simulada y pipeline real con SHAP).
+- `docs/task_014_prediccion.md`: decisiones, uso, verificación y limitaciones.
+
+**Verificación**
+- `python -B -m unittest discover -s tests/ml -p "test_prediccion.py" -v`:
+  **18 OK**.
+- Suite `tests/ml`: **66 OK, 3 omitidas** (omisiones previas de pandas 2.2.3;
+  SHAP ya quedó disponible en el intérprete global).
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Inserción real en transacción sobre PostgreSQL/PostGIS: 28 predicciones,
+  4 insertadas (piloto), 24 omitidas por catálogo; rollback posterior.
+- `ruff check` y `python -m compileall -q app tests`: OK.
+
+**Pendientes**
+- Si se quiere publicar t+4, agregar `horizonte_semanas` al esquema y definir
+  la regla de selección para `GET /zonas/riesgo` y alertas.
+- Integrar el porcentaje real de imputación de TASK-010; mientras el panel v2
+  no conserve `es_dato_imputado`, la confianza usa una estimación por
+  features climáticas ausentes.
+- TASK-015 debe partir de `predicciones.variables_explicativas` y no crear
+  alertas sin justificación.
+
+### 2026-10-26 — API de zonas y alertas (TASK-019 a TASK-023, Dilan)
+
+**Estado:** implementado y verificado contra PostgreSQL 17 + PostGIS 3.6
+locales (`pytest tests/api tests/test_modelos_predicciones.py`: 133 tests en
+verde; `alembic upgrade head`, `downgrade` y `alembic check` sin diferencias).
+**Sin commit ni push** de este trabajo. TASK-019 a 022 marcadas `[x]`;
+TASK-023 queda sin marcar (ver pendientes).
+
+**Implementado**
+- Modelos y migración `7c1e5d9a3b42`: `predicciones`, `alertas`,
+  `umbrales_configuracion`, `brotes_confirmados` (nadie las tenía asignadas;
+  divergencias anotadas en `design.md` §3 antes de marcar las tareas).
+- `app/api/deps.py`: verifica el JWT de acceso y el rol (`get_usuario_actual`,
+  `require_role`). No emite tokens (TASK-017) ni toca `roles`/`usuarios`.
+- `app/services/` (consultas y reglas por rol), `app/schemas/` y
+  `app/api/routes/{zonas,alertas,admin}.py`; `app/main.py` los registra.
+- `docs/contrato_api.md`: el "borrador de la API" del día 1 (rutas, payloads y
+  claims del token), además de `docs/contrato_esquema_bd.md` ampliado.
+- Pruebas en `tests/api/` y `tests/test_modelos_predicciones.py`. El fixture
+  `catalogo` pasó a `tests/conftest.py`; ahora `conftest.py` fija `SECRET_KEY`
+  solo para pruebas.
+
+**Decisiones que este diseño no fijaba (confirmar con el equipo)**
+- Vista completa de predicción: `epidemiologo` y `admin`; `autoridad`, `sedes`
+  y `coordinador_municipal` reciben la resumida.
+- Umbral por defecto 70 % (referencial, ejemplo de REQ-009).
+- Correlación predicción↔brote: ±7 días de `fecha_estimada_riesgo`.
+- `app/main.py` ahora importa `app.core.database`, por lo que arrancar la API
+  exige `DATABASE_URL` (antes `/health` arrancaba sin ella).
+
+**Pendientes**
+1. Ivonne: `/auth/login` debe emitir los claims de `docs/contrato_api.md`;
+   `evaluacion_alertas` (TASK-015) debe leer `obtener_umbral` y TASK-014 debe
+   insertar en `predicciones` (variables como lista). Seed de `roles`.
+2. Quién carga `brotes_confirmados` (sin fuente asignada): sin datos, el
+   historial y TASK-034 quedan vacíos.
+3. TASK-032: cobertura medida 2026-10-26 sobre `app/etl` + `app/ml`: **86 %**
+   total (205 tests en verde; `entrenamiento.py` 75 %, el resto ≥ 84 %).
+   Falta `prediccion.py` (TASK-014, Ivonne): al existir, repetir
+   `pytest --cov=app/etl --cov=app/ml` y marcar la tarea.
+4. TASK-031 y TASK-035 dependen de Adriana (024/025) y del cierre del resto.
+5. Entorno: Python 3.12 (`pip install -r requirements.txt` no funciona en
+   3.14). No crear el venv dentro de una carpeta sincronizada con iCloud
+   (`Documents`): los imports se cuelgan. Se usó `~/.venvs/dengue-malaria` y
+   el repo en `~/Pictures/machine/`. Suite completa: ~11 s.
+
+### 2026-10-26 — TASK-024/025: campañas y recomendaciones municipales
+
+**Implementación:** routers `campanas.py` y `municipios.py`, schemas
+`prevencion.py` y servicios compartidos `prevencion.py`/`reglas_prevencion.py`.
+`app/main.py` registra ambos routers. Se reutilizan JWT/RBAC, catálogos y
+predicciones almacenadas; no se modifican modelos, migraciones, ML ni los
+endpoints de TASK-019 a 023.
+
+**Reglas:** dengue t+3 verificable por metadatos del modelo, enfermedad y
+diferencia de 21 días UTC; fecha objetivo no vencida. Se filtra antes de
+elegir la última fila por municipio (fecha e ID). Campañas ordena por riesgo,
+fecha, probabilidad e ID municipal. Recursos devuelve recomendaciones
+orientativas del MVP, sin inventarios. Coordinadores limitados al municipio
+asignado; 403 sin asignación. Administrador solo en recursos, no campañas.
+
+**Evidencia y límites:** `docs/task_024_025_api.md` y
+`docs/decisiones_task_024_025.md`. Pruebas locales: 19 aprobadas y 27 de
+integración omitidas por dependencias ausentes y falta de BD exclusiva de
+pruebas. No se instaló nada ni se escribió en PostgreSQL. TASK-024/025 no
+se marcan completas hasta verificar integración HTTP/PostgreSQL/JWT.
+
+**Verificación posterior (2026-10-26):** las 46 pruebas de TASK-024/025
+aprobaron, incluidas las 27 integraciones PostgreSQL/HTTP/JWT, sin fallos ni
+omisiones. Tras fusionar el registro de routers con el trabajo de Dilan,
+se repitieron esas 46 pruebas y aprobaron también 13 pruebas de API ligera,
+salud y observabilidad. Se usó exclusivamente la base aislada de testing,
+sin migraciones ni escrituras en bases compartidas. OpenAPI conserva las
+13 rutas esperadas sin duplicaciones. El pendiente de integración de la
+primera ejecución indicado arriba queda respaldado por esta verificación.
+
+### 2026-10-26 (noche) — Integración y defensa del MVP (TASK-037 a 048, Dilan)
+
+**Estado:** implementado y verificado en local: **284 tests del backend, 104 de la
+interfaz**, 80 % de cobertura en `app/etl` + `app/ml`, `alembic check` limpio.
+Todo sin commit al cerrar esta entrada. Motivo: la «Guía de Defensa del MVP»
+exige un sistema integrado, desplegado, reproducible y respaldado por evidencia;
+se contrastó con el repositorio y se agregaron las tareas que faltaban (Fase 7 de
+`tasks.md`).
+
+**Hecho**
+- `app/core/observabilidad.py` + `app/api/routes/health.py` (TASK-040): `X-Request-ID`,
+  logs sin secretos, 503 ante base caída, `/health/ready`, timeouts de conexión y consulta.
+- `app/etl/seed_demo.py` (TASK-038): un comando carga casos reales, modelo, predicciones
+  y usuarios demo. `tests/e2e/` (TASK-039) y `scripts/smoke_test.py`.
+- `GET /casos/resumen` (TASK-047) para mostrar la malaria (solo acumulados, ADR-005).
+- Interfaz React (`frontend/`): login, mapa, detalle por rol, alertas, historial;
+  sistema de diseño estilo Apple con malaria como entrada (TASK-037, 048, 028 y parte
+  de 027, 029, 030). Pruebas con Vitest, incluido el contraste de los colores.
+- Documentos: `arquitectura_actual.md`, `resultados_experimentales.md`,
+  `guion_demo_y_plan_b.md`, riesgos M-01 a M-14 en `risk_register.md`,
+  `contrato_api.md` al día, `.github/workflows/ci.yml` (sin ejecutar en GitHub).
+- `tests/conftest.py`: cada test parte de las tablas de datos vacías (dentro de la
+  transacción que se revierte), para poder correrlos contra una base con la demo cargada.
+
+**Decisiones a confirmar con el equipo**
+- La malaria es la vista de entrada pero **sin predicciones**: casos observados.
+- `refresh_token` en `sessionStorage` (riesgo M-11); access token en memoria.
+- Regla de «acierto» del historial: ±7 días (ya anotada en `contrato_api.md`).
+
+**Docker (verificado 2026-10-26, Colima en Apple Silicon):** las 3 imágenes
+construyen, `docker compose` migra y carga la demo, el humo pasa por la API y por
+nginx, y los 283 tests pasan contra PostgreSQL 16 + PostGIS 3.4 (como el CI).
+Hallazgo: `app/services/casos.py` importaba `pandas` y la imagen `api` no lo trae
+(la API no arrancaba); corregido moviendo las constantes a `app/etl/fuentes.py` y
+vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
+
+**Pendientes (no son de esta sesión)**
+1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
+2. TASK-015 `evaluacion_alertas` (cierra la 023; sin ella no hay alertas) y TASK-016.
+3. Fuente de `brotes_confirmados` (riesgo M-08).
+4. TASK-027: selector de agregación; TASK-029: filtro de fechas en pantalla.
+5. TASK-041 (tag), 045 (ensayo, grabación, respaldo), 046 (ver el check verde en un PR).
+6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
+   `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.
+
+
+## Sesión 2026-10-26 (cierre del backlog propio)
+
+- TASK-016: `app/ml/job_semanal.py` (idempotente por semana ISO, CLI `--fecha`/`--forzar`) y
+  `.github/workflows/prediccion_semanal.yml`. Falta registrar los secretos `DATABASE_URL` y
+  `SECRET_KEY` en GitHub para la ejecución programada.
+- TASK-026: `GET /modelo/desempeno` (`app/services/desempeno.py`); métricas `null` sin brotes.
+- TASK-011, 013 y 029 se marcan como hechas **por Adriana**; TASK-036 tiene el texto en
+  `docs/limitaciones_informe_final.md`, falta pegarlo en el informe.
+- Verificación: 439 pruebas de backend y 152 de frontend en verde, `alembic check` sin cambios.
+- Siguen abiertas: TASK-034 (sin fuente de brotes), TASK-035 (firma), TASK-041/045/046.
