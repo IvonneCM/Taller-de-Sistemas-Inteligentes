@@ -4,6 +4,9 @@ Deja la base lista para recorrer el flujo completo con UN comando:
 
     SEED_DEMO_PASSWORD=<clave-de-demo> python -m app.etl.seed_demo
 
+Con `--todos-los-municipios` se amplia antes el catalogo (28 municipios con
+dengue y 21 con malaria, ADR-007); sin esa opcion, solo la zona piloto.
+
 Pasos (cada uno es idempotente salvo el ultimo, ver abajo):
   1. catalogo (departamentos, enfermedades, zona piloto) y usuarios demo
      `@demo.local` con los 5 roles (app/etl/seed_usuarios.py);
@@ -147,7 +150,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="Fecha ISO de generacion; por defecto, ahora (UTC).")
     parser.add_argument("--forzar", action="store_true",
                         help="Agrega una nueva tanda de predicciones aunque ya existan.")
+    parser.add_argument("--todos-los-municipios", action="store_true",
+                        help="Antes de sembrar, amplia el catalogo a todos los municipios con "
+                             "casos (app/etl/ampliar_catalogo.py, ADR-007). Sin esta opcion, "
+                             "solo la zona piloto de 4 municipios.")
     args = parser.parse_args(argv)
+
+    if args.todos_los_municipios:
+        from app.etl import ampliar_catalogo  # importa pandas: solo si se pide
+        ampliar_catalogo.main([])
 
     resultado = sembrar_demo(fecha_generacion=args.fecha, forzar=args.forzar)
     print(f"Usuarios demo: {resultado['usuarios']}")
@@ -163,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Sin predicciones nuevas: {resultado['motivo_sin_predicciones']}")
     if resultado["predicciones_omitidas"]:
         fuera = len(resultado["predicciones_omitidas"])
-        print(f"Omitidas (fuera de la zona piloto del catalogo): {fuera}")
+        print(f"Omitidas (municipios fuera del catalogo): {fuera}")
     print(f"Alertas emitidas con el umbral vigente: {resultado['alertas_emitidas']}")
     print("Malaria: sin predicciones (no hay modelo; ver ADR-005). Brotes confirmados: no se cargan.")
     return 0

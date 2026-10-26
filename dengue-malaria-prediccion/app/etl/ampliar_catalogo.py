@@ -25,6 +25,8 @@ Geometria (`municipios.geometria` es MULTIPOLYGON NOT NULL):
     inventa un limite.
   - Los 4 municipios piloto que ya estan en la base NO se modifican (conservan
     su cuadrado referencial centrado en la estacion SENAMHI).
+  - Los poligonos nuevos se simplifican a ~110 m (ST_SimplifyPreserveTopology)
+    para que el mapa no pese megas; el area cambia menos de 0,2 %.
   - Si un poligono de OSM no es valido para PostGIS se repara con ST_MakeValid.
 
 Idempotente: un municipio que ya existe (por nombre) no se vuelve a crear.
@@ -55,6 +57,8 @@ from app.models import Departamento, Municipio
 REFERENCIA = Path(__file__).resolve().parents[3] / "data" / "reference"
 UBICACION_CSV = REFERENCIA / "municipios_ubicacion.csv"
 LIMITES_GEOJSON = REFERENCIA / "municipios_limites.geojson"
+# ~110 m en el ecuador; ver la simplificacion en `ampliar_catalogo`.
+TOLERANCIA_SIMPLIFICACION_GRADOS = 0.001
 
 
 def _anillo(coords) -> str:
@@ -138,6 +142,16 @@ def ampliar_catalogo(
     reparadas = 0
     if creados:
         ids = [m.id for m in creados]
+        # Los limites de OSM traen ~66.000 vertices: el mapa (GET /casos/resumen,
+        # /zonas/riesgo) pesaba 2,6 MB. A ~110 m de tolerancia queda 5 veces mas
+        # liviano y el area cambia menos de 0,2 %, invisible a escala municipal.
+        db.execute(
+            text(
+                "UPDATE municipios SET geometria = ST_Multi(ST_SimplifyPreserveTopology(geometria, :tol)) "
+                "WHERE id = ANY(:ids)"
+            ),
+            {"ids": ids, "tol": TOLERANCIA_SIMPLIFICACION_GRADOS},
+        )
         reparadas = db.execute(
             text(
                 "UPDATE municipios SET geometria = ST_Multi(ST_CollectionExtract(ST_MakeValid(geometria), 3)) "

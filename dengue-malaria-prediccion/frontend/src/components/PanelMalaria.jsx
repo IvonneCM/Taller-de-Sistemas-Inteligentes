@@ -45,7 +45,7 @@ export function PanelMalaria({ carga, seleccionado, alSeleccionar }) {
         <p className="sobretitulo">Malaria · acumulado al {fechaLarga(filas[0].hasta)}</p>
         <p className="cifra cifra-malaria">{formatearEntero(total)}</p>
         <p className="secundario">
-          casos confirmados en {filas.length} municipios de la zona piloto, según el Boletín
+          casos confirmados en {filas.length} municipios, según el Boletín
           Epidemiológico N.º 13.
         </p>
       </div>
@@ -55,7 +55,7 @@ export function PanelMalaria({ carga, seleccionado, alSeleccionar }) {
           <h3>{nombreZona(elegida.municipio)}</h3>
           <div className="datos">
             <div className="dato"><span className="nota">Casos acumulados</span><span className="valor">{formatearEntero(elegida.total_casos)}</span></div>
-            <div className="dato"><span className="nota">De la zona piloto</span><span className="valor">{Math.round((elegida.total_casos / total) * 100)} %</span></div>
+            <div className="dato"><span className="nota">Del total mostrado</span><span className="valor">{Math.round((elegida.total_casos / total) * 100)} %</span></div>
           </div>
           <p className="nota">{elegida.fuente}</p>
         </div>
