@@ -225,6 +225,52 @@ backlog de la sección 5.
 
 ## 9. Registro de sesiones
 
+### 2026-10-26 — API de zonas y alertas (TASK-019 a TASK-023, Dilan)
+
+**Estado:** implementado y verificado contra PostgreSQL 17 + PostGIS 3.6
+locales (`pytest tests/api tests/test_modelos_predicciones.py`: 133 tests en
+verde; `alembic upgrade head`, `downgrade` y `alembic check` sin diferencias).
+**Sin commit ni push** de este trabajo. TASK-019 a 022 marcadas `[x]`;
+TASK-023 queda sin marcar (ver pendientes).
+
+**Implementado**
+- Modelos y migración `7c1e5d9a3b42`: `predicciones`, `alertas`,
+  `umbrales_configuracion`, `brotes_confirmados` (nadie las tenía asignadas;
+  divergencias anotadas en `design.md` §3 antes de marcar las tareas).
+- `app/api/deps.py`: verifica el JWT de acceso y el rol (`get_usuario_actual`,
+  `require_role`). No emite tokens (TASK-017) ni toca `roles`/`usuarios`.
+- `app/services/` (consultas y reglas por rol), `app/schemas/` y
+  `app/api/routes/{zonas,alertas,admin}.py`; `app/main.py` los registra.
+- `docs/contrato_api.md`: el "borrador de la API" del día 1 (rutas, payloads y
+  claims del token), además de `docs/contrato_esquema_bd.md` ampliado.
+- Pruebas en `tests/api/` y `tests/test_modelos_predicciones.py`. El fixture
+  `catalogo` pasó a `tests/conftest.py`; ahora `conftest.py` fija `SECRET_KEY`
+  solo para pruebas.
+
+**Decisiones que este diseño no fijaba (confirmar con el equipo)**
+- Vista completa de predicción: `epidemiologo` y `admin`; `autoridad`, `sedes`
+  y `coordinador_municipal` reciben la resumida.
+- Umbral por defecto 70 % (referencial, ejemplo de REQ-009).
+- Correlación predicción↔brote: ±7 días de `fecha_estimada_riesgo`.
+- `app/main.py` ahora importa `app.core.database`, por lo que arrancar la API
+  exige `DATABASE_URL` (antes `/health` arrancaba sin ella).
+
+**Pendientes**
+1. Ivonne: `/auth/login` debe emitir los claims de `docs/contrato_api.md`;
+   `evaluacion_alertas` (TASK-015) debe leer `obtener_umbral` y TASK-014 debe
+   insertar en `predicciones` (variables como lista). Seed de `roles`.
+2. Quién carga `brotes_confirmados` (sin fuente asignada): sin datos, el
+   historial y TASK-034 quedan vacíos.
+3. TASK-032: cobertura medida 2026-10-26 sobre `app/etl` + `app/ml`: **86 %**
+   total (205 tests en verde; `entrenamiento.py` 75 %, el resto ≥ 84 %).
+   Falta `prediccion.py` (TASK-014, Ivonne): al existir, repetir
+   `pytest --cov=app/etl --cov=app/ml` y marcar la tarea.
+4. TASK-031 y TASK-035 dependen de Adriana (024/025) y del cierre del resto.
+5. Entorno: Python 3.12 (`pip install -r requirements.txt` no funciona en
+   3.14). No crear el venv dentro de una carpeta sincronizada con iCloud
+   (`Documents`): los imports se cuelgan. Se usó `~/.venvs/dengue-malaria` y
+   el repo en `~/Pictures/machine/`. Suite completa: ~11 s.
+
 ### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
 
 > Nota: las secciones 4 a 7 de arriba describen el estado de la primera
