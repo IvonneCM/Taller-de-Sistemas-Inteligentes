@@ -1,0 +1,4 @@
+modelo,n_origenes,n,positivos,negativos,prevalencia,accuracy,balanced_accuracy,precision,recall,f1,roc_auc,pr_auc,brier,matriz_confusion
+modelo,4,112,30,82,0.2679,0.5536,0.5976,0.306,0.6041,0.3322,0.6588,0.4178,0.278,"{'tn': 48, 'fp': 34, 'fn': 16, 'tp': 14}"
+clase_mayoritaria,4,112,30,82,0.2679,0.7322,0.5,0.0,0.0,0.0,0.5,0.2678,0.22,"{'tn': 82, 'fp': 0, 'fn': 30, 'tp': 0}"
+casos_recientes,4,112,30,82,0.2679,0.5982,0.6913,0.3734,0.8577,0.4775,0.6913,0.3584,0.4018,"{'tn': 43, 'fp': 39, 'fn': 6, 'tp': 24}"

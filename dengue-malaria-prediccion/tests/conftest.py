@@ -2,10 +2,20 @@
 transaccion que siempre se revierte al final (no ensucia la base de
 desarrollo ni entre tests)."""
 
-import pytest
+import os
 
-from app.core.database import engine, SessionLocal
-from app.etl.seed_catalogo import seed as seed_catalogo
+import pytest
+from fastapi.testclient import TestClient
+
+# Debe definirse antes de importar app.core.security (lee el entorno al
+# emitir/validar tokens, pero no al importar).
+os.environ.setdefault("SECRET_KEY", "test-secret-key-solo-para-pytest-32-bytes")
+os.environ.setdefault("ALGORITHM", "HS256")
+os.environ.setdefault("JWT_ISSUER", "dengue-malaria-api")
+
+from app.core.database import SessionLocal, engine, get_db  # noqa: E402
+from app.etl.seed_catalogo import seed as seed_catalogo  # noqa: E402
+from app.main import app  # noqa: E402
 
 
 @pytest.fixture()
@@ -22,3 +32,16 @@ def db_session():
         session.close()
         transaction.rollback()
         connection.close()
+
+
+@pytest.fixture()
+def client(db_session):
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        app.dependency_overrides.clear()

@@ -129,7 +129,7 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       *Verificación:* test unitario valida que las columnas de lag se
       calculan correctamente sobre una serie de tiempo de ejemplo.
 
-- [ ] **TASK-012** [NFR-001, NFR-002] Entrenar modelo baseline (offline, en
+- [x] **TASK-012** [NFR-001, NFR-002] Entrenar modelo baseline (offline, en
       notebook/Colab) usando XGBoost u otro clasificador, con datos
       disponibles o sintéticos representativos; documentar métricas
       obtenidas (aclarando que son estimadas hasta validarse con datos
@@ -144,7 +144,7 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       *Verificación:* test que, dado un input de ejemplo, retorna una lista
       ordenada de variables con peso numérico.
 
-- [ ] **TASK-014** [REQ-001, REQ-002, REQ-003, NFR-007] Implementar
+- [x] **TASK-014** [REQ-001, REQ-002, REQ-003, NFR-007] Implementar
       `app/ml/prediccion.py`: ejecuta el pipeline completo (features →
       modelo → SHAP), calcula `nivel_riesgo`, `probabilidad_pct`,
       `nivel_confianza` (bajo si el % de datos imputados supera el umbral de
@@ -173,12 +173,12 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
 *Meta de la fase: exponer toda la funcionalidad vía API REST segura y con
 control de acceso por rol.*
 
-- [ ] **TASK-017** [REQ-019] Implementar `/auth/login` con JWT (access +
+- [x] **TASK-017** [REQ-019] Implementar `/auth/login` con JWT (access +
       refresh token) y hashing de contraseñas con bcrypt.
       *Verificación:* test de integración: login con credenciales válidas
       devuelve token; con credenciales inválidas devuelve 401.
 
-- [ ] **TASK-018** [REQ-007, REQ-019] Implementar dependencias de RBAC en
+- [x] **TASK-018** [REQ-007, REQ-019] Implementar dependencias de RBAC en
       `app/api/deps.py` (`require_role(...)`) para restringir endpoints
       según rol.
       *Verificación:* test que un usuario con rol "autoridad" recibe 403 al

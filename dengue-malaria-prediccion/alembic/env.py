@@ -2,6 +2,7 @@ import os
 import sys
 from logging.config import fileConfig
 
+import sqlalchemy as sa
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -31,15 +32,26 @@ if config.config_file_name is not None:
 # compare el esquema de la BD contra app/models/*.py.
 target_metadata = Base.metadata
 
-# Tablas propias de extensiones de PostgreSQL (PostGIS) que autogenerate no
-# debe proponer crear/eliminar nunca, porque no son modelos de la app.
-_TABLAS_EXTENSION = {"spatial_ref_sys"}
 
+def _tablas_de_extensiones(connection):
+    """Tablas, vistas y secuencias que pertenecen a extensiones (PostGIS).
 
-def include_object(object_, name, type_, reflected, compare_to):
-    if type_ == "table" and name in _TABLAS_EXTENSION:
-        return False
-    return True
+    autogenerate las veria como "removidas" y propondria DROP TABLE/DROP INDEX,
+    lo que rompe PostGIS. Se consultan dinamicamente para no mantener una
+    lista hardcodeada que dependa de la version de la extension.
+    """
+    filas = connection.execute(
+        sa.text(
+            """
+            SELECT c.relname
+            FROM pg_class c
+            JOIN pg_depend d ON d.objid = c.oid AND d.deptype = 'e'
+            JOIN pg_extension e ON e.oid = d.refobjid
+            WHERE c.relkind IN ('r', 'p', 'v', 'm', 'S')
+            """
+        )
+    )
+    return {fila[0] for fila in filas}
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -85,6 +97,20 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        tablas_extension = _tablas_de_extensiones(connection)
+        # La consulta anterior abre una transaccion implicita. Cerrarla para
+        # que `context.begin_transaction()` controle el commit de la migracion;
+        # si no, el DDL se ejecuta y se revierte al cerrar la conexion.
+        connection.rollback()
+
+        def include_object(object_, name, type_, reflected, compare_to):
+            if type_ == "table" and name in tablas_extension:
+                return False
+            if type_ == "index" and getattr(object_, "table", None) is not None:
+                if object_.table.name in tablas_extension:
+                    return False
+            return True
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

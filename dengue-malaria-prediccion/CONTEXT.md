@@ -323,3 +323,166 @@ backlog de la sección 5.
   desde un cron externo). Render Postgres gratis caduca a los 30 días: no sirve.
   Si se cambia de proveedor, actualizar ADR-003 y `design.md` §1 y §10.
 - Ahora hace falta un `.env` local con `SECRET_KEY` (antes bastaba `DATABASE_URL`).
+
+### 2026-10-25 — TASK-012 baseline XGBoost de dengue
+
+**Estado:** implementación terminada, verificada y `TASK-012` marcada como
+`[x]` en `tasks.md`. Solo falta que Ivonne revise y haga el commit.
+
+**Implementado**
+- `app/ml/entrenamiento.py`: etiqueta `casos_dengue_t_mas_{3,4} > 0`,
+  walk-forward cronológico, XGBoost, métricas, baselines, artefactos JSON y
+  registro opcional en BD.
+- `tests/ml/test_entrenamiento.py`: 11 pruebas; suite `tests/ml` completa
+  ejecutada con **33 OK, 1 omitida** (pandas 2.2.3 ausente).
+- `app/ml/artifacts/`: boosters y metadata de t+3 y t+4, versión `v1`.
+- `app/models/modelo.py` + `app/models/__init__.py`: ORM de `modelos`.
+- `alembic/versions/4079b097a5a2_task_012_modelos.py`: crea solo `modelos`.
+- `alembic/env.py`: exclusión dinámica de tablas/índices de extensiones
+  PostGIS en autogenerate. La consulta cierra su transacción implícita con
+  `rollback()` antes de iniciar la migración; sin eso, el DDL se revertía.
+- `docs/task_012_baseline.md` y `docs/task_012_metricas.json`.
+- `scripts/graficos_task_012.py` y `scripts/task_012_output/`: 6 gráficos
+  (métricas, matrices de confusión, ROC/PR, por origen, distribución de
+  probabilidades e importancia de variables), predicciones walk-forward y
+  CSVs de métricas. El script verifica que el recálculo coincida con la
+  metadata de los artefactos.
+
+**Datos y protocolo**
+- Panel `data/processed/panel_semanal_dengue_clima.csv`: 364 filas,
+  28 municipios, 13 semanas de 2026, 24 features.
+- Orígenes t+3: 2026-02-09/16/23 y 03-02 (112 predicciones).
+- Orígenes t+4: 2026-02-16 y 02-23 (56 predicciones).
+- Filas del modelo final: 224 (t+3) y 196 (t+4).
+
+**Resultados (macro por origen)**
+- t+3: modelo F1 0.3322 / ROC-AUC 0.6588; regla `casos_recientes`
+  F1 0.4775 / ROC-AUC 0.6913. El modelo **no supera** la regla simple.
+- t+4: modelo F1 0.3785 / ROC-AUC 0.6268; regla `casos_recientes`
+  F1 0.3255 / ROC-AUC 0.6215. Mejora marginal, no concluyente.
+- Métricas exploratorias; no validan NFR-001/NFR-002. La etiqueta no es
+  definición de brote.
+
+**Verificación BD (PostGIS temporal en Docker)**
+- `alembic upgrade head` aplicado; `alembic check` sin operaciones nuevas.
+- Upgrade desde base vacía verificado (con `CREATE EXTENSION postgis`
+  previo; la migración base no crea la extensión).
+- Catálogo: 2 enfermedades, 4 municipios piloto.
+- Filas en `modelos`: id 1 (t+3), id 2 (t+4), `enfermedad_id=1`,
+  `metricas_entrenamiento` JSONB válido.
+
+**Pendientes**
+- `.gitignore` tiene un cambio previo no relacionado (ignora
+  `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
+
+### 2026-10-25 — TASK-017/018 autenticación JWT y RBAC
+
+**Estado:** implementación terminada, tests verdes y `TASK-017`/`TASK-018`
+marcadas `[x]` tras confirmación explícita de Ivonne (2026-10-25)
+
+**Implementado**
+- `app/core/security.py`: bcrypt (costo 12) y JWT HS256 con access de 30
+  min y refresh de 7 días; claims `sub`, `rol`, `tipo`, `jti`, `iat`,
+  `exp`, `iss`. El algoritmo está restringido a HS256.
+- `app/models/refresh_token.py` + migración `aa12e214cb8d`: tabla
+  `refresh_tokens` (`jti` único, usuario, expiración, revocación,
+  creación). `RefreshToken` se registró en `app/models/__init__.py` y se
+  agregó la relación en `Usuario`.
+- `app/api/routes/auth.py`: `POST /auth/login` (OAuth2 password flow),
+  `POST /auth/refresh` con rotación y `POST /auth/logout` idempotente.
+- `app/api/deps.py`: `get_current_user` carga usuario y rol desde la BD en
+  cada request; `require_role(...)` aplica RBAC sin bypass implícito de
+  admin.
+- `app/schemas/auth.py`: `TokenPair` y `RefreshTokenRequest`.
+- `app/main.py`: incluye el router de auth.
+- `app/etl/seed_usuarios.py`: seed idempotente de roles y 5 usuarios
+  ficticios `@demo.local`; la contraseña sale de `SEED_DEMO_PASSWORD` o se
+  pide por consola. Incluye `--delete` y `--reset-passwords`; rechaza
+  `ENVIRONMENT=production`.
+- `.env.example`: agrega `JWT_ISSUER` y `SEED_DEMO_PASSWORD=` (vacío).
+- `README.md`: instrucciones reproducibles de PostGIS local, migraciones,
+  seed, limpieza y tests.
+- `design.md` §4: documenta `/auth/refresh` y `/auth/logout` además de
+  `/auth/login`, para que el contrato de API coincida con la implementación.
+- `tests/api/`: 19 pruebas de login, refresh, expiración, token sin
+  `exp`, rotación, logout, tipo de token y RBAC 401/403.
+
+**Decisiones**
+- El refresh token es revocable mediante `refresh_tokens` (SEG-01). En
+  `/auth/refresh` se revoca el token usado y se emite uno nuevo.
+- El access token no se persiste; su expiración corta limita el riesgo.
+- Se usa `bcrypt` directo, no `passlib`, porque el entorno tiene bcrypt
+  5.0 y passlib 1.7.4 no está instalado.
+- `decodificar_token` exige `exp` con `options={"require_exp": True}`: un
+  token firmado sin expiración ya no se acepta.
+- Los usuarios demo no se versionan: solo se versiona el script. Cada
+  desarrollador define su propia contraseña local.
+- No hay bypass automático de `admin`; cada endpoint declara sus roles.
+- El alcance por municipio (`municipio_asignado_id`) es una validación de
+  servicio posterior, no parte de `require_role`.
+
+**Verificación**
+- `pytest tests/api -q`: **19 passed**.
+- `ruff check` sobre los archivos nuevos: **All checks passed**.
+- `python -m compileall -q app tests`: OK.
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Smoke test del seed: login con `epidemiologo@demo.local` devuelve 200
+  con access y refresh; luego `--delete` elimina los 5 usuarios demo.
+- PostGIS temporal: contenedor `dengue-postgis-local`, puerto `55432`,
+  base `dengue_malaria`. Queda levantado para pruebas manuales.
+
+**Pendientes**
+- Se mantiene la extensión aprobada por Ivonne: `/auth/refresh` y
+  `/auth/logout` además de `/auth/login`, documentada en `design.md` §4.
+- Rate limiting de login (SEG-10) y HTTPS de despliegue siguen fuera de
+  alcance de estas dos tareas.
+- El access token no es revocable; si se requiere, evaluar una lista de
+  revocación o expiración aún más corta.
+
+### 2026-10-26 — TASK-014 pipeline de predicción + SHAP + tabla predicciones
+
+**Estado:** implementación terminada, verificada y `TASK-014` marcada como
+`[x]` tras confirmación explícita de Ivonne (2026-10-26). 
+
+**Decisiones acordadas para esta sesión**
+- Horizonte operativo **t+3**; t+4 queda disponible por parámetro pero no se
+  publica en el lote semanal. Motivo: la validación t+4 solo tiene 2 orígenes
+  walk-forward y `predicciones` no tiene columna de horizonte; publicar ambos
+  crearía filas/alertas duplicadas indistinguibles.
+- Cortes provisionales de `nivel_riesgo`: `<33.33` bajo, `33.33-66.67`
+  medio, `>=66.67` alto. **No validados** ni equivalentes a brote.
+- `nivel_confianza` NFR-007 estricto con los umbrales de TASK-010:
+  `<=5 %` alto, `>5 % y <=20 %` bajo, `>20 %` no se publica; `medio` queda
+  reservado.
+- El modelo puntúa los 28 municipios del panel, pero solo se persisten los 4
+  del catálogo piloto. Ampliar el catálogo requiere geometrías oficiales y
+  pertenece a la capa de datos, no a TASK-014.
+
+**Implementado**
+- `app/ml/prediccion.py`: features → artefacto TASK-012 → SHAP TASK-013,
+  cálculo de riesgo/confianza/fecha, persistencia inmutable y CLI.
+- `app/models/prediccion.py` + migración `5f6a7b8c9d01`: tabla
+  `predicciones` con los CHECK de `design.md` §3, incluido el horizonte de
+  21-28 días.
+- `tests/ml/test_prediccion.py`: 18 pruebas (cortes, NFR-007, fechas, ORM,
+  persistencia simulada y pipeline real con SHAP).
+- `docs/task_014_prediccion.md`: decisiones, uso, verificación y limitaciones.
+
+**Verificación**
+- `python -B -m unittest discover -s tests/ml -p "test_prediccion.py" -v`:
+  **18 OK**.
+- Suite `tests/ml`: **66 OK, 3 omitidas** (omisiones previas de pandas 2.2.3;
+  SHAP ya quedó disponible en el intérprete global).
+- `alembic upgrade head` y `alembic check`: sin operaciones nuevas.
+- Inserción real en transacción sobre PostgreSQL/PostGIS: 28 predicciones,
+  4 insertadas (piloto), 24 omitidas por catálogo; rollback posterior.
+- `ruff check` y `python -m compileall -q app tests`: OK.
+
+**Pendientes**
+- Si se quiere publicar t+4, agregar `horizonte_semanas` al esquema y definir
+  la regla de selección para `GET /zonas/riesgo` y alertas.
+- Integrar el porcentaje real de imputación de TASK-010; mientras el panel v2
+  no conserve `es_dato_imputado`, la confianza usa una estimación por
+  features climáticas ausentes.
+- TASK-015 debe partir de `predicciones.variables_explicativas` y no crear
+  alertas sin justificación.
