@@ -37,9 +37,9 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dengue_malaria
       SECRET_KEY: ci-solo-para-pruebas-clave-de-mas-de-32-caracteres
       ENVIRONMENT: development
-      # Las pruebas de integracion de TASK-024/025 solo corren si esto esta definido;
-      # en el CI la base es efimera y exclusiva, asi que es seguro apuntarla aqui.
-      GATOBYTE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dengue_malaria
+      # Las pruebas de integracion de TASK-024/025 y de alertas vigentes solo corren
+      # si esto esta definido y exigen esta base exclusiva (se crea en un paso aparte).
+      GATOBYTE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/gatobyte_task024025_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,6 +53,13 @@ jobs:
         run: |
           alembic upgrade head
           alembic check
+      - name: Crear la base de pruebas exclusiva y migrarla
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "CREATE DATABASE gatobyte_task024025_test"
+          psql -h localhost -U postgres -d gatobyte_task024025_test -c "CREATE EXTENSION IF NOT EXISTS postgis"
+          DATABASE_URL="$GATOBYTE_TEST_DATABASE_URL" alembic upgrade head
       - name: Pruebas con cobertura (mínimo 70 % en ingesta, limpieza y predicción)
         run: pytest -q --cov=app/etl --cov=app/ml --cov-fail-under=70
 

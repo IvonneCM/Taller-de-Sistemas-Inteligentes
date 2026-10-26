@@ -265,6 +265,8 @@ vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
 
 **TASK-027 y 035 (2026-10-26):** selector Municipio/Departamento en el mapa (por departamento: peor caso en dengue, suma en malaria) y revisión de seguridad verificable (`python -m app.core.revision_seguridad`, `docs/revision_seguridad.md`). Hallazgos para decidir: `python-multipart 0.0.9` y `python-jose 3.3.0` con avisos (H-1, H-2), sin límite de intentos de login (H-3) y sin cabeceras de seguridad en nginx (H-4). No se cambiaron los `requirements`.
 
+**Integraciones y hallazgo en el despliegue (2026-10-26):** integradas las ramas `ignaaa` (Render + Neon, prueba de carga, `RUN_MIGRATIONS`) y `adriii` (historial y panel de alertas, filtro `solo_vigentes` de `GET /alertas`). **Bug mío corregido:** el `options=-c statement_timeout` de TASK-040 lo rechaza el pooler de Neon, así que la API desplegada daba 503 en `/health/ready`; ahora el límite se aplica con `SET LOCAL` por transacción. La base de Neon está migrada pero **vacía** (sin usuarios ni datos): falta cargar la demostración (`python -m app.etl.seed_demo`) para poder iniciar sesión en el despliegue.
+
 **Pendientes (no son de esta sesión)**
 1. TASK-004 despliegue (bloquea el gate obligatorio) y decidir proveedor.
 2. TASK-016 (tarea semanal). TASK-015 ya la entregó Ivonne y está integrada: con el umbral por defecto (70 %) ninguna predicción alerta; el equipo de salud debe fijar el umbral real.

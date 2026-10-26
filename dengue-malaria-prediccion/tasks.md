@@ -344,7 +344,7 @@ considerarse listo para el piloto.*
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
-      *Estado 2026-10-26 (sin marcar):* `docs/revision_seguridad.md` y el comando `python -m app.core.revision_seguridad` (6 controles OK: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio; 42 pruebas que verifican que cada control detecta lo que debe). **Falta HTTPS en el despliegue** (TASK-004, hoy NO VERIFICADO) **y la firma del equipo.** La revisión encontró hallazgos para decidir antes de exponer la API: `python-multipart` y `python-jose` con avisos de seguridad (H-1, H-2), y sin límite de intentos de login (H-3).
+      *Estado 2026-10-26 (sin marcar):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (6 controles OK: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio; 44 pruebas que verifican que cada control detecta lo que debe). **HTTPS verificado en Render:** certificado válido, sin `Strict-Transport-Security` (aviso). **Falta la firma del equipo** y decidir los hallazgos: `python-multipart` y `python-jose` con avisos (H-1, H-2), sin límite de intentos de login (H-3), nginx sin cabeceras (H-4). La revisión también detectó que la API desplegada no podía conectarse a Neon por el parámetro `options` de TASK-040; corregido.
 
 - [ ] **TASK-036** Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,

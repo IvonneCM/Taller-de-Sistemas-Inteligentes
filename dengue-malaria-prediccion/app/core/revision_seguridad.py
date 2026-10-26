@@ -170,6 +170,10 @@ def secretos_en_el_repositorio(archivos: dict[str, str]) -> Resultado:
                      f"{len(archivos)} archivos versionados revisados (busqueda heuristica)")
 
 
+# Contienen secretos FICTICIOS a proposito (son los casos que el control debe detectar).
+_FIXTURES_DEL_CONTROL = ("tests/test_revision_seguridad.py",)
+
+
 def archivos_versionados(raiz: Path | None = None) -> dict[str, str] | None:
     """Contenido de los archivos de texto que git versiona; None si no hay git."""
     raiz = raiz or RAIZ_BACKEND.parent
@@ -181,6 +185,8 @@ def archivos_versionados(raiz: Path | None = None) -> dict[str, str] | None:
     for ruta in salida.decode("utf-8", "replace").split("\0"):
         archivo = raiz / ruta
         if not ruta or not archivo.is_file() or archivo.stat().st_size > 1_000_000:
+            continue
+        if ruta.endswith(_FIXTURES_DEL_CONTROL):
             continue
         try:
             archivos[ruta] = archivo.read_text(encoding="utf-8")

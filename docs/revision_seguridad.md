@@ -16,7 +16,7 @@ cd frontend && npm audit                                           # dependencia
 | Pedido | Estado | Evidencia |
 |---|---|---|
 | Ausencia de datos personales de pacientes (REQ-020) | **OK** | Control automático: 69 columnas de la base revisadas, solo `usuarios.email` (personal que opera el sistema). Los conectores rechazan columnas con datos personales (`app/etl/conectores/epidemiologia.py`) y toda la información es un conteo agregado por municipio. |
-| HTTPS en el despliegue (NFR-005) | **NO VERIFICADO** | No hay despliegue (TASK-004). El control ya existe y se ejecuta con `--url`: exige https, certificado válido y avisa si falta `Strict-Transport-Security`. **Debe repetirse cuando se despliegue.** |
+| HTTPS en el despliegue (NFR-005) | **AVISO** (verificado el 2026-10-26 en Render) | `python -m app.core.revision_seguridad --url https://taller-de-sistemas-inteligentes.onrender.com`: HTTPS con certificado válido, pero **sin `Strict-Transport-Security`**. Además `/docs`, `/redoc` y `/openapi.json` responden 404 en el despliegue (no se publican en producción). Conviene repetir el control cuando cambie el dominio. |
 | Ninguna alerta sin justificación en la base (REQ-005) | **OK** | Control automático sobre el sistema en Docker: 2 alertas, las dos con justificación y variables explicativas. Triple barrera: restricción `CHECK` en la base, `evaluacion_alertas` y filtro de `GET /alertas`. |
 | Checklist firmado por el equipo | **Pendiente** | Ver la sección 5. |
 
@@ -46,8 +46,12 @@ cd frontend && npm audit                                           # dependencia
 | H-5 | **El refresh token vive en `sessionStorage`** y quedaría expuesto si hubiera un XSS (riesgo M-11). | Baja | Aceptado para el MVP; la alternativa es una cookie `HttpOnly`, que exige cambiar el login. | Equipo |
 | H-6 | **Las alertas y predicciones no son inmutables en la base**, solo en el código (NFR-009 lo acepta). | Baja | Si se quiere reforzar, un trigger que rechace `UPDATE` y `DELETE`. | Equipo |
 | H-7 | Las imágenes base de Docker no se escanearon. | Baja | Escanear con un analizador de imágenes antes del despliegue. | Ignacio |
+| H-8 | El `CMD` del Dockerfile usa `--forwarded-allow-ips='*'`: uvicorn confía en `X-Forwarded-For` de cualquier origen. Es correcto mientras la API solo sea alcanzable a través del proxy de Render. | Baja | Restringir a las IP del proxy si el hosting lo permite. | Ignacio |
+| H-9 | **Sin `Strict-Transport-Security`** en el despliegue (lo detectó el control de HTTPS). | Baja | Agregarla desde la API o el proxy cuando el dominio sea estable. | Ignacio |
 
-Los hallazgos H-1 a H-3 conviene resolverlos antes de exponer la API en internet.
+La API **ya está expuesta en internet** (Render). Por eso conviene resolver pronto H-1 a H-3: las dependencias con avisos y, sobre todo, el límite de intentos de login.
+
+**Hallazgo corregido durante esta revisión:** el límite de tiempo por consulta (TASK-040) se pasaba como parámetro de arranque de la conexión y el pooler de Neon lo rechaza ("unsupported startup parameter"), por lo que la API desplegada devolvía 503 en `/health/ready` y no podía consultar la base. Ahora se aplica con `SET LOCAL` por transacción; verificado contra Neon con consultas de solo lectura (`/health/ready` → 200) y vigilado por una prueba.
 
 ## 4. Límites de esta revisión
 
@@ -58,7 +62,7 @@ Los hallazgos H-1 a H-3 conviene resolverlos antes de exponer la API en internet
 
 ## 5. Firma del equipo
 
-Debe firmarse **después** de desplegar y de repetir el control de HTTPS.
+Debe firmarse después de resolver (o aceptar por escrito) los hallazgos de la sección 3.
 
 | Integrante | Revisó | Fecha | Firma |
 |---|---|---|---|

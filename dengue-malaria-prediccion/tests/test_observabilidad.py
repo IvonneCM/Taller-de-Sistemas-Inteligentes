@@ -113,6 +113,30 @@ def test_la_conexion_usa_los_timeouts_configurados(db_session):
     assert engine.pool.timeout() == ajustes.DB_POOL_TIMEOUT_SECONDS
 
 
+def test_el_limite_de_consulta_no_usa_parametros_de_arranque_que_los_pooler_rechazan():
+    """Neon y PgBouncer rechazan `options=-c ...` con "unsupported startup parameter":
+    con eso la API desplegada no podia conectarse (regresion encontrada en Render)."""
+    import inspect
+
+    from app.core import database
+
+    fuente = inspect.getsource(database)
+    assert '"options"' not in fuente and "'options'" not in fuente
+    assert "SET LOCAL statement_timeout" in fuente
+
+
+def test_el_limite_aplica_en_cada_transaccion_y_se_puede_desactivar(monkeypatch):
+    from app.core import database
+
+    with engine.connect() as conexion:
+        with conexion.begin():
+            assert conexion.execute(text("SHOW statement_timeout")).scalar() == "15s"
+    monkeypatch.setattr(database._settings, "DB_STATEMENT_TIMEOUT_MS", 0)
+    with engine.connect() as conexion:
+        with conexion.begin():
+            assert conexion.execute(text("SHOW statement_timeout")).scalar() == "0"
+
+
 def test_error_no_previsto_responde_500_generico_y_deja_la_traza_en_el_log(caplog):
     caplog.set_level(logging.INFO)
     cliente = TestClient(_app_de_prueba(), raise_server_exceptions=False)
