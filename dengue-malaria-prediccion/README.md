@@ -1,12 +1,10 @@
 # Sistema de Predicción Temprana de Brotes de Dengue/Malaria
 
-> **Backend en desarrollo incremental.** Esta carpeta contiene la
-> especificación, el diseño y la implementación del backend (FastAPI +
-> PostgreSQL/PostGIS). Ya están cerrados el baseline XGBoost con SHAP
-> (TASK-012/013) y la autenticación JWT con RBAC (TASK-017/018). El
-> trabajo de datos (EDA, calidad, pipeline, línea base) vive en
-> `../docs/`, `../scripts/` y `../data/`, en la raíz del repositorio.
-> Ver `tasks.md` y `CONTEXT.md` para el estado exacto.
+> **MVP integrado (2.ª defensa).** Esta carpeta contiene la especificación, el
+> diseño y la implementación del sistema: API FastAPI + PostgreSQL/PostGIS,
+> modelo XGBoost con SHAP e interfaz React. El pipeline de datos (EDA, calidad,
+> DVC) vive en `../docs/`, `../scripts/` y `../data/`, en la raíz del
+> repositorio. Ver `tasks.md` y `CONTEXT.md` para el estado exacto.
 
 Proyecto universitario orientado a apoyar a SEDES, autoridades de salud y
 coordinadores municipales en la identificación de zonas con riesgo de brotes
@@ -16,30 +14,30 @@ preventivas.
 
 ## Estado actual
 
-Este proyecto tiene dos frentes de trabajo con avance muy distinto, que
-conviene no confundir:
+**Recorrido completo y reproducible:** datos reales del Boletín Epidemiológico
+N.º 13 (pipeline DVC en `../scripts/`) → ingesta (`app/etl/`) → base
+PostgreSQL/PostGIS → modelo XGBoost con explicabilidad SHAP (`app/ml/`) → API
+FastAPI con login JWT y control de acceso por rol → interfaz web React con mapa
+(`frontend/`). La demo cubre los 42 municipios con casos del boletín: 28 con
+dengue y 21 con malaria
+([ADR-007](../docs/adr/ADR-007-catalogo-ampliado-opcional.md)).
 
-**Sistema (este directorio) — MVP funcional en local; despliegue en la nube pendiente.**
-Hay un recorrido completo y reproducible: datos reales del Boletín Epidemiológico
-N.º 13 → ingesta (`app/etl/`) → base PostgreSQL/PostGIS → modelo XGBoost con
-explicabilidad SHAP (`app/ml/`) → API FastAPI con login JWT y control de acceso
-por rol → interfaz web React con mapa (`frontend/`). La **malaria se muestra con
-casos observados** (no hay serie semanal, así que no hay modelo; ver
-`../docs/adr/ADR-005-malaria-acumulado-en-bd.md`) y el **dengue con predicciones
-a 3 semanas**. Para recorrerlo y defenderlo paso a paso, ver
+- **Dengue:** predicciones a 3 semanas y alertas con su justificación.
+- **Malaria:** casos observados, sin modelo: la fuente solo trae acumulados
+  ([ADR-005](../docs/adr/ADR-005-malaria-acumulado-en-bd.md)).
+- **Boletines nuevos:** el sitio del Ministerio bloquea la descarga automática;
+  una persona sube el PDF en la pestaña Datos y el sistema lo verifica contra
+  los totales impresos antes de guardar (`POST /admin/boletines`).
+- **Despliegue:** API en Render y base en Neon
+  ([ADR-006](../docs/adr/ADR-006-despliegue-render-neon.md)); predicción
+  semanal en GitHub Actions. La interfaz todavía no está publicada y la base
+  de Neon no tiene los datos de demo (riesgo M-10).
+
+Para recorrerlo y defenderlo paso a paso, ver
 [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md); la arquitectura
 real está en [`../docs/arquitectura_actual.md`](../docs/arquitectura_actual.md).
-Faltan, entre otras cosas, el despliegue (TASK-004), la tarea semanal (TASK-016), `/modelo/desempeno` (TASK-026) y
-la validación retrospectiva (TASK-034). Ver `tasks.md` y `CONTEXT.md` (§9) para el estado exacto.
-
-**Datos (`../scripts/`, `../data/`, `../docs/`):** más avanzado que el
-backend. Ya existe ingesta real (no sintética) de SENAMHI y del Ministerio
-de Salud y Deportes de Bolivia, un EDA completo sobre esos datos, reglas de
-calidad/imputación documentadas, y un prototipo de pipeline de limpieza que
-las implementa (ver `../docs/eda_inicial.md` y `../docs/cierre_sprint1.md`).
-Este trabajo todavía no está integrado al backend — los conectores de
-`app/etl/` (TASK-008/009/010 en `tasks.md`) deben reutilizar esa lógica en
-vez de rediseñarla desde cero.
+Falta la validación retrospectiva (TASK-034), que necesita una fuente de brotes
+confirmados (riesgo M-08).
 
 Las métricas de precisión y anticipación del modelo (NFR-001, NFR-002)
 siguen siendo objetivos de diseño, no resultados validados: existe un modelo de
@@ -77,13 +75,13 @@ Lectura recomendada:
 25. [`../docs/guion_demo_y_plan_b.md`](../docs/guion_demo_y_plan_b.md): guion de la demostración y Plan B.
 26. [`../docs/revision_seguridad.md`](../docs/revision_seguridad.md): revisión de seguridad con evidencia, hallazgos y firma.
 
-## Tecnología propuesta
+## Tecnología
 
 - **Backend:** Python 3.12 y FastAPI.
 - **Base de datos:** PostgreSQL 16 con PostGIS.
 - **ML:** scikit-learn, XGBoost y SHAP.
-- **Frontend:** React con Leaflet o Mapbox; aún no incluido.
-- **Despliegue:** Railway previsto (ADR-003), pero **pendiente de decidir** proveedor (TASK-004). `Dockerfile` y `docker-compose.yml` ya funcionan en local.
+- **Frontend:** React 19 + Vite + Leaflet (`frontend/`).
+- **Despliegue:** Render (API) + Neon (PostgreSQL/PostGIS) y GitHub Actions para la predicción semanal (TASK-004, ADR-006). `Dockerfile` y `docker-compose.yml` funcionan en local.
 
 ## Reproducir el avance actual
 
@@ -135,7 +133,7 @@ Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend)
 
 | Servicio | Imagen | Tamaño | Comando |
 |---|---|---|---|
-| `api` | target `api` | 323 MB | `docker compose up --build api` |
+| `api` | target `api` (incluye pdfplumber para leer boletines) | 417 MB | `docker compose up --build api` |
 | `web` | `frontend/Dockerfile` (nginx) | 74 MB | `docker compose up --build api web` → http://localhost:8080 |
 | `ml` | target `ml` (pandas, xgboost, shap) | 2,3 GB | `docker compose run --rm ml python -m <modulo>` |
 
@@ -144,7 +142,7 @@ Imágenes de Docker (un solo `Dockerfile` con dos targets, más el del frontend)
 
 ```bash
 docker compose up -d --build api web     # la API crea las tablas sola (RUN_MIGRATIONS=1)
-docker compose run --rm -e SEED_DEMO_PASSWORD='<clave-de-demo>' ml python -m app.etl.seed_demo
+docker compose run --rm -e SEED_DEMO_PASSWORD='<clave-de-demo>' ml python -m app.etl.seed_demo --todos-los-municipios --fecha 2026-03-30
 # abrir http://localhost:8080 y entrar con epidemiologo@demo.local (o autoridad@, sedes@, coordinador@, admin@)
 ```
 
@@ -235,7 +233,7 @@ reales del boletín, registra el modelo, genera las predicciones y crea los cinc
 usuarios demo (`SEED_DEMO_PASSWORD` es obligatoria):
 
 ```bash
-python -m app.etl.seed_demo          # idempotente; --forzar agrega otra tanda de predicciones
+python -m app.etl.seed_demo --todos-los-municipios --fecha 2026-03-30   # idempotente; sin la primera opción, solo la zona piloto de 4
 uvicorn app.main:app --port 8000
 SMOKE_EMAIL=autoridad@demo.local SMOKE_PASSWORD="$SEED_DEMO_PASSWORD" python scripts/smoke_test.py
 ```
@@ -267,7 +265,7 @@ despertarla antes con `curl https://taller-de-sistemas-inteligentes.onrender.com
 Para una compilación de producción servida desde otro origen se usa
 `VITE_API_URL` (se fija al compilar) y la API necesitaría CORS, que aún no existe.
 
-La interfaz abre en **malaria** y permite cambiar a dengue. Sigue el sistema de
+La interfaz abre en el **Resumen** (ambas enfermedades) y el selector cambia entre malaria y dengue en el mapa, las alertas y el historial. Sigue el sistema de
 diseño de `frontend/src/styles/tokens.css` (fuente del sistema, modo claro y
 oscuro, contraste revisado por prueba automática). El access token vive solo en
 memoria; el refresh token en `sessionStorage` (ver riesgo M-11 en

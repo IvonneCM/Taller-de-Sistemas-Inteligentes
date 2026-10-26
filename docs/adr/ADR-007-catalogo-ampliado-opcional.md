@@ -1,4 +1,4 @@
-# ADR-006: Ampliar el catálogo de municipios más allá de la zona piloto (opcional)
+# ADR-007: Ampliar el catálogo de municipios más allá de la zona piloto (opcional)
 
 - **Estado:** Propuesto (opt-in; no se ejecuta por defecto)
 - **Fecha:** 2026-10-26
@@ -42,3 +42,13 @@ Geometría: límite administrativo de OpenStreetMap (ODbL) cuando existe (37 de 
   - `municipios.nombre` no es UNIQUE y los conectores buscan por nombre (hoy no hay repetidos).
 - **Cómo revertir:** borrar la base local y volver a ejecutar `seed_catalogo`; el comando es
   opt-in y no deja nada fuera de la base.
+
+## Actualización (2026-10-26)
+
+- La demo usa el catálogo ampliado con un solo comando:
+  `python -m app.etl.seed_demo --todos-los-municipios --fecha 2026-03-30`. Sin la opción,
+  `seed_demo` y las pruebas siguen con la zona piloto de 4.
+- Los polígonos de OSM se simplifican al guardarlos (~110 m, `ST_SimplifyPreserveTopology`):
+  de ~66.000 a ~12.500 vértices; el mapa pasa de 2,6 MB a 0,5 MB y el área cambia menos de 0,2 %.
+- Las predicciones poco creíbles por municipio quedan declaradas en el registro de riesgos
+  (M-20), y el clima de Alto Beni en M-19.
