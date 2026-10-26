@@ -9,7 +9,9 @@ describe("nombreZona", () => {
     expect(nombreZona("PALOS BLANCOS")).toBe("Palos Blancos");
   });
   it("pone en título los desconocidos y tolera vacío", () => {
-    expect(nombreZona("SANTA ANA DEL YACUMA")).toBe("Santa Ana Del Yacuma");
+    expect(nombreZona("SANTA ANA DEL YACUMA")).toBe("Santa Ana del Yacuma");
+    expect(nombreZona("SANTA CRUZ DE LA SIERRA")).toBe("Santa Cruz de la Sierra");
+    expect(nombreZona("DE LA PAZ")).toBe("De la Paz"); // la primera palabra siempre va en mayúscula
     expect(nombreZona("")).toBe("");
     expect(nombreZona(null)).toBe("");
   });

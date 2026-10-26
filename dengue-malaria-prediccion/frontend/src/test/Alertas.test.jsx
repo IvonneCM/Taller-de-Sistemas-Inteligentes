@@ -122,8 +122,32 @@ describe("TASK-030", () => {
   it("muestra todas las variables, incluido peso cero, sin convertir a porcentaje", async () => {
     pedir.mockResolvedValue([alerta(1, { variables_explicativas: [{ variable: "a", peso: 0 }, { variable: "b", peso: -1 }, { variable: "c", peso: 1 }, { variable: "d", peso: 0.1 }] })]);
     montar(); await screen.findByRole("article");
+    // La tarjeta abre con los 3 factores principales; el botón muestra todos.
+    expect(within(screen.getByRole("list", { name: "Variables explicativas de la alerta 1" })).getAllByRole("listitem")).toHaveLength(3);
+    await userEvent.click(screen.getByRole("button", { name: "Ver las 4 variables" }));
     expect(within(screen.getByRole("list", { name: "Variables explicativas de la alerta 1" })).getAllByRole("listitem")).toHaveLength(4);
     expect(screen.getByText(/\+0[.,]0000/)).toBeInTheDocument();
+  });
+
+  it("muestra la probabilidad como anillo y dice si cada variable aumenta o reduce el riesgo", async () => {
+    montar();
+    const tarjeta = await screen.findByRole("article");
+    expect(within(tarjeta).getByText("80 %")).toBeInTheDocument();
+    expect(within(tarjeta).getByText("aumenta el riesgo")).toBeInTheDocument();
+    expect(within(tarjeta).getByText("reduce el riesgo")).toBeInTheDocument();
+  });
+
+  it("con más de 3 variables muestra solo las principales hasta que se piden todas", async () => {
+    const vars = Array.from({ length: 6 }, (_, i) => ({ variable: `temperatura_media_lag${i + 1}`, peso: 0.5 - i * 0.1 }));
+    pedir.mockResolvedValue([alerta(1, { variables_explicativas: vars })]);
+    montar(); await screen.findByRole("article");
+    expect(screen.getByRole("heading", { name: "Los 3 factores principales" })).toBeInTheDocument();
+    const lista = () => screen.getByRole("list", { name: "Variables explicativas de la alerta 1" });
+    expect(within(lista()).getAllByRole("listitem")).toHaveLength(3);
+    await userEvent.click(screen.getByRole("button", { name: "Ver las 6 variables" }));
+    expect(within(lista()).getAllByRole("listitem")).toHaveLength(6);
+    await userEvent.click(screen.getByRole("button", { name: "Ver solo los principales" }));
+    expect(within(lista()).getAllByRole("listitem")).toHaveLength(3);
   });
 
   it("no consulta sin un ID de enfermedad verificable", () => {
