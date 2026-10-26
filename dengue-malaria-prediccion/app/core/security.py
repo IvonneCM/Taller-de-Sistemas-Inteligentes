@@ -15,7 +15,7 @@ from typing import Any
 from uuid import uuid4
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
 
 
 ALGORITMO_PERMITIDO = "HS256"
@@ -140,9 +140,9 @@ def decodificar_token(token: str, tipo_esperado: str) -> dict[str, Any]:
             token,
             _secreto(),
             algorithms=[_algoritmo()],
-            options={"require_exp": True},
+            options={"require": ["exp"]},
         )
-    except JWTError as exc:
+    except jwt.PyJWTError as exc:
         raise TokenError("Token invalido o expirado.") from exc
 
     if payload.get("iss") != _issuer():

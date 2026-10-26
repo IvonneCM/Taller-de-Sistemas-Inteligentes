@@ -39,6 +39,16 @@ def pytest_sessionstart(session):
         pytest.exit("Las pruebas no se ejecutan con ENVIRONMENT=production.", returncode=2)
 
 
+@pytest.fixture(autouse=True)
+def _limite_de_login_limpio():
+    """El limite de intentos de login vive en memoria: cada test parte de cero."""
+    from app.core.limite_intentos import limite_login
+
+    limite_login.reiniciar()
+    yield
+    limite_login.reiniciar()
+
+
 @pytest.fixture()
 def db_session():
     connection = engine.connect()

@@ -84,6 +84,13 @@ function errorDe(respuesta, cuerpo) {
   let mensaje = typeof cuerpo?.detail === "string" ? cuerpo.detail : null;
   if (respuesta.status === 422) mensaje = "Revisa los datos enviados.";
   if (respuesta.status === 403) mensaje = "Tu rol no tiene acceso a esto.";
+  if (respuesta.status === 429) {
+    const segundos = Number(respuesta.headers.get("retry-after"));
+    const minutos = Number.isFinite(segundos) && segundos > 0 ? Math.ceil(segundos / 60) : null;
+    mensaje = minutos
+      ? `Demasiados intentos fallidos. Vuelve a intentarlo en ${minutos} ${minutos === 1 ? "minuto" : "minutos"}.`
+      : "Demasiados intentos fallidos. Vuelve a intentarlo más tarde.";
+  }
   if (respuesta.status === 503) mensaje = mensaje ?? "El servicio de datos no está disponible. Intenta de nuevo en unos segundos.";
   if (respuesta.status >= 500 && !mensaje) mensaje = "Ocurrió un error en el servidor.";
   return new ApiError(respuesta.status, mensaje ?? "No se pudo completar la solicitud.", { requestId });

@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from app.api.routes import admin, alertas, campanas, casos, health, modelo, municipios, zonas
 from app.api.routes.auth import router as auth_router
-from app.core import observabilidad
+from app.core import cabeceras_seguridad, observabilidad
 from app.core.config import get_settings
 
 observabilidad.configure_logging(get_settings().LOG_LEVEL)
@@ -25,6 +25,7 @@ app = FastAPI(
 )
 
 observabilidad.instalar(app)
+cabeceras_seguridad.instalar(app)  # va despues: queda como capa exterior y cubre tambien los errores
 
 app.include_router(health.router)
 app.include_router(zonas.router)

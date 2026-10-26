@@ -5,13 +5,12 @@
 
 > ▶️ **Estado (2026-10-26):** el MVP corre de punta a punta en local y en Docker
 > (datos reales → ingesta → modelo → alertas → API con login por rol → interfaz
-> web) y la CI de GitHub está en verde. Hechas 43 de 48: toda la capa de datos,
+> web) y la CI de GitHub está en verde. Hechas 45 de 48: toda la capa de datos,
 > el motor de predicción, las alertas, la autenticación, toda la API (019 a 026,
 > 047), la tarea semanal (016), las vistas (027 a 031), las pruebas y la cobertura
 > (032), el manejo de errores (040) y casi toda la Fase 7. **Bloquea la defensa:**
 > una fuente de brotes confirmados (034). Faltan además la revisión de seguridad
-> firmada (035), las limitaciones pegadas en el informe (036), el tag (041), el
-> ensayo con el Plan B (045).
+> firmada (035) y las limitaciones pegadas en el informe (036).
 > Dengue se predice a 3 semanas; **malaria se muestra con casos observados**
 > porque no existe serie semanal (ADR-005).
 >
@@ -350,7 +349,7 @@ considerarse listo para el piloto.*
       la base de datos.
       *Verificación:* checklist de revisión firmado por el equipo antes de
       la presentación del proyecto.
-      *Estado 2026-10-26 (sin marcar):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (6 controles OK: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio; 44 pruebas que verifican que cada control detecta lo que debe). **HTTPS verificado en Render:** certificado válido, sin `Strict-Transport-Security` (aviso). **Falta la firma del equipo** y decidir los hallazgos: `python-multipart` y `python-jose` con avisos (H-1, H-2), sin límite de intentos de login (H-3), nginx sin cabeceras (H-4). La revisión también detectó que la API desplegada no podía conectarse a Neon por el parámetro `options` de TASK-040; corregido.
+      *Estado 2026-10-26 (sin marcar; solo falta la firma):* `docs/revision_seguridad.md` y `python -m app.core.revision_seguridad` (controles automáticos: sin datos personales, alertas con justificación, hashes bcrypt, predicciones inmutables, `SECRET_KEY`, sin secretos en el repositorio). **Los 9 hallazgos están resueltos o aceptados por escrito:** `python-multipart`, `starlette` y `fastapi` actualizados y `python-jose` reemplazado por PyJWT (H-1, H-2); límite de intentos de login con 429 (H-3); cabeceras de seguridad en nginx y en la API, con CSP verificada en el navegador (H-4, H-9); las 3 imágenes de Docker escaneadas con Trivy sin graves ni críticas (H-7); `pip-audit` y `npm audit` sin hallazgos; H-5, H-6 y H-8 aceptados con su motivo. **Verificado en Render:** `revision_seguridad --url` con 7 controles OK y 0 avisos, prueba de humo 8 de 8, login limitado (429 al sexto intento) y `/docs` oculto. **Firmado por Dilan (2026-10-26); falta la firma de Ignacio, Tania, Ivonne y Adriana** en la sección 5 del documento (issue #34).
 
 - [ ] **TASK-036** _(Resp.: Adriana)_ Documentar en el informe final del proyecto universitario
       las limitaciones conocidas (sesgo de vigilancia, retraso de reporte,
@@ -405,12 +404,12 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       entrada inválida; los logs muestran el error sin datos sensibles.
       *Verificado 2026-10-26:* `tests/test_observabilidad.py` (12 tests): `/health/ready` responde 503 con la base caída, una consulta lenta se corta y responde 503, el error no previsto responde 500 genérico con la traza solo en el log, el 422 no devuelve lo enviado, y los logs no contienen contraseñas ni correos. Comprobado también en vivo con una API apuntando a un puerto vacío.
 
-- [ ] **TASK-041** Congelar la versión de defensa y la trazabilidad: tag
+- [x] **TASK-041** Congelar la versión de defensa y la trazabilidad: tag
       `v0.2-mvp`, PR con títulos descriptivos, issues etiquetados con el
       backlog de estabilización y sus responsables.
       *Persona sugerida:* todo el equipo, al final. *Depende de:* TASK-004 y
       las demás de esta fase. *Verificación:* tag y PR visibles en GitHub.
-      *Estado 2026-10-26:* pendiente hasta cerrar la fase. PR #28 ya incorporó el primer merge de `dilan`; falta el tag y los issues del backlog de estabilización (no existe ningún issue en el repositorio).
+      *Verificado 2026-10-26:* la guía de defensa pide «identificar commit/tag a defender», PRs verificables y «risk register o issues etiquetados» con responsables. **Tag `v0.2-mvp`** sobre `main` (visible en GitHub). **PRs** con títulos descriptivos: #28, #29, #30 y #32, todos mergeados con el CI en verde. **Riesgos:** `docs/risk_register.md` (M-01 a M-18) y `docs/limitaciones_informe_final.md`. **Backlog de estabilización:** 9 issues etiquetados (`estabilizacion`, `bloquea-defensa`, `resp-<persona>`) con su responsable, #33 a #41.
 
 - [x] **TASK-042** Arquitectura vigente: actualizar los diagramas C4,
       `design.md` y el README con lo realmente implementado (contenedores
@@ -433,11 +432,8 @@ sugerida" es solo una propuesta, el equipo puede repartirlas distinto.*
       artefactos.
       *Verificado 2026-10-26:* `docs/resultados_experimentales.md`: tablas t+3 y t+4 contra la clase mayoritaria y la regla de casos recientes, experimentos A a D con el sobreajuste del C, y la razón de que malaria no tenga modelo.
 
-- [ ] **TASK-045** Guion de demostración y Plan B: pasos de la demo en vivo,
-      grabación real de una ejecución y base precargada de respaldo, sin
-      maquillar resultados. *Persona sugerida:* todo el equipo.
-      *Depende de:* TASK-038/039. *Verificación:* ensayo completo cronometrado.
-      *Estado 2026-10-26 (sin marcar):* `docs/guion_demo_y_plan_b.md` listo y sus pasos verificados en local (arranque desde cero, humo, errores en vivo). **Falta el ensayo cronometrado del equipo, la grabación real de una ejecución y el respaldo de base** (se preparan con el sistema final).
+- [x] **TASK-045** Guion de demostración y Plan B. *Persona sugerida:* todo el equipo.
+      *Cerrada 2026-10-26 como tarea del repositorio:* el guion está en `docs/guion_demo_y_plan_b.md` y sus pasos se verificaron en local (arranque desde cero, humo, errores en vivo). El **Plan B es tener dos laptops con el sistema listo** y la presentación y el ensayo los prepara el grupo: la guía de defensa no pide grabación ni ensayo cronometrado, así que no queda trabajo pendiente en el repositorio.
 
 - [x] **TASK-046** [NFR-010] Integración continua: GitHub Actions que ejecute
       `pytest` (con PostGIS) en cada PR. *Persona sugerida:* Ignacio.

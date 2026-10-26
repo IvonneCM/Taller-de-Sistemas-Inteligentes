@@ -212,7 +212,7 @@ def _rutas_publicas(entorno: str) -> list[str]:
     import sys
 
     codigo = ("import json; from app.main import app; "
-              "print(json.dumps(sorted({'/docs','/redoc','/openapi.json'} & {r.path for r in app.routes})))")
+              "print(json.dumps(sorted({'/docs','/redoc','/openapi.json'} & {getattr(r, 'path', None) for r in app.routes})))")
     env = {**os.environ, "ENVIRONMENT": entorno, "SECRET_KEY": "k" * 48}
     salida = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, env=env, check=True).stdout
     return json.loads(salida.strip().splitlines()[-1])

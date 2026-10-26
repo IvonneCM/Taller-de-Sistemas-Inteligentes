@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     DB_CONNECT_TIMEOUT_SECONDS: int = 5
     DB_STATEMENT_TIMEOUT_MS: int = 15000
+    # Limite de intentos fallidos de login (TASK-035, H-3); 0 desactiva el limite.
+    LOGIN_MAX_INTENTOS_EMAIL: int = 5
+    LOGIN_MAX_INTENTOS_IP: int = 20
+    LOGIN_VENTANA_SEGUNDOS: int = 900
     DB_POOL_TIMEOUT_SECONDS: int = 10
 
     @field_validator("DATABASE_URL")

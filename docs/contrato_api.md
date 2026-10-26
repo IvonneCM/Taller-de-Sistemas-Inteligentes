@@ -17,6 +17,8 @@ Todas las rutas, salvo `/health`, `/health/ready` y `/auth/*`, exigen `Authoriza
 | `POST /auth/refresh` | Cuerpo JSON `{"refresh_token": "..."}`. Entrega un par nuevo y **revoca** el refresh usado |
 | `POST /auth/logout` | Cuerpo JSON `{"refresh_token": "..."}`. Revoca el token; responde 204 aunque ya no fuera válido |
 
+**Límite de intentos (TASK-035, H-3):** tras 5 intentos fallidos con el mismo correo, o 20 desde la misma IP, en 15 minutos, `POST /auth/login` responde **429** con `Retry-After` (segundos) y no compara la contraseña, aunque sea la correcta. Un login correcto borra el contador del correo. Las respuestas de `/auth/*` llevan `Cache-Control: no-store`, y toda respuesta lleva `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy` (en producción, además, HSTS y una CSP cerrada).
+
 El rol sale de la base de datos en cada petición (`app/api/deps.py`: `get_current_user` y `require_role`), no del token: un cambio de rol rige de inmediato. Implementado por TASK-017 y 018.
 
 **Cliente web:** el access token se guarda solo en memoria y el refresh token en `sessionStorage` para sobrevivir a una recarga (compromiso aceptado para el MVP, riesgo M-11 en `risk_register.md`). Ante un 401 se refresca una vez y se reintenta; si el refresco falla, se pide entrar de nuevo.
