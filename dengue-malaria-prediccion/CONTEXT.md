@@ -279,3 +279,51 @@ backlog de la sección 5.
   commit ni push.
 - `.gitignore` tiene un cambio previo no relacionado (ignora
   `Reparto de Tarea.md`); no tocarlo sin decidir si se conserva.
+
+### 2026-10-25 — Capa de datos (TASK-005 a TASK-010) verificada en PostGIS real
+
+> Nota: las secciones 4 a 7 de arriba describen el estado de la primera
+> evaluación (datos sintéticos, backend en pausa) y están desactualizadas.
+> Para el estado actual, ver esta entrada, `tasks.md` y `design.md`.
+
+**Hecho**
+- Se levantó PostgreSQL 16 + PostGIS 3.4 en Docker (`postgis/postgis:16-3.4`,
+  puerto 5433 porque el 5432 lo usa PostgreSQL de Homebrew) y se verificó:
+  `alembic upgrade head`, geometría `MultiPolygon,4326` con índice GIST,
+  `CHECK >= 0` y `UNIQUE(municipio_id, fecha)` rechazando datos inválidos,
+  y 23 tests en verde (`DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5433/dengue_malaria`).
+- TASK-005 a TASK-010 marcadas `[x]` en `tasks.md`, con su verificación anotada.
+- TASK-009 corregida: ahora ingiere dengue como serie SEMANAL
+  (`ingerir_dengue_semanal`, decisión 2 del reparto). Antes solo ingería el
+  acumulado SE1-13 y decía que no había serie semanal.
+- Publicado `docs/contrato_esquema_bd.md` (esquema de BD para Ivonne y Dilan).
+- Pipeline de datos de un solo comando (`scripts/pipeline_completo.py`, 10
+  pasos) y paneles para el modelo (`data/processed/panel_semanal_dengue_clima.csv`,
+  `panel_bloques_malaria_clima.csv`); ver `docs/guia_entrega_fase2.md`.
+
+**Divergencias respecto a `design.md` (ya anotadas en `design.md` §3 y §10)**
+- `fecha_ingesta` es `timestamptz`; `es_dato_imputado` es NOT NULL; hay un
+  `UNIQUE` extra en `casos_epidemiologicos`.
+- `fecha_reporte` = domingo de la semana ISO en filas semanales (dengue) y
+  cierre del periodo en filas acumuladas (malaria).
+
+**Bug encontrado solo con PostgreSQL real:** un texto de `fuente` de más de
+100 caracteres falla con `StringDataRightTruncation` (la columna es
+`VARCHAR(100)`). Corregido y cubierto por un test que no necesita BD.
+
+**Pendiente / decisiones abiertas**
+1. ~~**Malaria:** decidir cómo guardarla.~~ **Resuelto (ADR-005):** acumulado
+   SE1-13 en la BD (3 filas piloto, sin semanas inventadas); el modelo de
+   malaria entrena con `data/processed/panel_bloques_malaria_clima.csv`. Se
+   reabre si SEDES/SNIS entrega casos semanales.
+2. **Tabla `roles` vacía:** el seed no carga los roles de `design.md` (la
+   necesita TASK-017/018, Ivonne).
+3. **`municipios.nombre` no es UNIQUE:** ambiguo al ampliar el catálogo más
+   allá de los 4 municipios piloto; ampliarlo exige polígonos oficiales.
+4. **TASK-027** (mapa de calor) no se puede empezar: depende de
+   `GET /zonas/riesgo` (Dilan, TASK-019) y no hay frontend en el repo.
+5. **Sin commit:** el pipeline de datos y sus CSV ya están versionados
+   (commit `89202f0`). Quedan sin versionar, en la rama
+   `tania/task-005-010-capa-datos`: los cambios del backend (conector y
+   tests de TASK-009, `tests/test_modelo_usuarios.py`), `tasks.md`,
+   `design.md`, este archivo y `docs/contrato_esquema_bd.md`.
