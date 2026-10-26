@@ -405,11 +405,14 @@ def persistir_predicciones(
     *,
     modelo_id: int,
     session=None,
+    evaluar_alertas: bool = False,
 ) -> dict:
     """Inserta solo predicciones publicadas; nunca actualiza filas existentes.
 
     Municipios o enfermedades fuera del catalogo se omiten con un motivo
     explicito. Si `session` es None se abre y cierra una sesion propia.
+    Si `evaluar_alertas` es True (TASK-015), evalua los umbrales e inserta
+    alertas justificadas para las predicciones persistidas.
     """
     from app.core.database import SessionLocal
     from app.models import Enfermedad, Modelo, Municipio
@@ -464,12 +467,21 @@ def persistir_predicciones(
             session.flush()
             insertadas.append(int(fila.id))
 
+        resumen_alertas = None
+        if evaluar_alertas and insertadas:
+            from app.ml.evaluacion_alertas import evaluar_alertas_lote
+
+            resumen_alertas = evaluar_alertas_lote(
+                session, insertadas, commit=False
+            )
+
         if propia:
             session.commit()
         return {
             "insertadas": insertadas,
             "omitidas": omitidas,
             "no_publicadas": no_publicadas,
+            "alertas": resumen_alertas,
         }
     finally:
         if propia:
@@ -507,6 +519,12 @@ def _imprimir_resumen(
             f"omitidas: {len(resumen['omitidas'])}; "
             f"no_publicadas: {resumen['no_publicadas']}"
         )
+        if resumen.get("alertas"):
+            al = resumen["alertas"]
+            print(
+                f"Alertas emitidas: {al.get('total_creadas', 0)}; "
+                f"omitidas sin explicacion (REQ-005): {len(al.get('omitidas_sin_explicacion', []))}"
+            )
         if resumen["omitidas"]:
             print(f"  primeras omisiones: {resumen['omitidas'][:5]}")
 
@@ -547,6 +565,13 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Porcentaje global de faltantes/imputados (NFR-007).",
     )
+    parser.add_argument(
+        "--no-alertas",
+        dest="evaluar_alertas",
+        action="store_false",
+        default=True,
+        help="Omite la evaluacion automatica de alertas al persistir.",
+    )
     args = parser.parse_args(argv)
 
     resultado = (
@@ -565,7 +590,9 @@ def main(argv: list[str] | None = None) -> int:
     resumen = None
     if args.modelo_id is not None:
         resumen = persistir_predicciones(
-            predicciones, modelo_id=args.modelo_id
+            predicciones,
+            modelo_id=args.modelo_id,
+            evaluar_alertas=args.evaluar_alertas,
         )
     _imprimir_resumen(predicciones, resumen)
     return 0
