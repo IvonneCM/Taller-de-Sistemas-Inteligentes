@@ -7,7 +7,7 @@ const ENFERMEDADES = [
   { valor: "dengue", etiqueta: "Dengue", icono: <Gota tamano={18} /> },
 ];
 
-// El selector de enfermedad solo afecta al mapa: en las demás vistas se oculta.
+// El selector de enfermedad lo usan el mapa, las alertas y el historial; la vista de campañas es solo de dengue.
 export function Barra({ usuario, enfermedad, alCambiarEnfermedad, alSalir, mostrarEnfermedad = true }) {
   return (
     <header className="barra">

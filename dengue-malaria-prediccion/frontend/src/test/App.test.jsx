@@ -162,6 +162,29 @@ describe("vista de dengue", () => {
 });
 
 describe("vistas y permisos", () => {
+  it("propaga el filtro global de enfermedad al panel de alertas", async () => {
+    simular(); render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Alertas" }));
+    await waitFor(() => expect(pedir).toHaveBeenCalledWith("/alertas", expect.objectContaining({ params: expect.objectContaining({ enfermedad_id: 2 }) })));
+    await userEvent.click(screen.getByRole("radio", { name: "Dengue" }));
+    await waitFor(() => expect(pedir).toHaveBeenCalledWith("/alertas", expect.objectContaining({ params: expect.objectContaining({ enfermedad_id: 1 }) })));
+  });
+
+  it("propaga el filtro global al historial sin modificar sus permisos", async () => {
+    simular({ rol: "admin" }); render(<App />);
+    await userEvent.click(await screen.findByRole("tab", { name: "Historial" }));
+    await waitFor(() => expect(pedir).toHaveBeenCalledWith("/zonas/1/historial", expect.objectContaining({ params: expect.objectContaining({ enfermedad_id: 2 }) })));
+    await userEvent.click(screen.getByRole("radio", { name: "Dengue" }));
+    await waitFor(() => expect(pedir).toHaveBeenCalledWith("/zonas/1/historial", expect.objectContaining({ params: expect.objectContaining({ enfermedad_id: 1 }) })));
+  });
+
+  it.each(["autoridad", "sedes", "coordinador_municipal"])("%s no consulta historial técnico", async (rol) => {
+    simular({ rol }); render(<App />);
+    await screen.findByRole("tab", { name: "Alertas" });
+    expect(screen.queryByRole("tab", { name: "Historial" })).not.toBeInTheDocument();
+    expect(pedir.mock.calls.some(([ruta]) => ruta.includes("/historial"))).toBe(false);
+  });
+
   it("el historial solo aparece para epidemiólogos y administración", async () => {
     simular({ rol: "autoridad" });
     const { unmount } = render(<App />);

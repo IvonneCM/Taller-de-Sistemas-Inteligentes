@@ -30,6 +30,13 @@ function Aplicacion() {
 
   const riesgo = useCarga(useCallback(() => pedir("/zonas/riesgo"), []), []);
   const casos = useCarga(useCallback(() => pedir("/casos/resumen"), []), []);
+  const paneles = {
+    zonas: [...(riesgo.datos ?? []), ...(casos.datos ?? [])],
+    enfermedad,
+    cargandoZonas: riesgo.fase === "cargando" || casos.fase === "cargando",
+    errorZonas: riesgo.error ?? casos.error,
+    recargarZonas: () => { riesgo.recargar(); casos.recargar(); },
+  };
 
   const elegirEnfermedad = useCallback((valor) => {
     setEnfermedad(valor);
@@ -47,16 +54,16 @@ function Aplicacion() {
     <div className="app">
       <Barra
         usuario={usuario} enfermedad={enfermedad} alCambiarEnfermedad={elegirEnfermedad} alSalir={cerrar}
-        mostrarEnfermedad={vista === "mapa"}
+        mostrarEnfermedad={vista !== "campanas"}
       />
       <main className="contenido">
         <div className="vistas">
           <Segmentado rol="tab" etiqueta="Vista" opciones={vistas} valor={vista} alCambiar={setVista} />
         </div>
         {vista === "mapa" && <VistaMapa enfermedad={enfermedad} riesgo={riesgo} casos={casos} usuario={usuario} />}
-        {vista === "alertas" && <Alertas />}
+        {vista === "alertas" && <Alertas key={enfermedad} {...paneles} />}
         {vista === "campanas" && <Campanas usuario={usuario} />}
-        {vista === "historial" && <Historial zonas={riesgo.datos} />}
+        {vista === "historial" && esTecnico(usuario.rol) && <Historial key={enfermedad} {...paneles} />}
       </main>
     </div>
   );
