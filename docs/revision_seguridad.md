@@ -70,6 +70,6 @@ Debe firmarse después de resolver (o aceptar por escrito) los hallazgos de la s
 |---|---|---|---|
 | Ignacio Retamozo Torrez | | | |
 | Tania Pérez | | | |
-| Ivonne Colque | | | |
+| Ivonne Colque | autenticación JWT, dependencias RBAC, hash de contraseñas con bcrypt, validación del modelo baseline | 2026-10-26 | Ivonne Colque |
 | Adriana Rocha Vedia | Revisión documental de privacidad, HTTPS, alertas y riesgos de seguridad aceptados | 26/10/2026 | Adriana Rocha Vedia |
 | Dilan Mamani Pamuri | Controles automáticos, hallazgos H-1 a H-9 (resueltos o aceptados) y verificación en Render | 2026-10-26 | Dilan Mamani Pamuri |
