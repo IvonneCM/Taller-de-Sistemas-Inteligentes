@@ -145,11 +145,12 @@ pipeline de ingesta/limpieza funcionando con datos de prueba.*
 *Meta de la fase: el pipeline de ML genera predicciones explicables y
 almacenables, cumpliendo el horizonte de 3-4 semanas.*
 
-- [ ] **TASK-011** [REQ-002] Implementar `app/ml/features.py`: generación de
+- [x] **TASK-011** [REQ-002] Implementar `app/ml/features.py`: generación de
       variables rezagadas (lag 2-4 semanas) y promedios móviles a partir de
       `casos_epidemiologicos` y `datos_climaticos`.
       *Verificación:* test unitario valida que las columnas de lag se
       calculan correctamente sobre una serie de tiempo de ejemplo.
+      *Hecha por Adriana Rocha (commit `1be2f8d`); marcada el 2026-10-26 al integrarla en `dilan`.* Verificado: `tests/ml/test_features.py` pasa (junto con `test_explicabilidad.py`: 38 pruebas en verde); documentación en `docs/task_011_features.md`.
 
 - [x] **TASK-012** [NFR-001, NFR-002] Entrenar modelo baseline (offline, en
       notebook/Colab) usando XGBoost u otro clasificador, con datos
@@ -160,11 +161,12 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       `modelos.metricas_entrenamiento` (JSONB) y documentadas en el reporte
       del proyecto.
 
-- [ ] **TASK-013** [REQ-004] Implementar `app/ml/explicabilidad.py` usando
+- [x] **TASK-013** [REQ-004] Implementar `app/ml/explicabilidad.py` usando
       SHAP para calcular la importancia de variables por predicción
       individual.
       *Verificación:* test que, dado un input de ejemplo, retorna una lista
       ordenada de variables con peso numérico.
+      *Hecha por Adriana Rocha (commit `62069f4`); marcada el 2026-10-26 al integrarla en `dilan`.* Verificado: `tests/ml/test_explicabilidad.py` pasa; documentación y evidencias en `docs/task_013_explicabilidad.md`. Las variables SHAP ya salen en la API y en el panel del epidemiólogo.
 
 - [x] **TASK-014** [REQ-001, REQ-002, REQ-003, NFR-007] Implementar
       `app/ml/prediccion.py`: ejecuta el pipeline completo (features →
@@ -184,10 +186,11 @@ almacenables, cumpliendo el horizonte de 3-4 semanas.*
       explicativas confirma que NO se genera alerta.
       *Verificado 2026-10-26:* `app/ml/evaluacion_alertas.py` implementa `evaluar_prediccion`, `evaluar_alertas_lote`, `evaluar_alertas_pendientes` y CLI. `tests/ml/test_evaluacion_alertas.py` (12 tests) pasa al 100%: confirma REQ-005 (probabilidad alta sin explicabilidad no genera alerta y registra log warning), REQ-009 (probabilidad >= umbral genera alerta), REQ-010 (cambio de umbral con `configurar_umbral` en caliente se refleja de inmediato sin reinicio) y jerarquía departamental vs general.
 
-- [ ] **TASK-016** Configurar tarea programada (APScheduler o cron de
+- [x] **TASK-016** Configurar tarea programada (APScheduler o cron de
       Railway) para ejecutar el pipeline de predicción semanalmente.
       *Verificación:* ejecución manual del job confirma inserción de nuevas
       filas en `predicciones` con fecha correcta.
+      *Verificado 2026-10-26.* Diseño del workflow: Ignacio (`docs/guia_despliegue_render_neon.md` §6, GitHub Actions en lugar de Railway). Implementación del job y del workflow: Dilan (`app/ml/job_semanal.py`, `.github/workflows/prediccion_semanal.yml`). Ejecución manual sobre una base limpia: la primera corrida insertó 4 predicciones con `fecha_generacion` 2026-11-02 y `fecha_estimada_riesgo` 2026-11-23 (+21 días); repetirla la misma semana no duplica («Sin cambios»); el lunes siguiente añade otro lote; sin tablas termina con código 1. 22 pruebas en `tests/ml/test_job_semanal.py` y `test_seed_demo`. **Pendiente humano:** registrar los secretos `DATABASE_URL` y `SECRET_KEY` en GitHub (Settings → Secrets → Actions) para que la ejecución programada funcione.
 
 ---
 
@@ -250,10 +253,11 @@ control de acceso por rol.*
       con el nivel de riesgo almacenado.
       *Verificado 2026-10-26:* igual que la TASK-024: 46 pruebas de integración en verde contra PostgreSQL; la coordinación solo ve su municipio (403 en otro), el admin ve cualquiera, y la recomendación es coherente con el nivel de riesgo almacenado. Son recomendaciones orientativas, no inventarios ni protocolos oficiales.
 
-- [ ] **TASK-026** [REQ-016] Implementar `GET /modelo/desempeno` (métricas
+- [x] **TASK-026** [REQ-016] Implementar `GET /modelo/desempeno` (métricas
       de precisión espacial y anticipación calculadas sobre un periodo).
       *Verificación:* test con datos de ejemplo de predicciones y brotes
       confirmados calcula correctamente precisión espacial.
+      *Implementada por Dilan, 2026-10-26* (`app/services/desempeno.py`, `app/api/routes/modelo.py`). Solo epidemiólogo y admin; filtros `enfermedad_id`, `desde`, `hasta`, `nivel_minimo`. Calcula precisión espacial, sensibilidad y anticipación con la misma ventana de ±7 días del historial. `tests/api/test_desempeno.py` (17 pruebas): con datos de ejemplo la precisión sale 50 %, la sensibilidad 50 % y la anticipación 28 días, y los casos límite se comprueban. **Sin brotes o sin predicciones devuelve `null` y un `estado`, nunca un número inventado.** Hoy no hay brotes reales cargados (TASK-034), por lo que el endpoint funciona pero NFR-001 y NFR-002 siguen sin poder validarse.
 
 ---
 
@@ -276,11 +280,11 @@ calor navegables.*
       confirma diferencias de UI acorde a REQ-007.
       *Verificado 2026-10-26:* prueba manual en el navegador con `autoridad@demo.local` y `epidemiologo@demo.local`: la autoridad recibe la vista resumida (probabilidad y confianza) y ve la invitación a pedir el detalle técnico; el epidemiólogo ve además «Qué influyó en esta predicción» (variables SHAP) y la pestaña Historial. La diferencia sale del servidor (`vista: resumida | completa`), no de la interfaz. Cubierto por `frontend/src/test/App.test.jsx`.
 
-- [ ] **TASK-029** [REQ-008] Implementar vista de historial de predicciones
+- [x] **TASK-029** [REQ-008] Implementar vista de historial de predicciones
       vs. brotes confirmados, con filtro por zona y fecha.
       *Verificación:* prueba manual sobre datos de ejemplo cargados en
       Fase 2.
-      *Estado 2026-10-26 (sin marcar):* existe la vista de historial para técnicos (`Historial.jsx`) con predicciones, brote confirmado y la regla de comparación. **Faltan el filtro por rango de fechas en pantalla** (la API ya lo soporta) **y datos de brotes confirmados** (sin fuente, riesgo M-08), así que hoy ninguna predicción aparece como acertada.
+      *Hecha por Adriana Rocha (commit `ba8c5d9`, «Historial de predicciones y panel de alertas acabado»); marcada el 2026-10-26.* La vista `Historial.jsx` incluye el filtro por rango de fechas (`FiltrosFechas.jsx`), la zona y la regla de comparación con los brotes confirmados; `src/test/Historial.test.jsx` (12 pruebas) pasa. **Limitación de datos, no de la vista:** no hay una fuente de brotes confirmados (riesgo M-08, TASK-034), así que con los datos de demostración ninguna predicción aparece como acertada.
 
 - [x] **TASK-030** [REQ-009] Implementar panel de alertas activas con
       justificación visible (variables explicativas).
@@ -351,6 +355,7 @@ considerarse listo para el piloto.*
       cobertura climática irregular) y cómo el sistema las mitiga
       parcialmente.
       *Verificación:* sección de limitaciones presente en el informe final.
+      *Estado 2026-10-26 (sin marcar):* el texto está escrito en [`docs/limitaciones_informe_final.md`](../docs/limitaciones_informe_final.md): las tres limitaciones pedidas (sesgo de vigilancia, retraso de reporte, cobertura climática irregular) con lo que el sistema mitiga y lo que no, más las del modelo, el alcance y la seguridad, basadas en `docs/risk_register.md` M-01 a M-18. **Falta pegarlo en el informe final** (documento fuera del repositorio); la tarea se marca cuando esté ahí.
 
 ---
 

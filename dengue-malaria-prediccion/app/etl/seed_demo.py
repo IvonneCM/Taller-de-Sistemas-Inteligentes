@@ -44,6 +44,7 @@ from sqlalchemy import func, select
 from app.core.database import SessionLocal
 from app.etl import seed_catalogo, seed_usuarios
 from app.ml import entrenamiento, prediccion
+from app.ml.job_semanal import asegurar_modelo
 from app.etl.conectores import epidemiologia
 from app.ml.features import cargar_features
 from app.models import Modelo, Prediccion
@@ -51,25 +52,6 @@ from app.models import Modelo, Prediccion
 # <repo>/data/processed. En la imagen Docker `ml` no existe (solo se copia app/):
 # alli la ingesta de casos se omite y se avisa.
 PROCESADOS = Path(__file__).resolve().parents[3] / "data" / "processed"
-
-
-def _metadata_del_modelo(version: str, directorio: Path) -> dict:
-    ruta = directorio / f"baseline_dengue_t{prediccion.HORIZONTE_PUBLICADO}_{version}_metadata.json"
-    if not ruta.exists():
-        raise FileNotFoundError(f"No existe {ruta}; entrenar con app.ml.entrenamiento.")
-    return json.loads(ruta.read_text(encoding="utf-8"))
-
-
-def _registrar_modelo(db, metadata: dict) -> tuple[int, bool]:
-    """Devuelve (modelo_id, creado). Reutiliza el modelo si ya esta registrado."""
-    existente = db.execute(
-        select(Modelo).where(
-            Modelo.nombre == metadata["nombre"], Modelo.version == metadata["version"]
-        )
-    ).scalars().first()
-    if existente is not None:
-        return existente.id, False
-    return entrenamiento.registrar_metricas_bd(metadata, session=db), True
 
 
 def _ingerir_casos(db, procesados: Path) -> dict:
@@ -109,8 +91,7 @@ def sembrar_demo(
         usuarios = seed_usuarios.seed(password, db=db)
         casos = _ingerir_casos(db, Path(procesados) if procesados else PROCESADOS)
 
-        metadata = _metadata_del_modelo(version, directorio)
-        modelo_id, modelo_creado = _registrar_modelo(db, metadata)
+        modelo_id, modelo_creado = asegurar_modelo(db, version, directorio)
 
         ya_tiene = db.scalar(
             select(func.count()).select_from(Prediccion).where(Prediccion.modelo_id == modelo_id)

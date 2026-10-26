@@ -29,6 +29,7 @@ El rol sale de la base de datos en cada petición (`app/api/deps.py`: `get_curre
 | `GET /zonas/{municipio_id}/prediccion` | todos (el contenido depende del rol) | TASK-020 · REQ-002/003/004/007 |
 | `GET /zonas/{municipio_id}/historial` | `epidemiologo`, `admin` | TASK-021 · REQ-008 |
 | `GET /alertas` | todos | TASK-022 · REQ-009 |
+| `GET /modelo/desempeno` | `epidemiologo`, `admin` | TASK-026 · REQ-016 |
 | `POST /admin/umbrales` | `admin` | TASK-023 · REQ-010 |
 | `GET /casos/resumen` | todos | TASK-047 · REQ-008, REQ-014 |
 | `GET /campanas/priorizacion` | `sedes`, `coordinador_municipal` (solo su municipio) | TASK-024 · REQ-011 |
@@ -71,6 +72,14 @@ El servidor no envía los campos técnicos a la vista resumida (ni siquiera en `
 Query opcional: `enfermedad_id`, `desde`, `hasta` (`YYYY-MM-DD`). Devuelve `predicciones` (en orden cronológico) y `brotes_confirmados`, más `ventana_correlacion_dias` (7).
 
 Cada predicción trae `brote_confirmado` (bool), `brote_confirmado_id`, `fecha_brote_confirmado` y `anticipacion_dias` (días entre generar la predicción y confirmarse el brote). **Regla de correlación (referencial):** hay "brote confirmado" si existe uno de la misma enfermedad y zona a no más de 7 días de `fecha_estimada_riesgo`; si hay varios se toma el más cercano. Es una comparación descriptiva, no una métrica validada de precisión (NFR-001/002). `desde`/`hasta` filtran las predicciones por fecha de generación (UTC) y los brotes por fecha de confirmación; la correlación usa todos los brotes de la zona, así que un brote fuera del rango puede aparecer referenciado en una predicción sin estar en la lista.
+
+### `GET /modelo/desempeno`
+
+Query opcional: `enfermedad_id`, `desde`, `hasta` (sobre la fecha estimada de riesgo) y `nivel_minimo` (`bajo|medio|alto`, por defecto `medio`: desde qué nivel una predicción cuenta como positiva).
+
+Devuelve conteos (`predicciones_positivas`, `aciertos`, `falsas_alarmas`, `brotes_confirmados`, `brotes_detectados`) y métricas: `precision_espacial_pct` (aciertos / predicciones positivas), `sensibilidad_pct` (brotes detectados / brotes confirmados) y `anticipacion_dias_media` / `_mediana`. Usa la misma ventana de ±7 días que el historial. `objetivos` repite las cifras de diseño (NFR-001: 75 %, NFR-002: 14 días), que **no son resultados validados**.
+
+Sin predicciones o sin brotes confirmados las métricas son `null` y `estado` vale `sin_predicciones` o `sin_brotes_confirmados`: no se devuelve un 0 inventado. Con la demo actual (sin brotes) siempre responde así. Errores: 404 si la enfermedad no existe; 422 si `desde` es posterior a `hasta` o `nivel_minimo` es inválido.
 
 ### `GET /alertas`
 

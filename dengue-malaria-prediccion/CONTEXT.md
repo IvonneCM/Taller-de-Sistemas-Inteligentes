@@ -786,3 +786,15 @@ vigilado por `tests/test_api_ligera.py`. La imagen de la base solo es amd64.
 5. TASK-041 (tag), 045 (ensayo, grabación, respaldo), 046 (ver el check verde en un PR).
 6. Entorno: crear el venv fuera de carpetas sincronizadas con iCloud. En Mac,
    `xgboost-cpu` de `requirements-ml.txt` no se instala: usar `xgboost==2.1.1`.
+
+
+## Sesión 2026-10-26 (cierre del backlog propio)
+
+- TASK-016: `app/ml/job_semanal.py` (idempotente por semana ISO, CLI `--fecha`/`--forzar`) y
+  `.github/workflows/prediccion_semanal.yml`. Falta registrar los secretos `DATABASE_URL` y
+  `SECRET_KEY` en GitHub para la ejecución programada.
+- TASK-026: `GET /modelo/desempeno` (`app/services/desempeno.py`); métricas `null` sin brotes.
+- TASK-011, 013 y 029 se marcan como hechas **por Adriana**; TASK-036 tiene el texto en
+  `docs/limitaciones_informe_final.md`, falta pegarlo en el informe.
+- Verificación: 439 pruebas de backend y 152 de frontend en verde, `alembic check` sin cambios.
+- Siguen abiertas: TASK-034 (sin fuente de brotes), TASK-035 (firma), TASK-041/045/046.
