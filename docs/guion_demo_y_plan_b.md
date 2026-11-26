@@ -17,6 +17,8 @@ Guía para la 2.ª Defensa (Demostración del MVP y Sprint Review 2). La regla d
 
 ## 2. Poner el sistema en marcha desde cero
 
+> **La receta completa y probada paso a paso está en [`guia_ejecucion_desde_cero.md`](./guia_ejecucion_desde_cero.md)**, incluidas todas las pruebas. Lo de abajo es el resumen original.
+
 Requisitos: Python 3.12, Node 22 o superior, PostgreSQL con PostGIS. Sin pasos ocultos: todo lo necesario está en esta lista.
 
 ```bash

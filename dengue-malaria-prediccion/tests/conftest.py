@@ -2,9 +2,10 @@
 transaccion que siempre se revierte al final (no ensucia la base de
 desarrollo ni entre tests).
 
-Cada test parte de las tablas de DATOS vacias aunque la base de desarrollo ya
-tenga datos de demostracion (app/etl/seed_demo.py): el vaciado se hace DENTRO de
-la transaccion del test y se revierte con ella, asi que no borra nada de verdad."""
+Cada test parte de las tablas de DATOS vacias y del catalogo base (zona piloto de
+4 municipios) aunque la base de desarrollo ya tenga la demostracion completa
+(app/etl/seed_demo.py, 42 municipios): el vaciado se hace DENTRO de la transaccion
+del test y se revierte con ella, asi que no borra nada de verdad."""
 
 import os
 
@@ -26,10 +27,13 @@ from app.main import app  # noqa: E402
 
 
 # Tablas que llena la demostracion o la ingesta. Orden: hijas antes que padres.
-# El catalogo (departamentos, enfermedades, municipios, roles) se conserva.
+# Municipios y departamentos se vacian tambien: la demostracion los amplia a todos
+# los del boletin y las pruebas esperan solo la zona piloto, que `seed_catalogo`
+# vuelve a crear. Enfermedades y roles se conservan.
 TABLAS_DE_DATOS = (
     "alertas", "predicciones", "brotes_confirmados", "umbrales_configuracion",
     "refresh_tokens", "usuarios", "modelos", "casos_epidemiologicos", "datos_climaticos",
+    "municipios", "departamentos",
 )
 
 
